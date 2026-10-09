@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ShopinVigia — Painel MASTER</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        darkbg: '#0f172a',
+                        cardbg: '#1e293b',
+                        accent: '#ff5722',
+                        accenthover: '#e64a19'
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Phosphor Icons -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <style>
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.75); z-index: 2000; display: flex; justify-content: center; align-items: center; opacity: 0; visibility: hidden; transition: all 0.2s ease-in-out; }
+        .modal-overlay.active { opacity: 1; visibility: visible; }
+    </style>
+</head>
+<body class="bg-darkbg text-slate-100 font-sans antialiased min-h-screen flex" id="master-body">
+
+    <!-- OVERLAY DE AUTENTICAÇÃO PARA TESTE DE FRONT-END -->
+    <div id="auth-modal" class="fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-4">
+        <div class="bg-cardbg border border-slate-700 rounded-xl p-8 max-w-md w-full shadow-2xl">
+            <div class="text-center mb-6">
+                <h1 class="text-3xl font-black tracking-wider text-white">SHOP<span class="text-accent">INVIGIA</span></h1>
+                <p class="text-xs uppercase font-semibold text-slate-400 mt-1">Módulo Master — Front-end Consolidado</p>
+            </div>
+            <form onsubmit="simularLogin(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xs uppercase font-semibold text-slate-400 mb-2">Senha de Teste (Ex: master123)</label>
+                    <input type="password" id="input-senha-master" required value="master123" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-accent transition" placeholder="Digite a senha...">
+                </div>
+                <button type="submit" class="w-full bg-accent hover:bg-accenthover text-white font-semibold py-3 rounded-lg transition duration-200 flex items-center justify-center gap-2">
+                    <i class="ph ph-lock-open text-lg"></i> Entrar no Painel Master
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- SIDEBAR MASTER -->
+    <aside class="w-64 bg-cardbg border-r border-slate-800 flex flex-col fixed inset-y-0 z-40">
+        <div class="h-24 flex flex-col items-center justify-center border-b border-slate-800 bg-slate-900/50">
+            <span class="text-2xl font-black tracking-wider text-white">SHOP<span class="text-accent">INVIGIA</span></span>
+            <span class="text-[10px] bg-accent/20 text-accent font-bold px-2 py-0.5 rounded mt-1">MASTER GLOBAL</span>
+        </div>
+        <ul class="flex-1 p-4 space-y-1 overflow-y-auto">
+            <li><a class="nav-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-white bg-accent cursor-pointer" onclick="navigate('dashboard', this)"><i class="ph ph-squares-four text-xl"></i> Dashboard</a></li>
+            <li><a class="nav-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-slate-400 hover:bg-slate-800 hover:text-white cursor-pointer" onclick="navigate('empresas', this)"><i class="ph ph-buildings text-xl"></i> Empresas / Tenants</a></li>
+            <li><a class="nav-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-slate-400 hover:bg-slate-800 hover:text-white cursor-pointer" onclick="navigate('financeiro', this)"><i class="ph ph-wallet text-xl"></i> Financeiro</a></li>
+            <li><a class="nav-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-slate-400 hover:bg-slate-800 hover:text-white cursor-pointer" onclick="navigate('contratos', this)"><i class="ph ph-file-contract text-xl"></i> Contratos</a></li>
+            <li><a class="nav-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-slate-400 hover:bg-slate-800 hover:text-white cursor-pointer" onclick="navigate('helpdesk', this)"><i class="ph ph-headset text-xl"></i> Helpdesk</a></li>
+            <li><a class="nav-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-slate-400 hover:bg-slate-800 hover:text-white cursor-pointer" onclick="navigate('auditoria', this)"><i class="ph ph-shield-check text-xl"></i> Auditoria</a></li>
+            <li><a class="nav-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-slate-400 hover:bg-slate-800 hover:text-white cursor-pointer" onclick="navigate('configuracoes', this)"><i class="ph ph-gear text-xl"></i> Configurações</a></li>
+        </ul>
+        <div class="p-4 border-t border-slate-800 bg-slate-900/50">
+            <button onclick="fazerLogout()" class="w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium text-red-400 hover:bg-red-500/10 transition">
+                <i class="ph ph-sign-out text-xl"></i> Sair / Bloquear
+            </button>
+        </div>
+    </aside>
+
+    <!-- MAIN CONTAINER -->
+    <main class="flex-1 ml-64 flex flex-col h-screen overflow-y-auto p-6 lg:p-8">
+
+        <!-- ================= SEÇÃO: DASHBOARD ================= -->
+        <section id="sec-dashboard" class="page-section space-y-6">
+            <div class="flex items-center justify-between flex-wrap gap-4">
+                <h1 class="text-2xl font-bold flex items-center gap-2 text-white"><i class="ph-duotone ph-chart-line-up text-accent"></i> Dashboard Master</h1>
+                <span class="text-xs bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-3 py-1 rounded-full font-semibold flex items-center gap-1.5">
+                    <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> Front-end Ativo (Modo Teste)
+                </span>
+            </div>
+
+            <!-- Indicadores Principais -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div class="bg-cardbg border border-slate-800 p-5 rounded-xl border-l-4 border-l-cyan-500">
+                    <span class="text-xs text-slate-400 font-semibold uppercase"><i class="ph ph-hard-drives"></i> DB Disk (Supabase)</span>
+                    <h2 class="text-2xl font-bold text-white mt-2">1.2 GB</h2>
+                </div>
+                <div class="bg-cardbg border border-slate-800 p-5 rounded-xl border-l-4 border-l-accent">
+                    <span class="text-xs text-slate-400 font-semibold uppercase"><i class="ph ph-users"></i> Total Empresas</span>
+                    <h2 class="text-2xl font-bold text-white mt-2">12</h2>
+                </div>
+                <div class="bg-cardbg border border-slate-800 p-5 rounded-xl border-l-4 border-l-emerald-500">
+                    <span class="text-xs text-slate-400 font-semibold uppercase"><i class="ph ph-currency-circle-dollar"></i> Receita Recorrente (MRR)</span>
+                    <h2 class="text-2xl font-bold text-emerald-400 mt-2">R$ 2.450,00</h2>
+                </div>
+                <div class="bg-cardbg border border-slate-800 p-5 rounded-xl border-l-4 border-l-amber-500">
+                    <span class="text-xs text-slate-400 font-semibold uppercase"><i class="ph ph-headset"></i> Chamados Abertos</span>
+                    <h2 class="text-2xl font-bold text-amber-400 mt-2">3</h2>
+                </div>
+            </div>
+
+            <!-- Central de Alertas -->
+            <div class="bg-cardbg border border-slate-800 rounded-xl p-6 shadow-sm">
+                <div class="flex justify-between items-center flex-wrap gap-4 mb-6 border-b border-slate-800 pb-4">
+                    <h3 class="text-lg font-bold flex items-center gap-2 text-white">
+                        <i class="ph-duotone ph-bell-ringing text-accent text-xl"></i> Central de Alertas e Vencimentos
+                    </h3>
+                    <button onclick="window.print()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold px-3 py-2 rounded-lg transition flex items-center gap-1.5"><i class="ph ph-printer"></i> Imprimir</button>
+                </div>
+                <div class="space-y-3">
+                    <div class="flex items-center justify-between p-4 bg-slate-900 border border-slate-800 rounded-lg">
+                        <div class="flex items-center gap-3">
+                            <i class="ph ph-warning text-amber-400 text-xl"></i>
+                            <div>
+                                <p class="text-sm font-medium text-white">Comercial Exemplo LTDA</p>
+                                <p class="text-xs text-slate-400">O período de avaliação (Trial) expira em 2 dias.</p>
+                            </div>
+                        </div>
+                        <button onclick="abrirModalPix(1)" class="text-xs bg-slate-800 hover:bg-slate-700 text-white px-3 py-1.5 rounded transition">Configurar PIX</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= SEÇÃO: EMPRESAS ================= -->
+        <section id="sec-empresas" class="page-section space-y-6 hidden">
+            <div class="flex justify-between items-center flex-wrap gap-4">
+                <h1 class="text-2xl font-bold flex items-center gap-2 text-white"><i class="ph-duotone ph-buildings text-accent"></i> Gestão de Empresas (Tenants)</h1>
+                <button onclick="toggleCadastroForm()" class="bg-accent hover:bg-accenthover text-white text-sm font-semibold px-4 py-2.5 rounded-lg transition flex items-center gap-2"><i class="ph ph-plus-circle text-lg"></i> Nova Empresa</button>
+            </div>
+
+            <!-- Formulário Novo Cliente -->
+            <div id="card-novo-cliente" class="bg-cardbg border border-slate-800 rounded-xl p-6 shadow-sm hidden border-l-4 border-l-accent">
+                <h3 class="text-lg font-bold mb-4 text-white">Cadastrar Nova Empresa (ADMIN)</h3>
+                <form onsubmit="cadastrarEmpresa(event)" class="space-y-4">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div><label class="block text-xs font-semibold text-slate-400 mb-1">Razão Social</label><input type="text" required class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white"></div>
+                        <div><label class="block text-xs font-semibold text-slate-400 mb-1">Nome Fantasia</label><input type="text" required class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white"></div>
+                        <div><label class="block text-xs font-semibold text-slate-400 mb-1">CNPJ</label><input type="text" placeholder="00.000.000/0001-00" required class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white"></div>
+                        <div><label class="block text-xs font-semibold text-slate-400 mb-1">Responsável</label><input type="text" required class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white"></div>
+                        <div><label class="block text-xs font-semibold text-slate-400 mb-1">WhatsApp / Contato</label><input type="text" required class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white"></div>
+                        <div><label class="block text-xs font-semibold text-slate-400 mb-1">E-mail Admin</label><input type="email" required class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white"></div>
+                        <div class="md:col-span-3"><label class="block text-xs font-semibold text-slate-400 mb-1">Endereço Completo</label><input type="text" required class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white"></div>
+                    </div>
+                    <div class="flex justify-end gap-2 pt-2">
+                        <button type="button" onclick="toggleCadastroForm()" class="px-4 py-2 bg-slate-800 text-slate-300 rounded-lg text-xs font-semibold">Cancelar</button>
+                        <button type="submit" class="px-4 py-2 bg-accent text-white rounded-lg text-xs font-semibold">Salvar & Iniciar Trial (7 Dias)</button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Tabela Empresas -->
+            <div class="bg-cardbg border border-slate-800 rounded-xl overflow-hidden shadow-sm">
+                <div class="p-4 border-b border-slate-800 bg-slate-900/50">
+                    <input type="text" placeholder="Pesquisar por nome ou CNPJ..." class="bg-slate-900 border border-slate-700 text-xs rounded-lg px-3 py-2 text-white w-80">
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse text-sm">
+                        <thead>
+                            <tr class="bg-slate-900 text-slate-400 uppercase text-[10px] tracking-wider border-b border-slate-800">
+                                <th class="p-4">Empresa / Razão Social</th>
+                                <th class="p-4">CNPJ</th>
+                                <th class="p-4">Vencimento / Trial</th>
+                                <th class="p-4">Status</th>
+                                <th class="p-4 text-right">Ações Master</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-800">
+                            <tr class="hover:bg-slate-900/40 transition">
+                                <td class="p-4 font-semibold text-white">Comercial Exemplo LTDA<br><span class="text-xs font-normal text-slate-400">Loja Matriz</span></td>
+                                <td class="p-4 text-slate-300">12.345.678/0001-99</td>
+                                <td class="p-4 text-slate-300">Vencimento Dia 10<br><span class="text-xs text-amber-400">TRIAL (2 dias restantes)</span></td>
+                                <td class="p-4"><span class="px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">ACTIVE</span></td>
+                                <td class="p-4 text-right space-x-1">
+                                    <button onclick="carimbarPagamento('Comercial Exemplo LTDA')" class="p-2 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 rounded transition" title="Carimbar Pagamento"><i class="ph ph-seal-check text-lg"></i></button>
+                                    <button onclick="abrirModalPix(1)" class="p-2 bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 rounded transition" title="Configurar PIX"><i class="ph ph-qr-code text-lg"></i></button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= SEÇÃO: FINANCEIRO ================= -->
+        <section id="sec-financeiro" class="page-section space-y-6 hidden">
+            <h1 class="text-2xl font-bold flex items-center gap-2 text-white"><i class="ph-duotone ph-wallet text-accent"></i> Módulo Financeiro & Cobranças</h1>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div class="bg-cardbg border border-slate-800 p-5 rounded-xl border-l-4 border-l-blue-500">
+                    <span class="text-xs text-slate-400 font-semibold uppercase">Receita Prevista</span>
+                    <h3 class="text-xl font-bold text-white mt-2">R$ 3.500,00</h3>
+                </div>
+                <div class="bg-cardbg border border-slate-800 p-5 rounded-xl border-l-4 border-l-emerald-500">
+                    <span class="text-xs text-slate-400 font-semibold uppercase">Recebido no Mês</span>
+                    <h3 class="text-xl font-bold text-emerald-400 mt-2">R$ 2.450,00</h3>
+                </div>
+                <div class="bg-cardbg border border-slate-800 p-5 rounded-xl border-l-4 border-l-red-500">
+                    <span class="text-xs text-slate-400 font-semibold uppercase">Inadimplência / Vencido</span>
+                    <h3 class="text-xl font-bold text-red-400 mt-2">R$ 300,00</h3>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= SEÇÃO: CONTRATOS ================= -->
+        <section id="sec-contratos" class="page-section space-y-6 hidden">
+            <h1 class="text-2xl font-bold flex items-center gap-2 text-white"><i class="ph-duotone ph-file-contract text-accent"></i> Gestão de Contratos e LGPD</h1>
+            <div class="bg-cardbg border border-slate-800 rounded-xl p-6 space-y-4">
+                <h3 class="text-base font-bold text-white">Termos de Uso e Versão Ativa</h3>
+                <p class="text-xs text-slate-400">Gerencie os termos contratuais aceitos obrigatoriamente pelos tenants.</p>
+                <div class="p-4 bg-slate-900 border border-slate-700 rounded-lg text-xs font-mono text-slate-300">
+                    Versão Atual: v1.2-2026 | Status: Ativo
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= SEÇÃO: HELPDESK ================= -->
+        <section id="sec-helpdesk" class="page-section space-y-6 hidden">
+            <h1 class="text-2xl font-bold flex items-center gap-2 text-white"><i class="ph-duotone ph-headset text-accent"></i> Central de Suporte & Chamados</h1>
+            <div class="bg-cardbg border border-slate-800 rounded-xl overflow-hidden shadow-sm">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse text-sm">
+                        <thead>
+                            <tr class="bg-slate-900 text-slate-400 uppercase text-[10px] tracking-wider border-b border-slate-800">
+                                <th class="p-4">Empresa / Data</th>
+                                <th class="p-4">Resumo do Problema</th>
+                                <th class="p-4">Status</th>
+                                <th class="p-4 text-right">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-800">
+                            <tr class="hover:bg-slate-900/40 transition">
+                                <td class="p-4 text-white font-medium">Comercial Exemplo<br><span class="text-xs text-slate-400">29/09/2026</span></td>
+                                <td class="p-4 text-slate-300 text-xs max-w-xs">Dúvida sobre alteração de banner na frente de loja.</td>
+                                <td class="p-4"><span class="px-2.5 py-1 rounded-full text-xs font-bold bg-blue-500/10 text-blue-400 border border-blue-500/20">OPEN</span></td>
+                                <td class="p-4 text-right">
+                                    <button onclick="alert('Atendendo chamado')" class="text-xs bg-slate-800 hover:bg-slate-700 text-white px-3 py-1.5 rounded transition">Atender</button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= SEÇÃO: AUDITORIA ================= -->
+        <section id="sec-auditoria" class="page-section space-y-6 hidden">
+            <h1 class="text-2xl font-bold flex items-center gap-2 text-white"><i class="ph-duotone ph-shield-check text-accent"></i> Logs de Auditoria do Sistema</h1>
+            <div class="bg-cardbg border border-slate-800 rounded-xl p-6 text-center text-xs text-slate-500">
+                Nenhum evento crítico recente registrado na sessão atual.
+            </div>
+        </section>
+
+        <!-- ================= SEÇÃO: CONFIGURAÇÕES ================= -->
+        <section id="sec-configuracoes" class="page-section space-y-6 hidden">
+            <h1 class="text-2xl font-bold flex items-center gap-2 text-white"><i class="ph-duotone ph-gear text-accent"></i> Configurações do Sistema</h1>
+            <div class="bg-cardbg border border-slate-800 rounded-xl p-6 max-w-xl space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Versão do Módulo</label>
+                    <input type="text" disabled value="ShopinVigia Master v1.0.0 (Front-end Consolidado)" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-2.5 text-slate-400 text-sm">
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- MODAL CONFIGURAÇÃO PIX -->
+    <div class="modal-overlay" id="modalPixMaster">
+        <div class="bg-cardbg border border-slate-700 rounded-xl p-6 max-w-md w-full shadow-2xl">
+            <div class="flex justify-between items-center mb-4 border-b border-slate-800 pb-3">
+                <h3 class="text-base font-bold text-white flex items-center gap-2"><i class="ph ph-qr-code text-amber-400"></i> Configurar Fatura e PIX</h3>
+                <button onclick="closeModal('modalPixMaster')" class="text-slate-400 hover:text-white"><i class="ph ph-x text-xl"></i></button>
+            </div>
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-400 mb-1">Código PIX (Copia e Cola)</label>
+                    <textarea rows="3" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-xs text-white font-mono" placeholder="0002012658..."></textarea>
+                </div>
+            </div>
+            <div class="flex justify-end gap-2 mt-6">
+                <button onclick="closeModal('modalPixMaster')" class="px-4 py-2 bg-slate-800 text-slate-300 rounded-lg text-xs">Cancelar</button>
+                <button onclick="alert('PIX configurado com sucesso!'); closeModal('modalPixMaster')" class="px-4 py-2 bg-accent text-white rounded-lg text-xs font-semibold">Salvar & Enviar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- SCRIPT DE NAVEGAÇÃO E CONTROLE LOCAL -->
+    <script>
+        function simularLogin(e) {
+            e.preventDefault();
+            document.getElementById('auth-modal').classList.add('hidden');
+        }
+
+        function fazerLogout() {
+            document.getElementById('auth-modal').classList.remove('hidden');
+        }
+
+        function navigate(secId, el) {
+            document.querySelectorAll('.page-section').forEach(s => s.classList.add('hidden'));
+            document.getElementById(`sec-${secId}`).classList.remove('hidden');
+            document.querySelectorAll('aside ul a').forEach(a => {
+                a.classList.remove('bg-accent', 'text-white');
+                a.classList.add('text-slate-400', 'hover:bg-slate-800', 'hover:text-white');
+            });
+            if (el) {
+                el.classList.add('bg-accent', 'text-white');
+                el.classList.remove('text-slate-400', 'hover:bg-slate-800');
+            }
+        }
+
+        function toggleCadastroForm() {
+            document.getElementById('card-novo-cliente').classList.toggle('hidden');
+        }
+
+        function cadastrarEmpresa(e) {
+            e.preventDefault();
+            alert("Empresa cadastrada com sucesso! Período de avaliação iniciado.");
+            toggleCadastroForm();
+        }
+
+        function abrirModalPix(id) {
+            openModal('modalPixMaster');
+        }
+
+        function carimbarPagamento(nome) {
+            if(confirm(`Confirmar quitação mensal da empresa "${nome}"?`)) {
+                alert("Pagamento carimbado com sucesso!");
+            }
+        }
+
+        function openModal(id) { document.getElementById(id).classList.add('active'); }
+        function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+    </script>
+</body>
+</html>

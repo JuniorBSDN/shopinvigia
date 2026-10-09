@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ShopinVigia — Painel MASTER</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        lightbg: '#f8fafc',
+                        cardbg: '#ffffff',
+                        gold: '#d4af37',
+                        goldhover: '#c5a028',
+                        blacktext: '#09090b',
+                        mutedblack: '#27272a'
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Phosphor Icons -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <style>
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(2px); z-index: 2000; display: flex; justify-content: center; align-items: center; opacity: 0; visibility: hidden; transition: all 0.2s ease-in-out; }
+        .modal-overlay.active { opacity: 1; visibility: visible; }
+
+        /* Rolagem suave na página */
+        html { scroll-behavior: smooth; }
+        body { background-color: #f8fafc; color: #09090b; font-weight: 400; }
+
+        /* Efeitos e transições nos botões */
+        .btn-effect {
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .btn-effect:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(212, 175, 55, 0.25);
+        }
+        .btn-effect:active {
+            transform: scale(0.95);
+        }
+
+        /* Menu hambúrguer mobile */
+        #sidebar { transition: transform 0.3s ease-in-out; }
+        @media(max-width: 1024px) {
+            #sidebar { transform: translateX(-100%); }
+            #sidebar.open { transform: translateX(0); }
+        }
+
+        @media print {
+            body * { visibility: hidden; }
+            #printable-area, #printable-area * { visibility: visible; }
+            #printable-area { position: absolute; left: 0; top: 0; width: 100%; background: white !important; color: black !important; }
+            .no-print { display: none !important; }
+        }
+    </style>
+</head>
+<body class="bg-lightbg text-blacktext font-sans antialiased min-h-screen flex flex-col lg:flex-row">
+
+    <!-- BOTÃO HAMBÚRGUER MOBILE (Android, Totens e PDV's) -->
+    <div class="lg:hidden flex items-center justify-between bg-cardbg border-b border-slate-200 p-4 sticky top-0 z-50 shadow-sm no-print">
+        <span class="text-xl font-black tracking-wider text-blacktext">SHOP<span class="text-gold">INVIGIA</span></span>
+        <button onclick="toggleSidebar()" class="p-2 text-blacktext hover:text-gold transition focus:outline-none">
+            <i class="ph ph-list text-2xl"></i>
+        </button>
+    </div>
+
+    <!-- SIDEBAR / MENU HAMBÚRGUER -->
+    <aside id="sidebar" class="w-64 bg-cardbg border-r border-slate-200 flex flex-col fixed inset-y-0 z-40 shadow-sm lg:translate-x-0">
+        <div class="h-24 flex flex-col items-center justify-center border-b border-slate-100 bg-slate-50">
+            <span class="text-2xl font-black tracking-widest text-blacktext">SHOP<span class="text-gold font-bold">INVIGIA</span></span>
+            <span class="text-[9px] bg-gold/10 text-gold font-bold tracking-wider uppercase px-2.5 py-0.5 rounded-full mt-1 border border-gold/20">Master Global</span>
+        </div>
+        <ul class="flex-1 p-4 space-y-1.5 overflow-y-auto">
+            <li><a class="nav-link flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold text-white bg-gold cursor-pointer shadow-sm btn-effect" onclick="navigate('empresas', this)"><i class="ph ph-buildings text-xl"></i> Clientes / Empresas</a></li>
+            <li><a class="nav-link flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-mutedblack hover:bg-slate-100 hover:text-blacktext cursor-pointer transition btn-effect" onclick="navigate('financeiro', this)"><i class="ph ph-wallet text-xl"></i> Financeiro</a></li>
+            <li><a class="nav-link flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-mutedblack hover:bg-slate-100 hover:text-blacktext cursor-pointer transition btn-effect" onclick="navigate('helpdesk', this)"><i class="ph ph-headset text-xl"></i> Helpdesk</a></li>
+        </ul>
+        <div class="p-4 border-t border-slate-100 bg-slate-50">
+            <button onclick="alert('Sessão encerrada com segurança.')" class="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium text-red-600 hover:bg-red-50 transition btn-effect">
+                <i class="ph ph-sign-out text-xl"></i> Sair do Master
+            </button>
+        </div>
+    </aside>
+
+    <!-- MAIN CONTAINER -->
+    <main class="flex-1 lg:ml-64 flex flex-col h-screen overflow-y-auto p-6 lg:p-10 space-y-8" id="printable-area">
+
+        <!-- ================= 1. CLIENTES / EMPRESAS ================= -->
+        <section id="sec-empresas" class="page-section space-y-6">
+            <div class="flex justify-between items-center flex-wrap gap-4 no-print">
+                <h1 class="text-2xl font-black tracking-wide flex items-center gap-2 text-blacktext"><i class="ph-duotone ph-buildings text-gold text-3xl"></i> Gestão de Clientes e Empresas</h1>
+
+                <!-- Indicador de Uso do Banco de Dados -->
+                <div class="bg-cardbg border border-slate-200 px-4 py-2.5 rounded-2xl flex items-center gap-3 shadow-xs">
+                    <i class="ph ph-hard-drives text-gold text-xl"></i>
+                    <div>
+                        <p class="text-[9px] uppercase font-bold tracking-wider text-mutedblack">Uso do Banco de Dados</p>
+                        <p class="text-xs font-bold text-blacktext">1.4 GB / 10 GB (14%)</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Filtros de Busca e Ações -->
+            <div class="bg-cardbg border border-slate-200 rounded-2xl p-5 shadow-xs no-print space-y-3">
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+                    <input type="text" id="filtro-busca" onkeyup="filtrarEmpresas()" placeholder="Buscar por ID, Nome ou CNPJ..." class="bg-slate-50 border border-slate-200 text-xs font-medium rounded-xl px-4 py-3 text-blacktext focus:outline-none focus:border-gold transition">
+                    <select id="filtro-status" onchange="filtrarEmpresas()" class="bg-slate-50 border border-slate-200 text-xs font-medium rounded-xl px-4 py-3 text-blacktext focus:outline-none focus:border-gold transition">
+                        <option value="">Todos os Status</option>
+                        <option value="ATIVO">ATIVO</option>
+                        <option value="VENCIDO">VENCIDO</option>
+                        <option value="BLOQUEADO">BLOQUEADO</option>
+                    </select>
+                    <input type="date" id="filtro-data" onchange="filtrarEmpresas()" class="bg-slate-50 border border-slate-200 text-xs font-medium rounded-xl px-4 py-3 text-blacktext focus:outline-none focus:border-gold transition">
+                    <input type="month" id="filtro-mes" onchange="filtrarEmpresas()" class="bg-slate-50 border border-slate-200 text-xs font-medium rounded-xl px-4 py-3 text-blacktext focus:outline-none focus:border-gold transition">
+                    <button onclick="window.print()" class="bg-blacktext hover:bg-slate-800 text-white text-xs font-bold px-4 py-3 rounded-xl transition flex items-center justify-center gap-2 shadow-xs btn-effect"><i class="ph ph-printer text-base text-gold"></i> Imprimir Resultados</button>
+                </div>
+            </div>
+
+            <!-- Tabela de Clientes / Empresas -->
+            <div class="bg-cardbg border border-slate-200 rounded-2xl overflow-hidden shadow-xs">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse text-sm">
+                        <thead>
+                            <tr class="bg-slate-50 text-mutedblack uppercase text-[10px] tracking-widest border-b border-slate-200 font-bold">
+                                <th class="p-4">ID</th>
+                                <th class="p-4">Nome / Cliente / Empresa</th>
+                                <th class="p-4">Plano</th>
+                                <th class="p-4">Data de Vencimento</th>
+                                <th class="p-4">Status</th>
+                                <th class="p-4 text-right no-print">Ações de Controle</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabela-empresas" class="divide-y divide-slate-100 font-medium">
+                            <!-- Preenchido via JS -->
+                        </tbody>
+                    </table>
+                </div>
+                <!-- Paginação -->
+                <div class="p-4 bg-slate-50 border-t border-slate-200 flex justify-between items-center text-xs text-mutedblack no-print font-bold">
+                    <span>Mostrando registros 1 a 3 de 3</span>
+                    <div class="flex gap-1">
+                        <button class="px-3 py-1.5 bg-slate-200 rounded-lg text-blacktext disabled:opacity-50 btn-effect">Anterior</button>
+                        <button class="px-3 py-1.5 bg-gold rounded-lg text-white font-bold btn-effect">1</button>
+                        <button class="px-3 py-1.5 bg-slate-200 rounded-lg text-blacktext btn-effect">Próxima</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= 2. FINANCEIRO ================= -->
+        <section id="sec-financeiro" class="page-section space-y-6 hidden">
+            <h1 class="text-2xl font-black tracking-wide flex items-center gap-2 text-blacktext"><i class="ph-duotone ph-wallet text-gold text-3xl"></i> Módulo Financeiro Global</h1>
+
+            <!-- Indicadores -->
+            <div class="grid grid-cols-1 sm:grid-cols-4 gap-4">
+                <div class="bg-cardbg border border-slate-200 p-5 rounded-2xl border-l-4 border-l-blue-500 shadow-xs">
+                    <span class="text-[10px] uppercase font-bold tracking-wider text-mutedblack">Faturamento Total</span>
+                    <h3 class="text-2xl font-black text-blacktext mt-1">R$ 5.850,00</h3>
+                </div>
+                <div class="bg-cardbg border border-slate-200 p-5 rounded-2xl border-l-4 border-l-emerald-600 shadow-xs">
+                    <span class="text-[10px] uppercase font-bold tracking-wider text-mutedblack">Recebido no Período</span>
+                    <h3 class="text-2xl font-black text-emerald-700 mt-1">R$ 4.350,00</h3>
+                </div>
+                <div class="bg-cardbg border border-slate-200 p-5 rounded-2xl border-l-4 border-l-amber-500 shadow-xs">
+                    <span class="text-[10px] uppercase font-bold tracking-wider text-mutedblack">Valores a Vencer</span>
+                    <h3 class="text-2xl font-black text-amber-700 mt-1">R$ 1.200,00</h3>
+                </div>
+                <div class="bg-cardbg border border-slate-200 p-5 rounded-2xl border-l-4 border-l-red-600 shadow-xs">
+                    <span class="text-[10px] uppercase font-bold tracking-wider text-mutedblack">Valores Vencidos</span>
+                    <h3 class="text-2xl font-black text-red-700 mt-1">R$ 300,00</h3>
+                </div>
+            </div>
+
+            <!-- Gráfico / Filtro por Período -->
+            <div class="bg-cardbg border border-slate-200 p-6 rounded-2xl space-y-4 shadow-xs">
+                <div class="flex justify-between items-center flex-wrap gap-3">
+                    <h3 class="text-sm font-black tracking-wide text-blacktext flex items-center gap-2"><i class="ph ph-chart-bar text-gold text-lg"></i> Visualização de Faturamento</h3>
+                    <div class="flex gap-1 bg-slate-100 p-1 rounded-xl border border-slate-200 text-xs font-bold">
+                        <button onclick="mudarPeriodoGrafico('dia', this)" class="px-3 py-1.5 rounded-lg bg-gold text-white font-bold transition shadow-xs btn-effect">Dia</button>
+                        <button onclick="mudarPeriodoGrafico('semana', this)" class="px-3 py-1.5 rounded-lg text-mutedblack hover:text-blacktext transition btn-effect">Semana</button>
+                        <button onclick="mudarPeriodoGrafico('mes', this)" class="px-3 py-1.5 rounded-lg text-mutedblack hover:text-blacktext transition btn-effect">Mês</button>
+                    </div>
+                </div>
+                <div class="h-48 bg-slate-50 rounded-xl border border-slate-200 flex items-end justify-around p-4">
+                    <div class="w-12 bg-gold hover:bg-goldhover rounded-t-lg flex flex-col justify-end items-center pb-2 text-[10px] font-bold text-white h-[60%] transition-all">R$ 450</div>
+                    <div class="w-12 bg-gold hover:bg-goldhover rounded-t-lg flex flex-col justify-end items-center pb-2 text-[10px] font-bold text-white h-[85%] transition-all">R$ 890</div>
+                    <div class="w-12 bg-gold hover:bg-goldhover rounded-t-lg flex flex-col justify-end items-center pb-2 text-[10px] font-bold text-white h-[40%] transition-all">R$ 320</div>
+                    <div class="w-12 bg-gold hover:bg-goldhover rounded-t-lg flex flex-col justify-end items-center pb-2 text-[10px] font-bold text-white h-[95%] transition-all">R$ 980</div>
+                    <div class="w-12 bg-gold hover:bg-goldhover rounded-t-lg flex flex-col justify-end items-center pb-2 text-[10px] font-bold text-white h-[70%] transition-all">R$ 710</div>
+                </div>
+            </div>
+
+            <!-- Notificações Financeiras -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                <div class="bg-cardbg border border-slate-200 p-5 rounded-2xl shadow-xs">
+                    <h4 class="text-xs font-black text-amber-700 uppercase tracking-wider mb-3 flex items-center gap-1.5"><i class="ph ph-clock text-base"></i> A Vencer (Próximos dias)</h4>
+                    <ul class="space-y-2 text-xs font-bold text-blacktext">
+                        <li class="flex justify-between bg-slate-50 p-3 rounded-xl border border-slate-100"><span>Burguer Master</span><strong class="text-amber-700">10/10/2026</strong></li>
+                    </ul>
+                </div>
+                <div class="bg-cardbg border border-slate-200 p-5 rounded-2xl shadow-xs">
+                    <h4 class="text-xs font-black text-red-700 uppercase tracking-wider mb-3 flex items-center gap-1.5"><i class="ph ph-warning text-base"></i> Vencidos</h4>
+                    <ul class="space-y-2 text-xs font-bold text-blacktext">
+                        <li class="flex justify-between bg-slate-50 p-3 rounded-xl border border-slate-100"><span>Pizzaria Bella</span><strong class="text-red-700">01/10/2026</strong></li>
+                    </ul>
+                </div>
+                <div class="bg-cardbg border border-slate-200 p-5 rounded-2xl shadow-xs">
+                    <h4 class="text-xs font-black text-slate-700 uppercase tracking-wider mb-3 flex items-center gap-1.5"><i class="ph ph-lock-key text-base"></i> Bloqueados</h4>
+                    <ul class="space-y-2 text-xs font-bold text-blacktext">
+                        <li class="flex justify-between bg-slate-50 p-3 rounded-xl border border-slate-100"><span>Açaí do Pará</span><strong class="text-slate-700">Desde 25/09</strong></li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Configuração Fixa do PIX -->
+            <div class="bg-cardbg border border-slate-200 rounded-2xl p-6 space-y-4 shadow-xs">
+                <h3 class="text-sm font-black tracking-wide text-blacktext flex items-center gap-2"><i class="ph ph-qr-code text-gold text-lg"></i> Configuração Fixa do PIX (Master)</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-mutedblack mb-1.5">Chave PIX da Plataforma</label>
+                        <input type="text" id="pix-chave" value="financeiro@shopinvigia.com.br" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-xs font-bold text-blacktext focus:outline-none focus:border-gold transition">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-mutedblack mb-1.5">Upload QR Code (Imagem)</label>
+                        <input type="file" id="pix-arquivo" accept="image/*" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2 text-xs text-mutedblack">
+                    </div>
+                </div>
+                <div class="flex justify-end">
+                    <button onclick="alert('Configuração fixa do PIX salva com sucesso!')" class="bg-gold hover:bg-goldhover text-white text-xs font-bold px-5 py-3 rounded-xl transition shadow-xs flex items-center gap-2 btn-effect"><i class="ph ph-floppy-disk text-base"></i> Salvar Configuração PIX</button>
+                </div>
+            </div>
+
+            <!-- Tabela de Clientes com Ação Financeira (Anexar NF) -->
+            <div class="bg-cardbg border border-slate-200 rounded-2xl overflow-hidden shadow-xs">
+                <div class="p-4 border-b border-slate-200 bg-slate-50">
+                    <h3 class="text-xs font-black uppercase tracking-wider text-mutedblack">Associação de Notas Fiscais e Histórico Financeiro</h3>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse text-sm">
+                        <thead>
+                            <tr class="bg-slate-50 text-mutedblack uppercase text-[10px] tracking-widest border-b border-slate-200 font-bold">
+                                <th class="p-4">Cliente / Empresa</th>
+                                <th class="p-4">Plano</th>
+                                <th class="p-4">Vencimento</th>
+                                <th class="p-4">Status</th>
+                                <th class="p-4 text-right">Ação Financeira (Anexar NF)</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100 font-medium">
+                            <tr class="hover:bg-slate-50/80 transition">
+                                <td class="p-4 font-bold text-blacktext">Comercial Exemplo LTDA</td>
+                                <td class="p-4 text-mutedblack text-xs">Plano Pro</td>
+                                <td class="p-4 text-mutedblack text-xs">10/10/2026</td>
+                                <td class="p-4"><span class="px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800">ATIVO</span></td>
+                                <td class="p-4 text-right">
+                                    <button onclick="abrirModalAnexarNF('Comercial Exemplo LTDA')" class="text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white px-3.5 py-2 rounded-xl transition shadow-xs flex items-center gap-1.5 ml-auto btn-effect"><i class="ph ph-paperclip"></i> Anexar NF & Histórico</button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= 3. HELPDESK ================= -->
+        <section id="sec-helpdesk" class="page-section space-y-6 hidden">
+            <h1 class="text-2xl font-black tracking-wide flex items-center gap-2 text-blacktext"><i class="ph-duotone ph-headset text-gold text-3xl"></i> Central de Suporte & Helpdesk</h1>
+
+            <!-- Indicadores -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+                <div class="bg-cardbg border border-slate-200 p-4 rounded-2xl border-l-4 border-l-blue-500 text-center shadow-xs">
+                    <span class="text-[9px] uppercase font-bold tracking-wider text-mutedblack">Abertos</span>
+                    <h3 class="text-xl font-black text-blacktext mt-1">2</h3>
+                </div>
+                <div class="bg-cardbg border border-slate-200 p-4 rounded-2xl border-l-4 border-l-amber-500 text-center shadow-xs">
+                    <span class="text-[9px] uppercase font-bold tracking-wider text-mutedblack">Em Atendimento</span>
+                    <h3 class="text-xl font-black text-amber-700 mt-1">1</h3>
+                </div>
+                <div class="bg-cardbg border border-slate-200 p-4 rounded-2xl border-l-4 border-l-purple-500 text-center shadow-xs">
+                    <span class="text-[9px] uppercase font-bold tracking-wider text-mutedblack">Pendentes</span>
+                    <h3 class="text-xl font-black text-purple-700 mt-1">0</h3>
+                </div>
+                <div class="bg-cardbg border border-slate-200 p-4 rounded-2xl border-l-4 border-l-emerald-600 text-center shadow-xs">
+                    <span class="text-[9px] uppercase font-bold tracking-wider text-mutedblack">Resolvidos</span>
+                    <h3 class="text-xl font-black text-emerald-700 mt-1">14</h3>
+                </div>
+                <div class="bg-cardbg border border-slate-200 p-4 rounded-2xl border-l-4 border-l-gold text-center shadow-xs">
+                    <span class="text-[9px] uppercase font-bold tracking-wider text-mutedblack">Tempo Médio</span>
+                    <h3 class="text-xl font-black text-gold mt-1">38 min</h3>
+                </div>
+            </div>
+
+            <!-- Busca e Impressão -->
+            <div class="bg-cardbg border border-slate-200 rounded-2xl p-4 shadow-xs no-print flex justify-between items-center flex-wrap gap-3">
+                <input type="text" id="filtro-hd" placeholder="Buscar por ID ou nome do cliente..." class="bg-slate-50 border border-slate-200 text-xs font-bold rounded-xl px-4 py-3 text-blacktext focus:outline-none focus:border-gold transition w-80">
+                <button onclick="window.print()" class="bg-blacktext hover:bg-slate-800 text-white text-xs font-bold px-4 py-3 rounded-xl transition flex items-center gap-2 shadow-xs btn-effect"><i class="ph ph-printer text-gold"></i> Imprimir Chamados</button>
+            </div>
+
+            <!-- Tabela de Chamados -->
+            <div class="bg-cardbg border border-slate-200 rounded-2xl overflow-hidden shadow-xs">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse text-sm">
+                        <thead>
+                            <tr class="bg-slate-50 text-mutedblack uppercase text-[10px] tracking-widest border-b border-slate-200 font-bold">
+                                <th class="p-4">ID</th>
+                                <th class="p-4">Cliente / Empresa</th>
+                                <th class="p-4">Resumo do Problema</th>
+                                <th class="p-4">Status do Atendimento</th>
+                                <th class="p-4 text-right no-print">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100 font-medium">
+                            <tr class="hover:bg-slate-50/80 transition">
+                                <td class="p-4 font-mono text-xs font-bold text-mutedblack">#CH-1024</td>
+                                <td class="p-4 font-bold text-blacktext">Comercial Exemplo LTDA</td>
+                                <td class="p-4 text-mutedblack text-xs max-w-xs">Dúvida sobre configuração da frente de loja pública.</td>
+                                <td class="p-4"><span class="px-2.5 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-800">EM ATENDIMENTO</span></td>
+                                <td class="p-4 text-right no-print space-x-1">
+                                    <button onclick="alert('Visualizar detalhes do chamado #CH-1024')" class="p-2 bg-slate-100 hover:bg-slate-200 text-blacktext rounded-xl transition btn-effect" title="Visualizar"><i class="ph ph-eye"></i></button>
+                                    <button onclick="alert('Concluir chamado')" class="p-2 bg-emerald-100 hover:bg-emerald-200 text-emerald-800 rounded-xl transition btn-effect" title="Concluir"><i class="ph ph-check"></i></button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- MODAL: VISUALIZAR CLIENTE -->
+    <div class="modal-overlay" id="modalCliente">
+        <div class="bg-cardbg border border-slate-200 rounded-2xl p-6 max-w-lg w-full shadow-xl">
+            <div class="flex justify-between items-center mb-4 border-b border-slate-100 pb-3">
+                <h3 class="text-base font-black text-blacktext flex items-center gap-2"><i class="ph ph-buildings text-gold text-xl"></i> Detalhes do Cliente / Empresa</h3>
+                <button onclick="closeModal('modalCliente')" class="text-mutedblack hover:text-blacktext"><i class="ph ph-x text-xl"></i></button>
+            </div>
+            <div class="space-y-3 text-sm font-bold text-mutedblack">
+                <p>ID: <span id="modal-cli-id" class="text-blacktext font-black">--</span></p>
+                <p>Nome/Empresa: <span id="modal-cli-nome" class="text-blacktext font-black">--</span></p>
+                <p>Plano: <span id="modal-cli-plano" class="text-blacktext font-black">--</span></p>
+                <p>Vencimento: <span id="modal-cli-venc" class="text-blacktext font-black">--</span></p>
+                <p>Status Atual: <span id="modal-cli-status" class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800">ATIVO</span></p>
+            </div>
+            <div class="flex justify-end gap-2 mt-6">
+                <button onclick="closeModal('modalCliente')" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-blacktext rounded-xl text-xs font-bold btn-effect">Fechar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: ANEXAR NF -->
+    <div class="modal-overlay" id="modalNF">
+        <div class="bg-cardbg border border-slate-200 rounded-2xl p-6 max-w-md w-full shadow-xl">
+            <div class="flex justify-between items-center mb-4 border-b border-slate-100 pb-3">
+                <h3 class="text-base font-black text-blacktext flex items-center gap-2"><i class="ph ph-paperclip text-emerald-600 text-xl"></i> Anexar Nota Fiscal / Comprovante</h3>
+                <button onclick="closeModal('modalNF')" class="text-mutedblack hover:text-blacktext"><i class="ph ph-x text-xl"></i></button>
+            </div>
+            <div class="space-y-4 font-bold">
+                <p class="text-xs text-mutedblack">Cliente: <strong id="nf-cliente-nome" class="text-blacktext font-black">--</strong></p>
+                <div>
+                    <label class="block text-xs font-bold text-mutedblack mb-1.5">Selecionar Arquivo da NF / Recibo</label>
+                    <input type="file" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2 text-xs text-mutedblack">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-mutedblack mb-1.5">Observação do Histórico Financeiro</label>
+                    <textarea rows="3" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs font-bold text-blacktext focus:outline-none focus:border-gold transition" placeholder="Ex: Pagamento confirmado via Pix em lote..."></textarea>
+                </div>
+            </div>
+            <div class="flex justify-end gap-2 mt-6">
+                <button onclick="closeModal('modalNF')" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-blacktext rounded-xl text-xs font-bold btn-effect">Cancelar</button>
+                <button onclick="alert('Nota Fiscal anexada e associada ao histórico com sucesso!'); closeModal('modalNF')" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-xs btn-effect">Salvar & Associar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- SCRIPT -->
+    <script>
+        let empresasData = [
+            { id: 'EMP-001', nome: 'Comercial Exemplo LTDA', plano: 'Plano Pro (R$ 59,90)', vencimento: '10/10/2026', status: 'ATIVO', email: 'contato@comercialexemplo.com.br' },
+            { id: 'EMP-002', nome: 'Pizzaria Bella', plano: 'Plano Básico (R$ 29,90)', vencimento: '01/10/2026', status: 'VENCIDO', email: 'pedidos@pizzariabella.com.br' },
+            { id: 'EMP-003', nome: 'Açaí do Pará', plano: 'Plano Enterprise (R$ 119,90)', vencimento: '25/09/2026', status: 'BLOQUEADO', email: 'gerencia@acaidopara.com.br' }
+        ];
+
+        window.onload = function() {
+            renderizarTabelaEmpresas(empresasData);
+        };
+
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            sidebar.classList.toggle('open');
+        }
+
+        function navigate(secId, el) {
+            document.querySelectorAll('.page-section').forEach(s => s.classList.add('hidden'));
+            document.getElementById(`sec-${secId}`).classList.remove('hidden');
+            document.querySelectorAll('aside ul a').forEach(a => {
+                a.classList.remove('bg-gold', 'text-white', 'shadow-sm', 'font-bold');
+                a.classList.add('text-mutedblack', 'hover:bg-slate-100', 'hover:text-blacktext', 'font-medium');
+            });
+            if (el) {
+                el.classList.add('bg-gold', 'text-white', 'shadow-sm', 'font-bold');
+                el.classList.remove('text-mutedblack', 'hover:bg-slate-100', 'font-medium');
+            }
+            document.getElementById('sidebar').classList.remove('open');
+        }
+
+        function renderizarTabelaEmpresas(lista) {
+            const tbody = document.getElementById('tabela-empresas');
+            tbody.innerHTML = '';
+
+            if (lista.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" class="p-6 text-center text-mutedblack font-bold">Nenhum cliente encontrado.</td></tr>';
+                return;
+            }
+
+            lista.forEach(emp => {
+                let badgeColor = 'bg-emerald-100 text-emerald-800';
+                if (emp.status === 'VENCIDO') badgeColor = 'bg-amber-100 text-amber-800';
+                if (emp.status === 'BLOQUEADO') badgeColor = 'bg-red-100 text-red-800';
+
+                tbody.innerHTML += `
+                    <tr class="hover:bg-slate-50/80 transition">
+                        <td class="p-4 font-mono text-xs font-bold text-mutedblack">${emp.id}</td>
+                        <td class="p-4 font-black text-blacktext">${emp.nome}</td>
+                        <td class="p-4 text-mutedblack text-xs font-bold">${emp.plano}</td>
+                        <td class="p-4 text-mutedblack text-xs font-bold">${emp.vencimento}</td>
+                        <td class="p-4"><span class="px-2.5 py-1 rounded-full text-xs font-black ${badgeColor}">${emp.status}</span></td>
+                        <td class="p-4 text-right space-x-1 no-print">
+                            <button onclick="acaoVisualizar('${emp.id}')" class="p-2 bg-slate-100 hover:bg-slate-200 text-blacktext rounded-xl transition btn-effect" title="Visualizar"><i class="ph ph-eye"></i></button>
+                            <button onclick="acaoAtivar('${emp.id}')" class="p-2 bg-emerald-100 hover:bg-emerald-200 text-emerald-800 rounded-xl transition btn-effect" title="Ativar"><i class="ph ph-check"></i></button>
+                            <button onclick="acaoBloquear('${emp.id}')" class="p-2 bg-red-100 hover:bg-red-200 text-red-800 rounded-xl transition btn-effect" title="Bloquear"><i class="ph ph-lock-key"></i></button>
+                            <button onclick="acaoContrato('${emp.nome}')" class="p-2 bg-blue-100 hover:bg-blue-200 text-blue-800 rounded-xl transition btn-effect" title="Emitir Contrato"><i class="ph ph-file-contract"></i></button>
+                            <button onclick="acaoExcluir('${emp.id}')" class="p-2 bg-slate-100 hover:bg-red-100 text-mutedblack hover:text-red-700 rounded-xl transition btn-effect" title="Excluir"><i class="ph ph-trash"></i></button>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        function filtrarEmpresas() {
+            const termo = document.getElementById('filtro-busca').value.toLowerCase();
+            const statusFiltro = document.getElementById('filtro-status').value;
+
+            const filtrados = empresasData.filter(emp => {
+                const matchTermo = emp.nome.toLowerCase().includes(termo) || emp.id.toLowerCase().includes(termo);
+                const matchStatus = statusFiltro ? emp.status === statusFiltro : true;
+                return matchTermo && matchStatus;
+            });
+
+            renderizarTabelaEmpresas(filtrados);
+        }
+
+        function acaoVisualizar(id) {
+            const emp = empresasData.find(e => e.id === id);
+            if (!emp) return;
+            document.getElementById('modal-cli-id').innerText = emp.id;
+            document.getElementById('modal-cli-nome').innerText = emp.nome;
+            document.getElementById('modal-cli-plano').innerText = emp.plano;
+            document.getElementById('modal-cli-venc').innerText = emp.vencimento;
+            document.getElementById('modal-cli-status').innerText = emp.status;
+            openModal('modalCliente');
+        }
+
+        function acaoAtivar(id) {
+            const emp = empresasData.find(e => e.id === id);
+            if (emp) {
+                emp.status = 'ATIVO';
+                renderizarTabelaEmpresas(empresasData);
+                alert(`Cliente ${emp.nome} ativado com sucesso após conferência de pagamento!`);
+            }
+        }
+
+        function acaoBloquear(id) {
+            const emp = empresasData.find(e => e.id === id);
+            if (emp) {
+                emp.status = 'BLOQUEADO';
+                renderizarTabelaEmpresas(empresasData);
+                alert(`Cliente ${emp.nome} bloqueado por inadimplência.`);
+            }
+        }
+
+        function acaoContrato(nome) {
+            alert(`Emitindo e gerando contrato de licenciamento oficial para ${nome}...`);
+        }
+
+        function acaoExcluir(id) {
+            if (confirm("Deseja realmente excluir este registro?")) {
+                empresasData = empresasData.filter(e => e.id !== id);
+                renderizarTabelaEmpresas(empresasData);
+            }
+        }
+
+        function mudarPeriodoGrafico(periodo, btn) {
+            document.querySelectorAll('#sec-financeiro .flex button').forEach(b => {
+                b.classList.remove('bg-gold', 'text-white', 'font-bold');
+                b.classList.add('text-mutedblack', 'font-medium');
+            });
+            btn.classList.add('bg-gold', 'text-white', 'font-bold');
+            btn.classList.remove('text-mutedblack', 'font-medium');
+            alert(`Visualização financeira alterada para: ${periodo.toUpperCase()}`);
+        }
+
+        function abrirModalAnexarNF(nome) {
+            document.getElementById('nf-cliente-nome').innerText = nome;
+            openModal('modalNF');
+        }
+
+        function openModal(id) { document.getElementById(id).classList.add('active'); }
+        function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+    </script>
+</body>
+</html>
