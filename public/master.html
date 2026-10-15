@@ -70,7 +70,7 @@
             <div class="bg-cardbg border border-slate-200 p-6 rounded-2xl shadow-xs flex flex-col gap-2">
                 <div class="flex justify-between items-center">
                     <h3 class="text-sm font-black tracking-wide flex items-center gap-2"><i class="ph ph-database text-gold text-lg"></i> Gráfico de Total Usado no DB</h3>
-                    <span class="text-xs font-bold text-mutedblack" id="db-usage-text">Carregando métricas...</span>
+                    <span class="text-xs font-bold text-mutedblack" id="db-usage-text">Carregando métricas da API...</span>
                 </div>
                 <div class="w-full bg-slate-100 rounded-full h-4 mt-2 overflow-hidden border border-slate-200 relative">
                     <div id="db-usage-bar" class="bg-gold h-4 rounded-full transition-all duration-1000" style="width: 0%"></div>
@@ -264,7 +264,7 @@
                     body: JSON.stringify({ senha_master: senha })
                 });
 
-                if(!response.ok) throw new Error("Senha inválida");
+                if(!response.ok) throw new Error("Senha inválida ou API offline");
 
                 const data = await response.json();
                 globalToken = data.token; 
@@ -274,11 +274,8 @@
                 MasterAPI.loadClientes();
 
             } catch (error) {
-                console.warn("API Offline - MODO TESTE ATIVADO");
-                globalToken = "teste";
-                document.getElementById('app-body').classList.remove('hidden');
-                MasterAPI.loadDashboardMetrics();
-                MasterAPI.loadClientes();
+                alert("Acesso Negado. Conexão com a API falhou ou senha incorreta.");
+                bloquearTela();
             }
         };
 
@@ -288,8 +285,6 @@
 
         const MasterAPI = {
             async fetch(endpoint, options = {}) {
-                if(globalToken === "teste") return this.mockData(endpoint);
-                
                 try {
                     const res = await fetch(`${API_URL}${endpoint}`, {
                         headers: {
@@ -306,20 +301,6 @@
                 }
             },
 
-            mockData(endpoint) {
-                if(endpoint.includes('/dashboard')) return { db_usado: 120, novos_clientes: 1, vencidos: 2 };
-                if(endpoint.includes('/clientes')) return [
-                    { id: 1, data_cadastro: '15/10/2026', nome: 'Supermercado Silva', status: 'ativo' },
-                    { id: 2, data_cadastro: '01/10/2026', nome: 'Boutique Moda', status: 'bloqueado' }
-                ];
-                if(endpoint.includes('/financeiro/graficos')) return { labels: ['01/10','05/10','10/10'], valores: [150, 300, 450] };
-                if(endpoint.includes('/financeiro/notificacoes')) return { a_vencer: 12, vencidos: 5, bloqueados: 2 };
-                if(endpoint.includes('/financeiro/lista')) return [
-                    { id: 1, nome: 'Supermercado Silva', cnpj: '00.000.000/0001-00', data_vencimento: '10/11/2026', status: 'ativo' }
-                ];
-                return {};
-            },
-
             async loadDashboardMetrics() {
                 try {
                     const data = await this.fetch('/dashboard');
@@ -329,26 +310,31 @@
 
                     const alertList = document.getElementById('alert-list');
                     alertList.innerHTML = '';
-                    if(data.novos_clientes > 0) alertList.innerHTML += `<li class="text-emerald-400">Novo cliente cadastrado!</li>`;
+                    if(data.novos_clientes && data.novos_clientes > 0) alertList.innerHTML += `<li class="text-emerald-400">Novo cliente cadastrado!</li>`;
                     if(percent > 80) alertList.innerHTML += `<li class="text-red-400">Alerta limite DB.</li>`;
-                    if(data.vencidos > 0) alertList.innerHTML += `<li class="text-amber-400">Status: ${data.vencidos} empresas vencidas.</li>`;
+                    if(data.vencidos && data.vencidos > 0) alertList.innerHTML += `<li class="text-amber-400">Status: ${data.vencidos} empresas vencidas.</li>`;
 
                     if(alertList.innerHTML !== '') {
                         setTimeout(() => document.getElementById('master-alert').style.display = 'block', 1000);
                     }
                 } catch (e) {
-                    document.getElementById('db-usage-text').innerText = "Falha ao carregar.";
+                    document.getElementById('db-usage-text').innerText = "Falha ao carregar métricas da API.";
                 }
             },
 
             async loadClientes() {
                 const tbody = document.getElementById('tbody-clientes');
-                tbody.innerHTML = `<tr><td colspan="4" class="text-center p-6 text-mutedblack">Carregando...</td></tr>`;
+                const busca = document.getElementById('busca-cliente').value;
+                const status = document.getElementById('filtro-status').value;
+
+                tbody.innerHTML = `<tr><td colspan="4" class="text-center p-6 text-mutedblack"><i class="ph-bold ph-spinner animate-spin text-xl"></i> Conectando à API...</td></tr>`;
 
                 try {
-                    const clientes = await this.fetch(`/clientes`);
-                    if(clientes.length === 0) {
-                        tbody.innerHTML = `<tr><td colspan="4" class="text-center p-6 text-mutedblack">Nenhum cliente.</td></tr>`;
+                    const query = new URLSearchParams({ busca, status }).toString();
+                    const clientes = await this.fetch(`/clientes?${query}`);
+
+                    if(!clientes || clientes.length === 0) {
+                        tbody.innerHTML = `<tr><td colspan="4" class="text-center p-6 text-mutedblack">Nenhum cliente retornado do banco.</td></tr>`;
                         return;
                     }
 
@@ -358,22 +344,40 @@
                             <td class="p-4 font-black text-blacktext">${c.nome}</td>
                             <td class="p-4"><span class="px-2.5 py-1 rounded-full text-[10px] font-black uppercase ${this.getStatusColor(c.status)}">${c.status}</span></td>
                             <td class="p-4 text-right space-x-1 no-print">
-                                <button onclick="MasterAPI.toggleStatus(${c.id}, '${c.nome}')" class="p-2 bg-slate-100 hover:bg-slate-200 rounded-xl transition" title="Ativar/Bloquear"><i class="ph ph-power"></i></button>
-                                <button onclick="uiShowToast('Info', 'Contrato gerado.')" class="p-2 bg-slate-100 hover:bg-slate-200 rounded-xl transition text-blue-600" title="Emitir Contrato"><i class="ph ph-file-text"></i></button>
-                                <button onclick="uiShowToast('Info', 'Modo edição.')" class="p-2 bg-slate-100 hover:bg-slate-200 rounded-xl transition text-amber-600" title="Alterar"><i class="ph ph-pencil"></i></button>
-                                <button onclick="uiShowToast('Aviso', 'Cliente removido.')" class="p-2 bg-red-50 hover:bg-red-100 rounded-xl transition text-red-600" title="Excluir"><i class="ph ph-trash"></i></button>
+                                <button onclick="MasterAPI.toggleStatus(${c.id}, '${c.nome}')" class="p-2 bg-slate-100 hover:bg-slate-200 rounded-xl transition text-blacktext" title="Ativar/Bloquear"><i class="ph ph-power"></i></button>
+                                <button onclick="MasterAPI.emitirContrato(${c.id})" class="p-2 bg-slate-100 hover:bg-slate-200 rounded-xl transition text-blue-600" title="Emitir Contrato"><i class="ph ph-file-text"></i></button>
+                                <button onclick="MasterAPI.alterarCliente(${c.id})" class="p-2 bg-slate-100 hover:bg-slate-200 rounded-xl transition text-amber-600" title="Alterar"><i class="ph ph-pencil"></i></button>
+                                <button onclick="MasterAPI.excluirCliente(${c.id})" class="p-2 bg-red-50 hover:bg-red-100 rounded-xl transition text-red-600" title="Excluir"><i class="ph ph-trash"></i></button>
                             </td>
                         </tr>
                     `).join('');
                 } catch (error) {
-                    tbody.innerHTML = `<tr><td colspan="4" class="text-center p-6 text-red-500 font-bold">Erro API.</td></tr>`;
+                    tbody.innerHTML = `<tr><td colspan="4" class="text-center p-6 text-red-500 font-bold">Erro ao conectar com a API.</td></tr>`;
                 }
             },
 
             async toggleStatus(id, nome) {
-                if(globalToken !== "teste") await this.fetch(`/clientes/${id}/toggle`, { method: 'PUT' });
-                uiShowToast('Status Alterado', `Notificação enviada para ${nome}.`);
-                this.loadClientes();
+                try {
+                    await this.fetch(`/clientes/${id}/toggle`, { method: 'PUT' });
+                    uiShowToast('Status Alterado', `Notificação enviada para ${nome}.`);
+                    this.loadClientes();
+                } catch (e) {
+                    uiShowToast('Erro', 'Falha ao processar na API.', 'error');
+                }
+            },
+
+            async emitirContrato(id) { uiShowToast('Info', `Chamada API para emitir contrato do ID ${id}`); },
+            async alterarCliente(id) { uiShowToast('Info', `Abrindo edição para o ID ${id}`); },
+            async excluirCliente(id) {
+                if(confirm('Tem certeza que deseja excluir?')) {
+                    try {
+                        await this.fetch(`/clientes/${id}`, { method: 'DELETE' });
+                        uiShowToast('Sucesso', `Cliente excluído.`);
+                        this.loadClientes();
+                    } catch (e) {
+                        uiShowToast('Erro', 'Falha ao excluir no banco.', 'error');
+                    }
+                }
             },
 
             getStatusColor(status) {
@@ -398,9 +402,9 @@
             async loadNotificacoes() {
                 try {
                     const data = await this.fetch(`/financeiro/notificacoes`);
-                    document.getElementById('ind-vencer').innerText = data.a_vencer;
-                    document.getElementById('ind-vencidos').innerText = data.vencidos;
-                    document.getElementById('ind-bloqueados').innerText = data.bloqueados;
+                    document.getElementById('ind-vencer').innerText = data.a_vencer || '-';
+                    document.getElementById('ind-vencidos').innerText = data.vencidos || '-';
+                    document.getElementById('ind-bloqueados').innerText = data.bloqueados || '-';
 
                     if(chartNot) chartNot.destroy();
                     const ctx = document.getElementById('chart-notificacoes').getContext('2d');
@@ -414,9 +418,15 @@
 
             async loadFinanceiroRecibos() {
                 const tbody = document.getElementById('tbody-recibos');
-                tbody.innerHTML = `<tr><td colspan="4" class="text-center p-6 text-mutedblack">Carregando...</td></tr>`;
+                const busca = document.getElementById('busca-financeiro').value;
+                tbody.innerHTML = `<tr><td colspan="4" class="text-center p-6 text-mutedblack"><i class="ph-bold ph-spinner animate-spin text-xl"></i> Conectando...</td></tr>`;
+                
                 try {
-                    const lista = await this.fetch(`/financeiro/lista`);
+                    const lista = await this.fetch(`/financeiro/lista?busca=${busca}`);
+                    if(!lista || lista.length === 0) {
+                        tbody.innerHTML = `<tr><td colspan="4" class="text-center p-6 text-mutedblack">Nenhum registro encontrado no banco.</td></tr>`;
+                        return;
+                    }
                     tbody.innerHTML = lista.map(c => `
                         <tr class="hover:bg-slate-50 transition">
                             <td class="p-4 font-black text-blacktext">${c.nome}</td>
@@ -433,21 +443,67 @@
                             </td>
                         </tr>
                     `).join('');
-                } catch (e) {}
+                } catch (e) {
+                    tbody.innerHTML = `<tr><td colspan="4" class="text-center p-6 text-red-500 font-bold">Erro ao conectar com a API.</td></tr>`;
+                }
             },
 
             async updateClientStatus(id, novoStatus) {
-                if(globalToken !== "teste") await this.fetch(`/financeiro/status`, { method: 'PUT', body: JSON.stringify({ id, status: novoStatus }) });
-                uiShowToast('Sucesso', 'Status atualizado no sistema.');
+                try {
+                    await this.fetch(`/financeiro/status`, { method: 'PUT', body: JSON.stringify({ id, status: novoStatus }) });
+                    uiShowToast('Sucesso', 'Status atualizado no sistema banco de dados.');
+                } catch (e) {
+                    uiShowToast('Erro', 'Falha ao atualizar DB.', 'error');
+                }
             },
 
             async savePixConfig() {
-                uiShowToast('Sucesso', 'Configuração PIX salva.');
+                const fotoInput = document.getElementById('pix-foto');
+                const chave = document.getElementById('pix-chave').value;
+                if (!fotoInput.files[0] || !chave) return;
+
+                const formData = new FormData();
+                formData.append('qr_code', fotoInput.files[0]);
+                formData.append('chave_pix', chave);
+
+                try {
+                    const res = await fetch(`${API_URL}/config/pix`, {
+                        method: 'POST',
+                        headers: { 'Authorization': `Bearer ${globalToken}` },
+                        body: formData
+                    });
+                    if(!res.ok) throw new Error();
+                    uiShowToast('Sucesso', 'Configuração PIX salva no banco e pronta para o app cliente.');
+                } catch (e) {
+                    uiShowToast('Erro', 'Falha na comunicação com a API (multipart/form-data).', 'error');
+                }
             },
 
             async generateReceipt() {
-                closeModal('modalGerarPDF');
-                uiShowToast('PDF Gerado', 'Enviado para o cliente.');
+                const payload = {
+                    id_cliente: document.getElementById('pdf-id-cliente').value,
+                    info_empresa: {
+                        nome: document.getElementById('pdf-master-nome').value,
+                        cnpj: document.getElementById('pdf-master-cnpj').value,
+                        telefone: document.getElementById('pdf-master-tel').value,
+                        endereco: document.getElementById('pdf-master-end').value
+                    },
+                    info_cliente: {
+                        nome: document.getElementById('pdf-cliente-nome').value,
+                        cnpj: document.getElementById('pdf-cliente-cnpj').value
+                    },
+                    competencia: document.getElementById('pdf-competencia').value,
+                    informacoes: document.getElementById('pdf-info').value,
+                    obs: document.getElementById('pdf-obs').value
+                };
+
+                try {
+                    await this.fetch('/recibos', { method: 'POST', body: JSON.stringify(payload) });
+                    closeModal('modalGerarPDF');
+                    uiShowToast('PDF Gerado', 'Registro carimbado e enviado para o cliente via API.');
+                } catch (e) {
+                    uiShowToast('Falha', 'Não foi possível registrar o recibo.', 'error');
+                }
             }
         };
 
@@ -482,12 +538,14 @@
         function openModal(id) { document.getElementById(id).classList.add('active'); }
         function closeModal(id) { document.getElementById(id).classList.remove('active'); }
 
-        function uiShowToast(titulo, mensagem) {
+        function uiShowToast(titulo, mensagem, tipo = 'success') {
             const container = document.getElementById('toast-container');
             const toast = document.createElement('div');
+            const color = tipo === 'success' ? 'emerald' : 'red';
             toast.className = `w-full bg-white/95 backdrop-blur-xl border border-slate-100 shadow-xl rounded-2xl p-4 flex gap-4 animate-slide-in-right pointer-events-auto`;
             toast.innerHTML = `
-                <div class="w-10 h-10 rounded-full bg-emerald-500/10 flex items-center justify-center flex-shrink-0"><i class="ph-fill ph-check-circle text-emerald-500 text-xl"></i></div>
+                <div class="absolute left-0 top-0 bottom-0 w-1 bg-${color}-500"></div>
+                <div class="w-10 h-10 rounded-full bg-${color}-500/10 flex items-center justify-center flex-shrink-0"><i class="ph-fill ph-check-circle text-${color}-500 text-xl"></i></div>
                 <div class="flex-1 pt-0.5"><h4 class="text-[13px] font-black text-blacktext">${titulo}</h4><p class="text-[11px] font-bold text-mutedblack mt-1">${mensagem}</p></div>
                 <button onclick="this.parentElement.remove()" class="text-slate-400 hover:text-blacktext"><i class="ph-bold ph-x"></i></button>
             `;
