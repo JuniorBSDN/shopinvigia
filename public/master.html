@@ -267,7 +267,7 @@
                 if(!response.ok) throw new Error("Senha inválida ou API offline");
 
                 const data = await response.json();
-                globalToken = data.token; 
+                globalToken = data.token;
 
                 document.getElementById('app-body').classList.remove('hidden');
                 MasterAPI.loadDashboardMetrics();
@@ -420,7 +420,7 @@
                 const tbody = document.getElementById('tbody-recibos');
                 const busca = document.getElementById('busca-financeiro').value;
                 tbody.innerHTML = `<tr><td colspan="4" class="text-center p-6 text-mutedblack"><i class="ph-bold ph-spinner animate-spin text-xl"></i> Conectando...</td></tr>`;
-                
+
                 try {
                     const lista = await this.fetch(`/financeiro/lista?busca=${busca}`);
                     if(!lista || lista.length === 0) {
