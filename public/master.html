@@ -33,7 +33,7 @@
         .btn-effect { transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); }
         .btn-effect:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(212, 175, 55, 0.25); }
         .btn-effect:active:not(:disabled) { transform: scale(0.95); }
-        
+
         @media print {
             body * { visibility: hidden; }
             #printable-area, #printable-area * { visibility: visible; }
@@ -133,7 +133,7 @@
                         <canvas id="chart-faturamento"></canvas>
                     </div>
                 </div>
-                
+
                 <!-- Notificações -->
                 <div class="bg-cardbg border border-slate-200 p-6 rounded-2xl shadow-xs">
                     <h3 class="text-sm font-black tracking-wide flex items-center gap-2 mb-4"><i class="ph ph-bell-ringing text-gold text-lg"></i> Notificações Inadimplência</h3>
@@ -202,10 +202,10 @@
                 <h3 class="text-base font-black text-blacktext flex items-center gap-2"><i class="ph ph-file-pdf text-gold text-xl"></i> Gerar Comprovante PDF (Cliente)</h3>
                 <button type="button" onclick="closeModal('modalGerarPDF')" class="text-mutedblack hover:text-blacktext"><i class="ph ph-x text-xl"></i></button>
             </div>
-            
+
             <div class="space-y-4 font-bold text-xs text-mutedblack">
                 <input type="hidden" id="pdf-id-cliente">
-                
+
                 <!-- Info Empresa (SaaS) -->
                 <div class="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-3">
                     <h4 class="text-[10px] uppercase font-black text-blacktext">Info Empresa (SHOPINVIGIA)</h4>
@@ -271,7 +271,7 @@
     <!-- ARQUITETURA JS: INTEGRAÇÃO API FASTAPI     -->
     <!-- ========================================== -->
     <script>
-        const API_URL = '/api/master'; 
+        const API_URL = '/api/master';
         let globalToken = null;
         let chartFat = null;
         let chartNot = null;
@@ -300,12 +300,12 @@
                 globalToken = data.token;
 
                 document.getElementById('app-body').classList.remove('hidden');
-                
+
                 MasterAPI.loadDashboardMetrics();
                 MasterAPI.loadClientes();
 
             } catch (error) {
-                alert("Acesso Negado. Conexão com a API falhou ou senha incorreta.");
+                alert(`Erro Real: ${error.message}`);
                 bloquearTela();
             }
         };
@@ -321,7 +321,7 @@
             async fetch(endpoint, options = {}) {
                 try {
                     const res = await fetch(`${API_URL}${endpoint}`, {
-                        headers: { 
+                        headers: {
                             'Content-Type': 'application/json',
                             'Authorization': `Bearer ${globalToken}`
                         },
@@ -347,7 +347,7 @@
                     if(data.novos_clientes > 0) alertList.innerHTML += `<li class="text-emerald-400">Novo cliente cadastrado!</li>`;
                     if(percent > 80) alertList.innerHTML += `<li class="text-red-400">Alerta: DB próximo do limite de 500mb.</li>`;
                     if(data.vencidos > 0) alertList.innerHTML += `<li class="text-amber-400">Status: ${data.vencidos} empresas vencidas.</li>`;
-                    
+
                     if(alertList.innerHTML !== '') {
                         setTimeout(() => document.getElementById('master-alert').style.display = 'block', 1000);
                     }
@@ -360,13 +360,13 @@
                 const tbody = document.getElementById('tbody-clientes');
                 const busca = document.getElementById('busca-cliente').value;
                 const status = document.getElementById('filtro-status').value;
-                
+
                 tbody.innerHTML = `<tr><td colspan="4" class="text-center p-6 text-mutedblack"><i class="ph-bold ph-spinner animate-spin text-xl"></i> Conectando à API Python...</td></tr>`;
-                
+
                 try {
                     const query = new URLSearchParams({ busca, status }).toString();
                     const clientes = await this.fetch(`/clientes?${query}`);
-                    
+
                     if(clientes.length === 0) {
                         tbody.innerHTML = `<tr><td colspan="4" class="text-center p-6 text-mutedblack text-xs">Nenhum cliente retornado do Supabase.</td></tr>`;
                         return;
@@ -409,7 +409,7 @@
             async loadFaturamento(periodo = 'mes') {
                 try {
                     const data = await this.fetch(`/financeiro/graficos?periodo=${periodo}`);
-                    
+
                     if(chartFat) chartFat.destroy();
                     const ctx = document.getElementById('chart-faturamento').getContext('2d');
                     chartFat = new Chart(ctx, {
@@ -445,7 +445,7 @@
                 const tbody = document.getElementById('tbody-recibos');
                 const busca = document.getElementById('busca-financeiro').value;
                 tbody.innerHTML = `<tr><td colspan="4" class="text-center p-6 text-mutedblack"><i class="ph-bold ph-spinner animate-spin text-xl"></i> Conectando à API...</td></tr>`;
-                
+
                 try {
                     const lista = await this.fetch(`/financeiro/lista?busca=${busca}`);
                     if(lista.length === 0) {
@@ -499,7 +499,7 @@
                         body: formData
                     });
                     if(!res.ok) throw new Error();
-                    
+
                     uiShowToast('Sucesso!', 'A configuração do PIX aparecerá em tempo real na aba financeiro do app cliente/empresa.');
                 } catch (e) {
                     uiShowToast('Erro HTTP', 'A API Python precisa estar configurada para receber multipart/form-data.', 'error');
@@ -537,7 +537,7 @@
         function uiNavigate(secId, element) {
             document.querySelectorAll('.page-section').forEach(s => s.classList.add('hidden'));
             document.getElementById(`sec-${secId}`).classList.remove('hidden');
-            
+
             document.querySelectorAll('#nav-menu a').forEach(a => {
                 a.classList.remove('bg-gold', 'text-blacktext');
                 a.classList.add('text-slate-300', 'hover:bg-slate-800');
