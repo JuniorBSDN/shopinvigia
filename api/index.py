@@ -155,6 +155,8 @@ def create_empresa(emp: EmpresaCreate, db=Depends(get_db), token: str = Depends(
     finally:
         cursor.close()
 
+
+
 # Rota extra para simular se a API está online antes do banco estar configurado
 @app.get("/ping")
 def ping():
