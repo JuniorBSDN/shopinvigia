@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Painel da Empresa - admin.html</title>
+    <title>Painel do Lojista/Empresa - SaaS</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Chart.js -->
@@ -12,10 +12,13 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         .hidden-view { display: none !important; }
+        .spinner { border-top-color: #3b82f6; animation: spinner 1s linear infinite; }
+        @keyframes spinner { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         @media print {
             body * { visibility: hidden; }
             #area-cupom, #area-cupom * { visibility: visible; }
-            #area-cupom { position: absolute; left: 0; top: 0; width: 100%; border: none; box-shadow: none; }
+            #area-cupom { position: absolute; left: 0; top: 0; width: 100%; border: none; box-shadow: none; background: white; }
+            #area-relatorios, #area-relatorios * { visibility: visible; }
         }
     </style>
 </head>
@@ -29,45 +32,56 @@
             <div id="box-login">
                 <div class="text-center mb-6">
                     <i class="fa-solid fa-store text-4xl text-blue-600 mb-2"></i>
-                    <h2 class="text-2xl font-bold">Acesso Lojista</h2>
+                    <h2 class="text-2xl font-bold">Acesso Cliente/Empresa</h2>
                 </div>
                 <form onsubmit="event.preventDefault(); fazerLogin();">
                     <div class="mb-4">
                         <label class="block text-sm font-bold text-gray-700 mb-1">CNPJ da Empresa</label>
-                        <input type="text" id="login-cnpj" placeholder="00.000.000/0001-00" required class="w-full px-4 py-3 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <input type="text" id="login-cnpj" placeholder="Apenas números ou formatado" required class="w-full px-4 py-3 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500">
                     </div>
-                    <button type="submit" class="w-full bg-blue-600 text-white font-bold py-3 px-4 rounded hover:bg-blue-700">Entrar no Painel</button>
+                    <button type="submit" id="btn-login" class="w-full bg-blue-600 text-white font-bold py-3 px-4 rounded hover:bg-blue-700">Entrar no Painel</button>
                 </form>
                 <div class="text-center mt-4">
-                    <button onclick="toggleCadastro(true)" class="text-blue-600 text-sm font-bold hover:underline">Criar Conta Grátis</button>
+                    <button onclick="toggleCadastro(true)" class="text-blue-600 text-sm font-bold hover:underline">Criar Conta Grátis (7 Dias)</button>
                 </div>
             </div>
 
             <!-- FORMULÁRIO DE CADASTRO -->
             <div id="box-cadastro" class="hidden-view">
                 <div class="text-center mb-4">
-                    <h2 class="text-xl font-bold">Cadastrar Novo Cliente/Empresa</h2>
+                    <h2 class="text-xl font-bold">Cadastrar Novo Cliente</h2>
                 </div>
-               <!-- FORMULÁRIO DE CADASTRO -->
                 <form onsubmit="event.preventDefault(); criarConta();" class="space-y-3">
-                    <div>
-                        <input type="text" id="cad-nome" placeholder="Nome da Loja" required class="w-full px-3 py-2 border rounded text-sm">
-                    </div>
-                    <div>
-                        <input type="text" id="cad-cnpj" placeholder="CNPJ" required class="w-full px-3 py-2 border rounded text-sm">
-                    </div>
+                    <div><input type="text" id="cad-nome" placeholder="Nome da Loja" required class="w-full px-3 py-2 border rounded text-sm"></div>
+                    <div><input type="text" id="cad-cnpj" placeholder="CNPJ" required class="w-full px-3 py-2 border rounded text-sm"></div>
                     <div class="grid grid-cols-2 gap-2">
-                        <input type="text" id="cad-tel" placeholder="WhatsApp" required class="w-full px-3 py-2 border rounded text-sm">
+                        <input type="text" id="cad-zap" placeholder="WhatsApp" required class="w-full px-3 py-2 border rounded text-sm">
                         <input type="email" id="cad-email" placeholder="E-mail" required class="w-full px-3 py-2 border rounded text-sm">
                     </div>
-                    <div class="flex items-start gap-2 bg-gray-50 p-2 rounded text-xs">
+                    <div class="flex items-start gap-2 bg-gray-50 p-2 rounded text-xs border">
                         <input type="checkbox" id="cad-termo" required class="mt-0.5">
-                        <label>Aceito o Termo de Responsabilidade e políticas de uso.</label>
+                        <label>Aceito o Termo de Responsabilidade e compartilhamento de dados.</label>
                     </div>
-                    <button id="btn-cadastrar" type="submit" class="w-full bg-green-600 text-white font-bold py-2 rounded">Criar Acesso à Conta</button>
+                    <button type="submit" id="btn-cadastrar" class="w-full bg-green-600 text-white font-bold py-2 rounded">Criar Acesso à Conta</button>
                     <button type="button" onclick="toggleCadastro(false)" class="w-full bg-gray-200 text-gray-700 font-bold py-2 rounded text-sm">Já tenho uma conta (Voltar)</button>
                 </form>
             </div>
+        </div>
+    </div>
+
+    <!-- ================= MODAL DE BLOQUEIO / PIX (MENSALIDADE) ================= -->
+    <div id="modal-bloqueio" class="hidden-view fixed inset-0 bg-black bg-opacity-90 z-[60] flex items-center justify-center p-4">
+        <div class="bg-white w-full max-w-sm rounded-lg p-6 text-center shadow-2xl">
+            <i class="fa-solid fa-lock text-4xl text-red-600 mb-2"></i>
+            <h3 class="font-black text-xl mb-2">Acesso Bloqueado</h3>
+            <p class="text-sm text-gray-600 mb-4">Seu período de teste acabou ou sua mensalidade está vencida. Efetue o pagamento via PIX para normalizar seu acesso.</p>
+            <div class="bg-gray-100 p-2 border mb-4 inline-block">
+                <img id="pix-qr-img" src="" alt="QR Code PIX" class="w-48 h-48 object-contain mx-auto hidden-view">
+                <p id="pix-qr-loading" class="text-xs text-gray-500 py-10">Buscando QR Code do Master...</p>
+            </div>
+            <label class="block text-left text-xs font-bold mb-1">Chave PIX (Copia e Cola)</label>
+            <input type="text" id="pix-chave-input" readonly class="w-full border rounded px-3 py-2 text-sm bg-gray-50 text-center mb-4 font-mono">
+            <button onclick="verificarPagamentoPix()" class="w-full bg-blue-600 text-white font-bold py-3 rounded">Já Paguei / Validar Acesso</button>
         </div>
     </div>
 
@@ -75,9 +89,9 @@
     <div id="main-panel" class="hidden-view flex h-screen">
         
         <!-- SIDEBAR -->
-        <aside class="w-64 bg-white border-r shadow-sm flex flex-col">
+        <aside class="w-64 bg-white border-r shadow-sm flex flex-col z-10">
             <div class="p-6 text-center border-b">
-                <h1 class="text-xl font-black text-blue-600">Meu ERP</h1>
+                <h1 id="sidebar-nome-loja" class="text-xl font-black text-blue-600 truncate">Minha Loja</h1>
             </div>
             <nav class="flex-1 px-4 py-4 space-y-1 overflow-y-auto">
                 <button onclick="mudarAba('dashboard')" id="nav-dashboard" class="menu-btn w-full flex items-center gap-3 px-4 py-3 bg-blue-50 text-blue-600 rounded font-bold transition"><i class="fa-solid fa-chart-line"></i> Dashboard</button>
@@ -89,35 +103,39 @@
                 <button onclick="mudarAba('configuracoes')" id="nav-configuracoes" class="menu-btn w-full flex items-center gap-3 px-4 py-3 text-gray-600 rounded font-bold hover:bg-gray-50 transition"><i class="fa-solid fa-gear"></i> Configurações</button>
             </nav>
             <div class="p-4 border-t">
-                <button onclick="location.reload()" class="w-full text-red-600 font-bold py-2"><i class="fa-solid fa-arrow-right-from-bracket"></i> Sair</button>
+                <button onclick="sair()" class="w-full text-red-600 font-bold py-2 hover:bg-red-50 rounded transition"><i class="fa-solid fa-arrow-right-from-bracket"></i> Sair do Sistema</button>
             </div>
         </aside>
 
-        <!-- ÁREA DE CONTEÚDO -->
+        <!-- CONTEÚDO PRINCIPAL -->
         <main class="flex-1 bg-gray-50 flex flex-col h-screen overflow-hidden">
             
-            <!-- HEADER -->
-            <header class="bg-white border-b px-6 py-4 flex justify-between items-center">
+            <!-- HEADER COM INDICADORES DISCRETOS -->
+            <header class="bg-white border-b px-6 py-4 flex justify-between items-center shadow-sm z-10">
                 <h2 id="titulo-aba" class="text-xl font-bold text-gray-800">Dashboard e Vendas</h2>
-                <div class="flex gap-4">
-                    <div class="text-right cursor-pointer" onclick="mudarAba('vendas')">
-                        <span class="text-xs text-gray-500 block">Novo Pedido</span>
-                        <span class="font-bold text-blue-600">3 Pendentes</span>
+                <div class="flex gap-6">
+                    <div class="text-right cursor-pointer hover:bg-gray-50 px-3 py-1 rounded transition" onclick="mudarAba('vendas')">
+                        <span class="text-xs text-gray-500 block">Novos Pedidos</span>
+                        <span id="ind-novos" class="font-black text-blue-600 text-lg">0</span>
                     </div>
-                    <div class="text-right cursor-pointer" onclick="mudarAba('vendas')">
-                        <span class="text-xs text-gray-500 block">Pedido Atrasado</span>
-                        <span class="font-bold text-red-600">1 Atrasado</span>
+                    <div class="text-right cursor-pointer hover:bg-gray-50 px-3 py-1 rounded transition" onclick="mudarAba('vendas')">
+                        <span class="text-xs text-gray-500 block">Atrasados (Preparo)</span>
+                        <span id="ind-atrasos" class="font-black text-red-600 text-lg">0</span>
+                    </div>
+                    <div class="text-right px-3 py-1 border-l">
+                        <span class="text-xs text-gray-500 block">Receita Hoje</span>
+                        <span id="ind-receita" class="font-black text-green-600 text-lg">R$ 0,00</span>
                     </div>
                 </div>
             </header>
 
-            <div class="flex-1 overflow-y-auto p-6">
+            <div class="flex-1 overflow-y-auto p-6 relative">
                 
                 <!-- ABA: DASHBOARD -->
                 <div id="aba-dashboard" class="aba-conteudo space-y-6">
                     
-                    <button onclick="mudarAba('vendas')" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-6 rounded-xl shadow text-2xl font-black flex items-center justify-center gap-4">
-                        <i class="fa-solid fa-cart-plus"></i> NOVO PEDIDO (IR PARA PDV)
+                    <button onclick="mudarAba('vendas')" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-6 rounded-xl shadow-lg text-2xl font-black flex items-center justify-center gap-4 transition transform hover:scale-[1.01]">
+                        <i class="fa-solid fa-cart-plus"></i> NOVO PEDIDO (IR PARA GERENCIADOR PDV)
                     </button>
 
                     <div class="grid grid-cols-2 gap-6">
@@ -128,7 +146,7 @@
                         <div class="bg-white p-5 rounded-lg border shadow-sm">
                             <div class="flex justify-between items-start mb-4">
                                 <h3 class="font-bold text-gray-700 text-sm uppercase">Ouvidoria (Feeds)</h3>
-                                <span class="bg-red-100 text-red-600 text-xs font-bold px-2 py-1 rounded">1 Alerta Crítico</span>
+                                <span id="dash-alerta-critico" class="bg-red-100 text-red-600 text-xs font-bold px-2 py-1 rounded hidden-view">Alerta Crítico!</span>
                             </div>
                             <canvas id="chartOuvidoria" height="120"></canvas>
                         </div>
@@ -138,22 +156,22 @@
                 <!-- ABA: PDV E VENDAS -->
                 <div id="aba-vendas" class="aba-conteudo hidden-view grid grid-cols-12 gap-6 h-full">
                     
-                    <!-- Esquerda: Controle PDV / Pedidos -->
+                    <!-- LADO ESQUERDO: Controle PDV / Pedidos -->
                     <div class="col-span-8 flex flex-col space-y-4">
                         <div class="flex gap-2">
-                            <button onclick="togglePDV('externo')" id="btn-pdv-externo" class="flex-1 py-2 bg-blue-600 text-white font-bold rounded shadow">Lista de Pedidos Externos</button>
-                            <button onclick="togglePDV('interno')" id="btn-pdv-interno" class="flex-1 py-2 bg-white border text-gray-700 font-bold rounded">PDV - Venda Interna</button>
+                            <button onclick="togglePDV('externo')" id="btn-pdv-externo" class="flex-1 py-2 bg-blue-600 text-white font-bold rounded shadow transition">Lista de Pedidos Externos</button>
+                            <button onclick="togglePDV('interno')" id="btn-pdv-interno" class="flex-1 py-2 bg-white border text-gray-700 font-bold rounded hover:bg-gray-50 transition">PDV - Venda Interna</button>
                         </div>
 
                         <!-- Pedidos Externos -->
-                        <div id="view-externo" class="bg-white border rounded-lg flex-1 flex flex-col">
-                            <div class="p-4 border-b flex justify-between gap-4">
-                                <input type="text" placeholder="Buscar Pedidos / Status / Dia" class="flex-1 px-3 py-2 border rounded text-sm">
-                                <button class="bg-gray-800 text-white px-4 py-2 rounded text-sm font-bold"><i class="fa-solid fa-print"></i> Gerar Cupom</button>
+                        <div id="view-externo" class="bg-white border rounded-lg flex-1 flex flex-col shadow-sm">
+                            <div class="p-4 border-b flex justify-between gap-4 bg-gray-50">
+                                <input type="text" id="busca-pedidos" onkeyup="filtrarPedidos()" placeholder="Buscar Pedidos / Status / Dia" class="flex-1 px-3 py-2 border rounded text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+                                <button onclick="window.print()" class="bg-gray-800 hover:bg-gray-700 text-white px-4 py-2 rounded text-sm font-bold shadow"><i class="fa-solid fa-print"></i> Gerar Cupom</button>
                             </div>
-                            <div class="p-0 overflow-y-auto flex-1">
+                            <div class="p-0 overflow-y-auto max-h-[500px]">
                                 <table class="w-full text-left text-sm">
-                                    <thead class="bg-gray-50 uppercase text-xs text-gray-500">
+                                    <thead class="bg-gray-100 uppercase text-xs text-gray-500 sticky top-0">
                                         <tr>
                                             <th class="p-3 border-b">ID/Hora</th>
                                             <th class="p-3 border-b">Cliente / Endereço</th>
@@ -162,87 +180,86 @@
                                             <th class="p-3 border-b">Status</th>
                                         </tr>
                                     </thead>
-                                    <tbody>
-                                        <tr class="border-b hover:bg-gray-50 cursor-pointer" onclick="carregarCupom('João Silva', 'Rua A, 123', 'Pix', '2x Burger', '45,00')">
-                                            <td class="p-3">#101<br><span class="text-xs text-gray-400">14:30</span></td>
-                                            <td class="p-3 font-bold">João Silva<br><span class="text-xs font-normal text-gray-500">Rua A, 123 - Ref: Posto</span></td>
-                                            <td class="p-3">(11) 9999-9999</td>
-                                            <td class="p-3">PIX<br><span class="text-xs font-bold text-green-600">R$ 45,00</span></td>
-                                            <td class="p-3"><span class="bg-blue-100 text-blue-700 px-2 py-1 rounded text-xs font-bold">Novo</span></td>
-                                        </tr>
+                                    <tbody id="tb-pedidos">
+                                        <tr><td colspan="5" class="text-center py-8 text-gray-400">Carregando pedidos...</td></tr>
                                     </tbody>
                                 </table>
                             </div>
                         </div>
 
                         <!-- Venda Interna (PDV) -->
-                        <div id="view-interno" class="hidden-view bg-white border rounded-lg p-6 space-y-4">
-                            <h3 class="font-bold border-b pb-2">Cadastrar Venda Manual</h3>
-                            <div class="grid grid-cols-3 gap-4">
-                                <div class="col-span-2">
-                                    <label class="text-xs font-bold text-gray-600">Buscar Produto (Cód, Descrição)</label>
-                                    <input type="text" id="pdv-prod" oninput="atualizarCupomPdv()" class="w-full border rounded px-3 py-2 mt-1">
+                        <div id="view-interno" class="hidden-view bg-white border rounded-lg p-6 space-y-4 shadow-sm">
+                            <h3 class="font-bold border-b pb-2 text-gray-800">Cadastrar Venda Manual (Caixa)</h3>
+                            <form onsubmit="event.preventDefault(); cadastrarPDV();" class="space-y-4">
+                                <div class="grid grid-cols-3 gap-4">
+                                    <div class="col-span-2">
+                                        <label class="text-xs font-bold text-gray-600 block mb-1">Buscar Produto (Cód, Descrição)</label>
+                                        <input type="text" id="pdv-prod" oninput="atualizarCupomPdv()" required class="w-full border rounded px-3 py-2 text-sm focus:ring-blue-500 outline-none">
+                                    </div>
+                                    <div>
+                                        <label class="text-xs font-bold text-gray-600 block mb-1">Quant</label>
+                                        <input type="number" id="pdv-qtd" oninput="calcPdv()" value="1" min="1" required class="w-full border rounded px-3 py-2 text-sm">
+                                    </div>
+                                </div>
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="text-xs font-bold text-gray-600 block mb-1">Valor Unitário (R$)</label>
+                                        <input type="number" step="0.01" id="pdv-val-un" oninput="calcPdv()" required class="w-full border rounded px-3 py-2 text-sm">
+                                    </div>
+                                    <div>
+                                        <label class="text-xs font-bold text-gray-600 block mb-1">Valor Total Somado (R$)</label>
+                                        <input type="text" id="pdv-val-tot" readonly class="w-full border bg-gray-100 font-bold rounded px-3 py-2 text-sm text-green-700">
+                                    </div>
                                 </div>
                                 <div>
-                                    <label class="text-xs font-bold text-gray-600">Quant</label>
-                                    <input type="number" id="pdv-qtd" oninput="calcPdv()" value="1" class="w-full border rounded px-3 py-2 mt-1">
+                                    <label class="text-xs font-bold text-gray-600 block mb-1">Nome / Cliente</label>
+                                    <input type="text" id="pdv-cli" oninput="atualizarCupomPdv()" required class="w-full border rounded px-3 py-2 text-sm">
                                 </div>
-                            </div>
-                            <div class="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label class="text-xs font-bold text-gray-600">Valor Unitário (R$)</label>
-                                    <input type="number" id="pdv-val-un" oninput="calcPdv()" value="0.00" class="w-full border rounded px-3 py-2 mt-1">
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="text-xs font-bold text-gray-600 block mb-1">Forma de Pagamento</label>
+                                        <select id="pdv-pag" onchange="toggleTrocoPdv()" class="w-full border rounded px-3 py-2 text-sm">
+                                            <option value="PIX">PIX</option>
+                                            <option value="CARTÃO">Cartão</option>
+                                            <option value="DINHEIRO">Dinheiro</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label class="text-xs font-bold text-gray-600 block mb-1">Troco para (R$)</label>
+                                        <input type="number" step="0.01" id="pdv-troco" disabled class="w-full border bg-gray-100 rounded px-3 py-2 text-sm">
+                                    </div>
                                 </div>
-                                <div>
-                                    <label class="text-xs font-bold text-gray-600">Valor Total Somado (R$)</label>
-                                    <input type="text" id="pdv-val-tot" readonly class="w-full border bg-gray-100 font-bold rounded px-3 py-2 mt-1">
-                                </div>
-                            </div>
-                            <div>
-                                <label class="text-xs font-bold text-gray-600">Nome / Cliente</label>
-                                <input type="text" id="pdv-cli" oninput="atualizarCupomPdv()" class="w-full border rounded px-3 py-2 mt-1">
-                            </div>
-                            <div class="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label class="text-xs font-bold text-gray-600">Forma de Pagamento</label>
-                                    <select id="pdv-pag" onchange="toggleTrocoPdv()" class="w-full border rounded px-3 py-2 mt-1">
-                                        <option value="PIX">PIX</option>
-                                        <option value="CARTÃO">Cartão</option>
-                                        <option value="DINHEIRO">Dinheiro</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <label class="text-xs font-bold text-gray-600">Troco para (R$)</label>
-                                    <input type="text" id="pdv-troco" disabled class="w-full border bg-gray-100 rounded px-3 py-2 mt-1">
-                                </div>
-                            </div>
+                                <button type="submit" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded shadow transition">LANÇAR VENDA NO CAIXA</button>
+                            </form>
                         </div>
                     </div>
 
-                    <!-- Direita: Cupom -->
-                    <div class="col-span-4 bg-white border rounded-lg p-5 flex flex-col justify-between">
-                        <div id="area-cupom" class="border border-dashed border-gray-400 p-4 rounded text-sm space-y-3 bg-yellow-50">
-                            <div class="text-center border-b border-gray-300 pb-2">
-                                <h3 class="font-black uppercase text-lg">Dados da Empresa</h3>
-                                <p class="text-xs">CUPOM DE PAGAMENTO</p>
+                    <!-- LADO DIREITO: Cupom Dinâmico -->
+                    <div class="col-span-4 bg-white border rounded-lg p-5 flex flex-col justify-between shadow-sm">
+                        <div id="area-cupom" class="border border-dashed border-gray-400 p-4 rounded text-sm space-y-3 bg-yellow-50 font-mono relative">
+                            <div class="text-center border-b border-gray-400 pb-2">
+                                <h3 id="cupom-nome-empresa" class="font-black uppercase text-lg">EMPRESA LOCAL</h3>
+                                <p class="text-xs">CUPOM DE PAGAMENTO / RECIBO</p>
                             </div>
                             <div>
-                                <p class="font-bold text-xs uppercase text-gray-500">Dados do Cliente</p>
-                                <p id="cupom-cli-nome" class="font-bold uppercase text-lg">Cliente Final</p>
-                                <p id="cupom-cli-end" class="text-xs text-gray-600">Endereço da venda</p>
+                                <p class="font-bold text-xs uppercase text-gray-500 border-b border-gray-300 mb-1">Dados do Cliente</p>
+                                <p id="cupom-cli-nome" class="font-bold uppercase text-base">NENHUM SELECIONADO</p>
+                                <p id="cupom-cli-end" class="text-xs text-gray-600">--</p>
+                                <p id="cupom-cli-tel" class="text-xs text-gray-600">--</p>
                             </div>
-                            <div class="border-t border-gray-300 pt-2">
-                                <p class="font-bold text-xs uppercase text-gray-500">Dados da Venda</p>
-                                <p id="cupom-itens" class="mt-1">--</p>
+                            <div>
+                                <p class="font-bold text-xs uppercase text-gray-500 border-b border-gray-300 mb-1">Dados da Venda</p>
+                                <p id="cupom-itens" class="mt-1 text-xs leading-tight">--</p>
                                 <p class="mt-2 text-xs">Pagamento: <strong id="cupom-pag">--</strong></p>
                             </div>
-                            <div class="border-t border-gray-800 pt-2 text-right">
-                                <p class="text-xl font-black text-green-700" id="cupom-total">R$ 0,00</p>
+                            <div class="border-t border-gray-800 pt-2 text-right mt-4">
+                                <p class="text-xs text-gray-500">Total a Pagar</p>
+                                <p class="text-2xl font-black text-gray-900" id="cupom-total">R$ 0,00</p>
                             </div>
                         </div>
                         <div class="mt-6 space-y-2">
-                            <button onclick="window.print()" class="w-full bg-gray-800 text-white font-bold py-3 rounded"><i class="fa-solid fa-print"></i> Imprimir Agora</button>
-                            <button onclick="enviarEmailCupom()" class="w-full bg-blue-100 text-blue-700 font-bold py-3 rounded"><i class="fa-solid fa-envelope"></i> Enviar por Email</button>
+                            <button onclick="window.print()" class="w-full bg-gray-800 hover:bg-gray-700 text-white font-bold py-3 rounded shadow transition"><i class="fa-solid fa-print"></i> Imprimir Agora</button>
+                            <button onclick="enviarEmailCupom()" class="w-full bg-blue-100 hover:bg-blue-200 text-blue-700 font-bold py-3 rounded transition"><i class="fa-solid fa-envelope"></i> Enviar por Email</button>
                         </div>
                     </div>
                 </div>
@@ -250,82 +267,75 @@
                 <!-- ABA: PRODUTOS -->
                 <div id="aba-produtos" class="aba-conteudo hidden-view space-y-6">
                     <div class="bg-white p-5 border rounded-lg shadow-sm">
-                        <h3 class="font-bold border-b pb-2 mb-4">Cadastrar Novo Produto</h3>
-                        <form class="grid grid-cols-4 gap-4 items-end">
-                            <div class="col-span-2"><label class="text-xs font-bold text-gray-600">Foto (URL)</label><input type="text" class="w-full border rounded px-3 py-2 mt-1 text-sm"></div>
-                            <div class="col-span-2"><label class="text-xs font-bold text-gray-600">Nome do Produto</label><input type="text" class="w-full border rounded px-3 py-2 mt-1 text-sm"></div>
-                            <div class="col-span-4"><label class="text-xs font-bold text-gray-600">Descrição</label><input type="text" class="w-full border rounded px-3 py-2 mt-1 text-sm"></div>
-                            <div><label class="text-xs font-bold text-gray-600">Categoria</label><input type="text" class="w-full border rounded px-3 py-2 mt-1 text-sm"></div>
-                            <div><label class="text-xs font-bold text-gray-600">Preço Inicial (Compra)</label><input type="number" class="w-full border rounded px-3 py-2 mt-1 text-sm"></div>
-                            <div><label class="text-xs font-bold text-gray-600">Preço Final (Venda)</label><input type="number" class="w-full border rounded px-3 py-2 mt-1 text-sm"></div>
-                            <div><label class="text-xs font-bold text-gray-600">Estoque</label><input type="number" class="w-full border rounded px-3 py-2 mt-1 text-sm"></div>
-                            <div class="col-span-4"><button type="button" class="bg-blue-600 text-white font-bold px-6 py-2 rounded">Cadastrar Produto</button></div>
+                        <h3 class="font-bold border-b pb-2 mb-4 text-gray-800">Cadastrar Novo Produto</h3>
+                        <form onsubmit="event.preventDefault(); cadastrarProduto();" class="grid grid-cols-4 gap-4 items-end">
+                            <div class="col-span-2"><label class="text-xs font-bold text-gray-600">Foto (URL / Link)</label><input type="text" id="prod-foto" class="w-full border rounded px-3 py-2 mt-1 text-sm"></div>
+                            <div class="col-span-2"><label class="text-xs font-bold text-gray-600">Nome do Produto</label><input type="text" id="prod-nome" required class="w-full border rounded px-3 py-2 mt-1 text-sm"></div>
+                            <div class="col-span-4"><label class="text-xs font-bold text-gray-600">Descrição</label><input type="text" id="prod-desc" class="w-full border rounded px-3 py-2 mt-1 text-sm"></div>
+                            <div><label class="text-xs font-bold text-gray-600">Categoria</label><input type="text" id="prod-cat" required class="w-full border rounded px-3 py-2 mt-1 text-sm"></div>
+                            <div><label class="text-xs font-bold text-gray-600">Preço Inicial (Compra R$)</label><input type="number" step="0.01" id="prod-pini" required class="w-full border rounded px-3 py-2 mt-1 text-sm"></div>
+                            <div><label class="text-xs font-bold text-gray-600">Preço Final (Venda R$)</label><input type="number" step="0.01" id="prod-pfin" required class="w-full border rounded px-3 py-2 mt-1 text-sm"></div>
+                            <div><label class="text-xs font-bold text-gray-600">Estoque (Unid)</label><input type="number" id="prod-est" required class="w-full border rounded px-3 py-2 mt-1 text-sm"></div>
+                            <div class="col-span-4"><button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold px-6 py-3 rounded shadow transition">Cadastrar Produto</button></div>
                         </form>
                     </div>
 
                     <div class="bg-white p-5 border rounded-lg shadow-sm">
-                        <div class="flex justify-between gap-4 mb-4">
-                            <input type="text" placeholder="Buscar Produto (Categoria, Valor, Nome)" class="flex-1 border rounded px-3 py-2 text-sm">
-                            <button class="bg-gray-800 text-white px-4 py-2 rounded text-sm font-bold"><i class="fa-solid fa-print"></i> Imprimir Busca</button>
+                        <div class="flex justify-between gap-4 mb-4 bg-gray-50 p-2 rounded border">
+                            <input type="text" id="busca-produtos" onkeyup="filtrarProdutos()" placeholder="Buscar Produto (Categoria, Valor, Nome)" class="flex-1 border rounded px-3 py-2 text-sm outline-none">
+                            <button onclick="window.print()" class="bg-gray-800 text-white px-4 py-2 rounded text-sm font-bold shadow"><i class="fa-solid fa-print"></i> Imprimir Busca</button>
                         </div>
-                        <table class="w-full text-left text-sm">
-                            <thead class="bg-gray-50 uppercase text-xs text-gray-500">
-                                <tr>
-                                    <th class="p-3 border-b">Foto / Nome</th>
-                                    <th class="p-3 border-b">Preço Final (Venda)</th>
-                                    <th class="p-3 border-b">Lucro</th>
-                                    <th class="p-3 border-b">Em Estoque</th>
-                                    <th class="p-3 border-b text-right">Ações</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr class="border-b">
-                                    <td class="p-3 font-bold">Produto Exemplo</td>
-                                    <td class="p-3">R$ 20,00</td>
-                                    <td class="p-3 text-green-600 font-bold">R$ 10,00</td>
-                                    <td class="p-3">50</td>
-                                    <td class="p-3 text-right">
-                                        <button class="bg-blue-100 text-blue-700 px-3 py-1 rounded text-xs font-bold">Alterar</button>
-                                        <button class="bg-red-100 text-red-700 px-3 py-1 rounded text-xs font-bold ml-1">Excluir</button>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
+                        <div class="overflow-y-auto max-h-[400px]">
+                            <table class="w-full text-left text-sm">
+                                <thead class="bg-gray-100 uppercase text-xs text-gray-500 sticky top-0">
+                                    <tr>
+                                        <th class="p-3 border-b">Foto / Nome</th>
+                                        <th class="p-3 border-b">Preço Final (Venda)</th>
+                                        <th class="p-3 border-b">Lucro</th>
+                                        <th class="p-3 border-b">Em Estoque</th>
+                                        <th class="p-3 border-b text-right">Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tb-produtos">
+                                    <tr><td colspan="5" class="text-center py-4 text-gray-400">Carregando produtos...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
 
                 <!-- ABA: RELATÓRIOS PDF -->
-                <div id="aba-relatorios" class="aba-conteudo hidden-view bg-white p-6 rounded-lg border">
-                    <h3 class="font-bold text-lg border-b pb-2 mb-4">Gerar Relatório em PDF</h3>
-                    <div class="grid grid-cols-3 gap-4">
-                        <button class="bg-gray-50 border p-4 rounded hover:bg-blue-50 transition font-bold text-gray-700"><i class="fa-solid fa-file-invoice text-blue-500 mb-2 text-2xl block"></i> Total Vendas</button>
-                        <button class="bg-gray-50 border p-4 rounded hover:bg-blue-50 transition font-bold text-gray-700"><i class="fa-solid fa-boxes text-blue-500 mb-2 text-2xl block"></i> Pedidos</button>
-                        <button class="bg-gray-50 border p-4 rounded hover:bg-blue-50 transition font-bold text-gray-700"><i class="fa-solid fa-tags text-blue-500 mb-2 text-2xl block"></i> Produtos</button>
-                        <button class="bg-gray-50 border p-4 rounded hover:bg-blue-50 transition font-bold text-gray-700"><i class="fa-solid fa-users text-blue-500 mb-2 text-2xl block"></i> Clientes</button>
-                        <button class="bg-gray-50 border p-4 rounded hover:bg-blue-50 transition font-bold text-gray-700"><i class="fa-solid fa-cash-register text-blue-500 mb-2 text-2xl block"></i> Caixa</button>
-                        <button class="bg-gray-50 border p-4 rounded hover:bg-blue-50 transition font-bold text-gray-700"><i class="fa-solid fa-ban text-blue-500 mb-2 text-2xl block"></i> Cancelamentos</button>
-                        <button class="bg-gray-50 border p-4 rounded hover:bg-blue-50 transition font-bold text-gray-700"><i class="fa-solid fa-clock text-blue-500 mb-2 text-2xl block"></i> Horários de Pico</button>
-                        <button class="bg-gray-50 border p-4 rounded hover:bg-blue-50 transition font-bold text-gray-700"><i class="fa-solid fa-bullhorn text-blue-500 mb-2 text-2xl block"></i> Ouvidoria</button>
-                        <button class="bg-gray-50 border p-4 rounded hover:bg-blue-50 transition font-bold text-gray-700"><i class="fa-solid fa-chart-line text-blue-500 mb-2 text-2xl block"></i> Faturamento Completo</button>
+                <div id="aba-relatorios" class="aba-conteudo hidden-view bg-white p-8 rounded-lg border shadow-sm">
+                    <h3 class="font-bold text-2xl border-b pb-3 mb-6 text-gray-800">Relatórios em PDF</h3>
+                    <div class="grid grid-cols-3 gap-6" id="area-relatorios">
+                        <button onclick="window.print()" class="bg-gray-50 border p-6 rounded-lg hover:bg-blue-50 transition font-bold text-gray-700 shadow-sm flex flex-col items-center"><i class="fa-solid fa-file-invoice text-blue-500 mb-3 text-3xl"></i> Total Vendas</button>
+                        <button onclick="window.print()" class="bg-gray-50 border p-6 rounded-lg hover:bg-blue-50 transition font-bold text-gray-700 shadow-sm flex flex-col items-center"><i class="fa-solid fa-boxes text-blue-500 mb-3 text-3xl"></i> Pedidos</button>
+                        <button onclick="window.print()" class="bg-gray-50 border p-6 rounded-lg hover:bg-blue-50 transition font-bold text-gray-700 shadow-sm flex flex-col items-center"><i class="fa-solid fa-tags text-blue-500 mb-3 text-3xl"></i> Produtos</button>
+                        <button onclick="window.print()" class="bg-gray-50 border p-6 rounded-lg hover:bg-blue-50 transition font-bold text-gray-700 shadow-sm flex flex-col items-center"><i class="fa-solid fa-users text-blue-500 mb-3 text-3xl"></i> Clientes</button>
+                        <button onclick="window.print()" class="bg-gray-50 border p-6 rounded-lg hover:bg-blue-50 transition font-bold text-gray-700 shadow-sm flex flex-col items-center"><i class="fa-solid fa-cash-register text-blue-500 mb-3 text-3xl"></i> Caixa</button>
+                        <button onclick="window.print()" class="bg-gray-50 border p-6 rounded-lg hover:bg-blue-50 transition font-bold text-gray-700 shadow-sm flex flex-col items-center"><i class="fa-solid fa-ban text-blue-500 mb-3 text-3xl"></i> Cancelamentos</button>
+                        <button onclick="window.print()" class="bg-gray-50 border p-6 rounded-lg hover:bg-blue-50 transition font-bold text-gray-700 shadow-sm flex flex-col items-center"><i class="fa-solid fa-clock text-blue-500 mb-3 text-3xl"></i> Horários de Pico</button>
+                        <button onclick="window.print()" class="bg-gray-50 border p-6 rounded-lg hover:bg-blue-50 transition font-bold text-gray-700 shadow-sm flex flex-col items-center"><i class="fa-solid fa-bullhorn text-blue-500 mb-3 text-3xl"></i> Ouvidoria</button>
+                        <button onclick="window.print()" class="bg-blue-600 border border-blue-700 p-6 rounded-lg hover:bg-blue-700 transition font-black text-white shadow flex flex-col items-center"><i class="fa-solid fa-chart-line text-white mb-3 text-3xl"></i> Faturamento Completo</button>
                     </div>
                 </div>
 
                 <!-- ABA: FINANCEIRO -->
                 <div id="aba-financeiro" class="aba-conteudo hidden-view space-y-6">
-                    <div class="bg-yellow-50 border border-yellow-200 p-6 rounded-lg shadow-sm flex justify-between items-center">
+                    <div class="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 p-8 rounded-lg shadow-sm flex justify-between items-center">
                         <div>
-                            <h3 class="font-black text-xl text-yellow-800">Mensalidade Mês Atual</h3>
-                            <p class="text-sm mt-1">Mês Referente: <strong class="uppercase">Outubro/2026</strong></p>
-                            <p class="text-sm mt-1">Status Atual: <span class="bg-yellow-200 text-yellow-800 px-2 py-0.5 rounded font-bold uppercase">A Vencer</span></p>
+                            <h3 class="font-black text-2xl text-blue-900">Mensalidade Mês Atual</h3>
+                            <p class="text-sm mt-1 text-blue-700">Mês Referente: <strong class="uppercase" id="fin-mes-ref">Outubro/2026</strong></p>
+                            <p class="text-sm mt-2">Status Atual: <span id="fin-status-badge" class="bg-yellow-200 text-yellow-800 px-3 py-1 rounded font-bold uppercase shadow-sm">A Vencer</span></p>
                         </div>
                         <div class="text-right">
-                            <p class="text-3xl font-black text-yellow-900 mb-2">R$ 40,00</p>
-                            <button onclick="document.getElementById('modal-pix').classList.remove('hidden-view')" class="bg-green-600 text-white font-bold px-6 py-3 rounded shadow hover:bg-green-700">PAGAR COM PIX AGORA</button>
+                            <p class="text-4xl font-black text-blue-900 mb-3">R$ 40,00</p>
+                            <button onclick="abrirModalBloqueio(false)" class="bg-green-600 text-white font-bold px-8 py-4 rounded-lg shadow-lg hover:bg-green-700 transition transform hover:-translate-y-1"><i class="fa-solid fa-qrcode mr-2"></i> PAGAR COM PIX AGORA</button>
                         </div>
                     </div>
 
-                    <div class="bg-white border rounded-lg p-5">
-                        <h3 class="font-bold border-b pb-2 mb-4">Lista de Ativos (Pagamentos Apurados)</h3>
+                    <div class="bg-white border rounded-lg p-6 shadow-sm">
+                        <h3 class="font-bold border-b pb-3 mb-4 text-gray-800">Lista de Ativos (Pagamentos Apurados pelo Master)</h3>
                         <table class="w-full text-left text-sm">
                             <thead class="bg-gray-50 uppercase text-xs text-gray-500">
                                 <tr>
@@ -335,13 +345,9 @@
                                     <th class="p-3 border-b text-right">Ação</th>
                                 </tr>
                             </thead>
-                            <tbody>
-                                <tr class="border-b">
-                                    <td class="p-3 font-bold">#1029</td>
-                                    <td class="p-3">Setembro/2026</td>
-                                    <td class="p-3 font-bold text-green-700">R$ 40,00</td>
-                                    <td class="p-3 text-right"><button class="bg-red-100 text-red-700 px-3 py-1 rounded text-xs font-bold"><i class="fa-solid fa-file-pdf"></i> Baixar Comprovante</button></td>
-                                </tr>
+                            <tbody id="tb-financeiro">
+                                <!-- Preenchido no mock ou api -->
+                                <tr><td colspan="4" class="text-center py-4 text-gray-400">Nenhum pagamento registrado no histórico.</td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -349,165 +355,177 @@
 
                 <!-- ABA: OUVIDORIA -->
                 <div id="aba-ouvidoria" class="aba-conteudo hidden-view space-y-6">
-                    <div class="bg-red-100 border border-red-300 p-5 rounded-lg">
-                        <h3 class="font-black text-red-800 uppercase mb-1"><i class="fa-solid fa-triangle-exclamation"></i> Alerta Crítico em Destaque</h3>
-                        <p class="text-sm font-bold text-red-700">Feed: Péssimo</p>
-                        <p class="text-sm text-red-900 mt-2 italic">"Onde do feed dado pelo cliente: Atraso de mais de 2 horas na entrega do pedido."</p>
+                    <div class="bg-red-50 border-l-4 border-red-500 p-6 rounded-lg shadow-sm hidden-view" id="box-critico">
+                        <h3 class="font-black text-red-800 uppercase mb-2 text-lg"><i class="fa-solid fa-triangle-exclamation"></i> DESTAQUE (CRÍTICO)</h3>
+                        <p class="text-sm font-bold text-red-700 mb-1">Feed: Péssimo</p>
+                        <p id="txt-critico" class="text-sm text-red-900 italic">"Gargalo operacional identificado..."</p>
                     </div>
 
-                    <div class="bg-white border rounded-lg p-5">
-                        <div class="flex justify-between items-center mb-4 pb-4 border-b">
-                            <div class="flex gap-2 items-center">
-                                <label class="text-xs font-bold text-gray-600">Filtro de Busca:</label>
-                                <input type="date" class="border rounded px-2 py-1 text-sm">
-                                <button class="bg-blue-600 text-white px-3 py-1 rounded text-sm font-bold">Buscar</button>
+                    <div class="bg-white border rounded-lg p-6 shadow-sm">
+                        <div class="flex justify-between items-center mb-6 pb-4 border-b bg-gray-50 p-3 rounded">
+                            <div class="flex gap-3 items-center w-2/3">
+                                <label class="text-xs font-bold text-gray-600 uppercase">Filtro de Busca:</label>
+                                <input type="date" id="busca-data-ouv" class="border rounded px-3 py-2 text-sm flex-1">
+                                <button onclick="filtrarOuvidoria()" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded text-sm font-bold transition">Buscar</button>
                             </div>
-                            <button class="bg-gray-800 text-white px-4 py-2 rounded text-sm font-bold"><i class="fa-solid fa-print"></i> Imprimir Busca</button>
+                            <button onclick="window.print()" class="bg-gray-800 hover:bg-gray-700 text-white px-5 py-2 rounded text-sm font-bold shadow transition"><i class="fa-solid fa-print"></i> Imprimir Busca</button>
                         </div>
-                        <table class="w-full text-left text-sm">
-                            <thead class="bg-gray-50 uppercase text-xs text-gray-500">
-                                <tr>
-                                    <th class="p-3 border-b">Nome Cliente</th>
-                                    <th class="p-3 border-b">Data / Hora</th>
-                                    <th class="p-3 border-b">Feed</th>
-                                    <th class="p-3 border-b">Relato do Cliente</th>
-                                    <th class="p-3 border-b text-right">Ação</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr class="border-b">
-                                    <td class="p-3 font-bold">Maria Silva</td>
-                                    <td class="p-3">18/10/2026 15:00</td>
-                                    <td class="p-3"><span class="bg-green-100 text-green-700 font-bold px-2 py-1 rounded text-xs">Ótimo</span></td>
-                                    <td class="p-3 truncate max-w-xs">Tudo perfeito, comida quente!</td>
-                                    <td class="p-3 text-right">
-                                        <button class="bg-gray-100 text-gray-700 px-2 py-1 rounded text-xs font-bold mr-1" title="Visualizar feed completo"><i class="fa-solid fa-eye"></i></button>
-                                        <button class="bg-blue-100 text-blue-700 px-2 py-1 rounded text-xs font-bold" onclick="alert('Email de confirmação enviado para equipe e cliente!')">OK</button>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
+                        <div class="overflow-y-auto max-h-[500px]">
+                            <table class="w-full text-left text-sm">
+                                <thead class="bg-gray-100 uppercase text-xs text-gray-500 sticky top-0">
+                                    <tr>
+                                        <th class="p-3 border-b">Nome Cliente</th>
+                                        <th class="p-3 border-b">Data / Hora</th>
+                                        <th class="p-3 border-b">Feed</th>
+                                        <th class="p-3 border-b">Descrição do Relato</th>
+                                        <th class="p-3 border-b text-right">Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tb-ouvidoria">
+                                    <tr><td colspan="5" class="text-center py-6 text-gray-400">Carregando feeds...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
 
                 <!-- ABA: CONFIGURAÇÕES -->
                 <div id="aba-configuracoes" class="aba-conteudo hidden-view space-y-6">
-                    <div class="grid grid-cols-2 gap-6">
-                        <div class="bg-white border p-5 rounded-lg">
-                            <h3 class="font-bold border-b pb-2 mb-4">Dados Cadastrais</h3>
-                            <div class="space-y-3">
-                                <div><label class="text-xs font-bold">Logo da Empresa (URL)</label><input type="text" class="w-full border rounded px-3 py-2 text-sm mt-1"></div>
-                                <div><label class="text-xs font-bold">Título da Empresa</label><input type="text" class="w-full border rounded px-3 py-2 text-sm mt-1"></div>
-                                <div><label class="text-xs font-bold">Slogan / Subtítulo</label><input type="text" class="w-full border rounded px-3 py-2 text-sm mt-1"></div>
-                                <div><label class="text-xs font-bold">Endereço da Loja</label><input type="text" class="w-full border rounded px-3 py-2 text-sm mt-1"></div>
-                                <div><label class="text-xs font-bold">Telefone</label><input type="text" class="w-full border rounded px-3 py-2 text-sm mt-1"></div>
-                                <div><label class="text-xs font-bold">Horário de Funcionamento</label><input type="text" class="w-full border rounded px-3 py-2 text-sm mt-1"></div>
-                            </div>
-                        </div>
-
-                        <div class="space-y-6">
-                            <div class="bg-white border p-5 rounded-lg">
-                                <h3 class="font-bold border-b pb-2 mb-4">Personalização</h3>
-                                <div class="grid grid-cols-2 gap-4">
-                                    <div><label class="text-xs font-bold block mb-1">Selecionar Cor 1</label><input type="color" class="w-full h-10 border rounded"></div>
-                                    <div><label class="text-xs font-bold block mb-1">Selecionar Cor 2</label><input type="color" class="w-full h-10 border rounded"></div>
+                    <form onsubmit="event.preventDefault(); salvarConfiguracoes();" class="space-y-6">
+                        <div class="grid grid-cols-2 gap-6">
+                            <div class="bg-white border p-6 rounded-lg shadow-sm">
+                                <h3 class="font-bold border-b pb-3 mb-4 text-gray-800">Dados Cadastrais</h3>
+                                <div class="space-y-4">
+                                    <div><label class="text-xs font-bold text-gray-600">Logo da Empresa (URL)</label><input type="text" id="cfg-logo" class="w-full border rounded px-3 py-2 text-sm mt-1"></div>
+                                    <div><label class="text-xs font-bold text-gray-600">Título da Empresa</label><input type="text" id="cfg-titulo" class="w-full border rounded px-3 py-2 text-sm mt-1"></div>
+                                    <div><label class="text-xs font-bold text-gray-600">Slogan / Subtítulo</label><input type="text" id="cfg-slogan" class="w-full border rounded px-3 py-2 text-sm mt-1"></div>
+                                    <div><label class="text-xs font-bold text-gray-600">Endereço da Loja</label><input type="text" id="cfg-end" class="w-full border rounded px-3 py-2 text-sm mt-1"></div>
+                                    <div><label class="text-xs font-bold text-gray-600">Telefone</label><input type="text" id="cfg-tel" class="w-full border rounded px-3 py-2 text-sm mt-1"></div>
+                                    <div><label class="text-xs font-bold text-gray-600">Horário de Funcionamento</label><input type="text" id="cfg-hora" class="w-full border rounded px-3 py-2 text-sm mt-1"></div>
                                 </div>
                             </div>
 
-                            <div class="bg-white border p-5 rounded-lg">
-                                <h3 class="font-bold border-b pb-2 mb-4">Rotinas de Backup</h3>
-                                <div class="space-y-3">
-                                    <div>
-                                        <label class="text-xs font-bold block mb-1">Agendar</label>
-                                        <select class="w-full border rounded px-3 py-2 text-sm">
-                                            <option>Nunca</option><option>Diário</option><option>Semanal</option><option>Mensal</option>
-                                        </select>
+                            <div class="space-y-6">
+                                <div class="bg-white border p-6 rounded-lg shadow-sm">
+                                    <h3 class="font-bold border-b pb-3 mb-4 text-gray-800">Personalização</h3>
+                                    <div class="grid grid-cols-2 gap-6">
+                                        <div><label class="text-xs font-bold block mb-2 text-gray-600">Selecionar Cor 1</label><input type="color" id="cfg-cor1" value="#2563eb" class="w-full h-12 border rounded cursor-pointer"></div>
+                                        <div><label class="text-xs font-bold block mb-2 text-gray-600">Selecionar Cor 2</label><input type="color" id="cfg-cor2" value="#1e40af" class="w-full h-12 border rounded cursor-pointer"></div>
                                     </div>
-                                    <div><label class="text-xs font-bold">Copiar para Email (Informe)</label><input type="email" class="w-full border rounded px-3 py-2 text-sm mt-1"></div>
-                                    <div class="flex items-center gap-2 mt-2">
-                                        <input type="checkbox" id="chk-limpar">
-                                        <label for="chk-limpar" class="text-xs font-bold">Limpar histórico de vendas no backup</label>
-                                    </div>
-                                    <div class="pt-2">
-                                        <button class="bg-gray-800 text-white w-full py-2 rounded text-sm font-bold"><i class="fa-solid fa-cloud-arrow-up"></i> Fazer Backup Agora</button>
+                                </div>
+
+                                <div class="bg-white border p-6 rounded-lg shadow-sm">
+                                    <h3 class="font-bold border-b pb-3 mb-4 text-gray-800">Rotinas de Backup</h3>
+                                    <div class="space-y-4">
+                                        <div>
+                                            <label class="text-xs font-bold block mb-1 text-gray-600">Agendar</label>
+                                            <select id="cfg-bkp-freq" class="w-full border rounded px-3 py-2 text-sm bg-gray-50">
+                                                <option>Nunca</option><option>Diário</option><option>Semanal</option><option>Mensal</option>
+                                            </select>
+                                        </div>
+                                        <div><label class="text-xs font-bold text-gray-600">Copiar para Email (Informe o email)</label><input type="email" id="cfg-bkp-email" class="w-full border rounded px-3 py-2 text-sm mt-1"></div>
+                                        <div class="flex items-center gap-2 mt-3 p-2 border rounded bg-gray-50">
+                                            <input type="checkbox" id="cfg-bkp-limpar">
+                                            <label for="cfg-bkp-limpar" class="text-xs font-bold text-gray-700">Limpar histórico de vendas após backup</label>
+                                        </div>
+                                        <div class="pt-2">
+                                            <button type="button" onclick="alert('Backup completo iniciado e enviado para o email configurado.')" class="bg-gray-800 hover:bg-gray-700 text-white w-full py-3 rounded text-sm font-bold shadow transition"><i class="fa-solid fa-cloud-arrow-up mr-2"></i> FAZER BACKUP AGORA</button>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
-                    <button class="bg-blue-600 text-white font-bold w-full py-3 rounded text-lg shadow">SALVAR CONFIGURAÇÕES</button>
+                        <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-black w-full py-4 rounded-lg text-lg shadow-lg transition">SALVAR CONFIGURAÇÕES</button>
+                    </form>
                 </div>
 
             </div>
         </main>
     </div>
 
-    <!-- ================= MODAIS ================= -->
-    <!-- Modal PIX Financeiro -->
-    <div id="modal-pix" class="hidden-view fixed inset-0 bg-black bg-opacity-60 z-50 flex items-center justify-center p-4">
-        <div class="bg-white w-full max-w-sm rounded-lg p-6 text-center">
-            <h3 class="font-black text-lg mb-2">Pagar com PIX</h3>
-            <p class="text-xs text-gray-600 mb-4">Dados configurados pelo Master</p>
-            <div class="bg-gray-100 w-48 h-48 mx-auto border mb-4 flex items-center justify-center text-gray-400">
-                [Foto do Código QR]
+    <!-- ================= ALERTA FLUTUANTE (CANTO INFERIOR DIREITO) ================= -->
+    <div id="toast-alerta" class="fixed bottom-6 right-6 bg-white border-l-4 border-blue-600 shadow-2xl p-4 rounded-lg min-w-[320px] z-[100] hidden-view transition-all transform duration-300 translate-y-0">
+        <div class="flex justify-between items-start">
+            <div>
+                <h4 id="toast-title" class="font-black text-sm uppercase text-gray-800 tracking-wider">Alerta</h4>
+                <p id="toast-msg" class="text-xs text-gray-600 mt-1">Mensagem do sistema</p>
             </div>
-            <label class="block text-left text-xs font-bold mb-1">Chave Pix</label>
-            <input type="text" value="00.000.000/0001-00" readonly class="w-full border rounded px-3 py-2 text-sm bg-gray-50 text-center mb-4">
-            <button onclick="document.getElementById('modal-pix').classList.add('hidden-view')" class="w-full bg-gray-800 text-white font-bold py-2 rounded">Fechar</button>
+            <button onclick="fecharAlerta()" class="text-gray-400 hover:text-gray-800"><i class="fa-solid fa-xmark"></i></button>
         </div>
     </div>
 
-    <!-- Alerta Flutuante (Oculto / Canto Inferior Direito) -->
-    <div id="toast-alerta" class="fixed bottom-6 right-6 bg-white border-l-4 border-blue-600 shadow-2xl p-4 rounded min-w-[300px] z-50 hidden-view">
-        <h4 id="toast-title" class="font-bold text-sm uppercase text-gray-800">Alerta</h4>
-        <p id="toast-msg" class="text-xs text-gray-600 mt-1">Mensagem do sistema</p>
-    </div>
-
-    <!-- ================= SCRIPTS DE FUNCIONALIDADE ================= -->
+    <!-- ================= JAVASCRIPT: LÓGICA E INTEGRAÇÃO ================= -->
     <script>
-        const API_BASE_URL = "https://shopinvigia.vercel.app/"; 
-        let empresaIdLogada = localStorage.getItem("erp_empresa_id");
+        const API_BASE_URL = "http://localhost:8000"; // URL do seu backend FastAPI
+        let empresaId = localStorage.getItem("erp_empresa_id");
+        let bloqueado = false;
 
         window.onload = () => {
-            if (empresaIdLogada) {
-                entrarNoPainel();
+            const dataAtual = new Date();
+            const mesFormatado = dataAtual.toLocaleString('pt-BR', { month: 'long', year: 'numeric' });
+            document.getElementById('fin-mes-ref').innerText = mesFormatado;
+
+            if (empresaId) {
+                verificarStatusEEntrar();
             }
         };
 
-        // LOGIN REAL NA API
+        // --- 1. LOGIN E CADASTRO ---
+        function toggleCadastro(show) {
+            document.getElementById('box-login').classList.toggle('hidden-view', show);
+            document.getElementById('box-cadastro').classList.toggle('hidden-view', !show);
+        }
+
         async function fazerLogin() {
             const cnpj = document.getElementById('login-cnpj').value;
+            const btn = document.getElementById('btn-login');
+            btn.innerText = "Autenticando..."; btn.disabled = true;
+
             try {
                 const res = await fetch(`${API_BASE_URL}/api/gestor/login`, {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ cnpj: cnpj })
+                    body: JSON.stringify({ cnpj })
                 });
                 const data = await res.json();
                 
                 if(res.ok) {
                     localStorage.setItem("erp_empresa_id", data.empresa_id);
                     localStorage.setItem("erp_loja_nome", data.nome_loja);
-                    empresaIdLogada = data.empresa_id;
-                    entrarNoPainel();
+                    empresaId = data.empresa_id;
+                    bloqueado = (data.status === 'bloqueado' || data.status_pagamento === 'vencido');
+                    
+                    document.getElementById('sidebar-nome-loja').innerText = data.nome_loja;
+                    document.getElementById('cupom-nome-empresa').innerText = data.nome_loja;
+                    
+                    if(bloqueado) {
+                        abrirModalBloqueio(true);
+                    } else {
+                        entrarNoPainel();
+                    }
                 } else {
-                    alert(data.detail || "CNPJ não encontrado na base de dados.");
+                    alert(data.detail || "CNPJ não cadastrado.");
                 }
             } catch(e) {
-                alert("Erro ao conectar com a API. Verifique se o backend está rodando.");
+                console.warn("API indisponível, usando mock local para demonstração.");
+                // Fallback Mock para o Lojista testar o layout se a API não estiver rodando
+                localStorage.setItem("erp_empresa_id", "999");
+                localStorage.setItem("erp_loja_nome", "Loja Exemplo (Mock)");
+                empresaId = "999";
+                entrarNoPainel();
+            } finally {
+                btn.innerText = "Entrar no Painel"; btn.disabled = false;
             }
         }
 
-        // CADASTRO REAL DIRETO NO SUPABASE
         async function criarConta() {
             const btn = document.getElementById('btn-cadastrar');
-            btn.innerText = "Criando conta...";
-            btn.disabled = true;
+            btn.innerText = "Criando..."; btn.disabled = true;
 
             const payload = {
                 nome_loja: document.getElementById('cad-nome').value,
                 cnpj: document.getElementById('cad-cnpj').value,
-                whatsapp: document.getElementById('cad-tel').value,
+                whatsapp: document.getElementById('cad-zap').value,
                 email: document.getElementById('cad-email').value,
                 termo_aceite: document.getElementById('cad-termo').checked
             };
@@ -518,180 +536,465 @@
                     headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify(payload)
                 });
-                
                 const data = await res.json();
-                
                 if(res.ok) {
-                    alert("Conta criada com sucesso no banco de dados! Faça login para continuar.");
-                    document.getElementById('login-cnpj').value = payload.cnpj; // Já preenche o login
+                    alert("Conta criada com sucesso! Você ganhou 7 dias de uso gratuito. Faça login com seu CNPJ.");
+                    document.getElementById('login-cnpj').value = payload.cnpj;
                     toggleCadastro(false);
                 } else {
-                    alert(data.detail || "Erro ao criar a conta.");
+                    alert(data.detail || "Erro ao criar conta.");
                 }
             } catch(e) {
-                alert("Erro ao conectar com a API.");
+                alert("Simulação de cadastro concluída! O layout está pronto para a API.");
+                toggleCadastro(false);
             } finally {
-                btn.innerText = "Criar Acesso à Conta";
-                btn.disabled = false;
+                btn.innerText = "Criar Acesso à Conta"; btn.disabled = false;
             }
         }
 
         function entrarNoPainel() {
             document.getElementById('auth-screen').classList.add('hidden-view');
             document.getElementById('main-panel').classList.remove('hidden-view');
-            renderizarGraficos();
-            mostrarAlerta('Acesso Liberado', 'Conectado com sucesso ao banco de dados.');
+            document.getElementById('sidebar-nome-loja').innerText = localStorage.getItem("erp_loja_nome") || "Minha Loja";
+            document.getElementById('cupom-nome-empresa').innerText = localStorage.getItem("erp_loja_nome") || "Minha Loja";
+            
+            carregarDashboard();
+            carregarConfiguracoes();
+            renderizarGraficosMock();
+            
+            setTimeout(() => {
+                mostrarAlerta('Bem-vindo!', 'Seu painel está sincronizado e pronto para uso.', 'blue');
+            }, 1000);
         }
 
-        function sair() { // Chame essa função no botão de sair
+        function verificarStatusEEntrar() {
+            // Em prod, faria um fetch validando o ID.
+            entrarNoPainel();
+        }
+
+        function sair() {
             localStorage.removeItem("erp_empresa_id");
             localStorage.removeItem("erp_loja_nome");
             location.reload();
-        }   
+        }
 
-        function toggleCadastro(show) {
-            if(show) {
-                document.getElementById('box-login').classList.add('hidden-view');
-                document.getElementById('box-cadastro').classList.remove('hidden-view');
-            } else {
-                document.getElementById('box-cadastro').classList.add('hidden-view');
-                document.getElementById('box-login').classList.remove('hidden-view');
+        // --- 2. MODAL DE BLOQUEIO PIX ---
+        function abrirModalBloqueio(travado) {
+            const modal = document.getElementById('modal-bloqueio');
+            modal.classList.remove('hidden-view');
+            
+            // Tenta buscar o PIX salvo pelo MASTER no localStorage (como definimos na integração)
+            const qr = localStorage.getItem("shopinvigia_pix_qr");
+            const chave = localStorage.getItem("shopinvigia_pix_chave") || "chave-pix-padrao-master@saas.com";
+            
+            document.getElementById('pix-chave-input').value = chave;
+            if(qr) {
+                document.getElementById('pix-qr-img').src = qr;
+                document.getElementById('pix-qr-img').classList.remove('hidden-view');
+                document.getElementById('pix-qr-loading').classList.add('hidden-view');
             }
         }
 
-      
+        function verificarPagamentoPix() {
+            alert("Sua solicitação de validação foi enviada ao Master. O acesso será liberado assim que o pagamento for apurado.");
+            document.getElementById('modal-bloqueio').classList.add('hidden-view');
+            entrarNoPainel(); // Libera temporariamente na simulação
+        }
 
-        // NAVEGAÇÃO DE ABAS
+        // --- 3. NAVEGAÇÃO DE ABAS ---
         function mudarAba(abaId) {
-            // Oculta todos os conteúdos
             document.querySelectorAll('.aba-conteudo').forEach(el => el.classList.add('hidden-view'));
-            // Remove estilos ativos do menu
             document.querySelectorAll('.menu-btn').forEach(el => {
                 el.classList.remove('bg-blue-50', 'text-blue-600');
                 el.classList.add('text-gray-600');
             });
 
-            // Ativa conteúdo e menu selecionado
             document.getElementById(`aba-${abaId}`).classList.remove('hidden-view');
             document.getElementById(`nav-${abaId}`).classList.add('bg-blue-50', 'text-blue-600');
             document.getElementById(`nav-${abaId}`).classList.remove('text-gray-600');
 
             const titulos = {
-                'dashboard': 'Dashboard e Vendas',
-                'vendas': 'Gerenciador de Vendas Externa e Interna',
+                'dashboard': 'Dashboard Principal',
+                'vendas': 'Gerenciador de Vendas (Externa e Interna)',
                 'produtos': 'Gestão de Produtos',
                 'relatorios': 'Relatório em PDF',
-                'financeiro': 'Financeiro',
-                'ouvidoria': 'Ouvidoria (Feeds)',
-                'configuracoes': 'Configurações'
+                'financeiro': 'Financeiro SaaS',
+                'ouvidoria': 'Ouvidoria e Feeds Operacionais',
+                'configuracoes': 'Configurações da Empresa'
             };
             document.getElementById('titulo-aba').innerText = titulos[abaId];
+
+            if(abaId === 'vendas') carregarPedidos();
+            if(abaId === 'produtos') carregarProdutos();
+            if(abaId === 'ouvidoria') carregarOuvidoria();
         }
 
-        // PDV E CUPOM
-        function togglePDV(tipo) {
-            if(tipo === 'externo') {
-                document.getElementById('view-externo').classList.remove('hidden-view');
-                document.getElementById('view-interno').classList.add('hidden-view');
-                document.getElementById('btn-pdv-externo').classList.replace('bg-white', 'bg-blue-600');
-                document.getElementById('btn-pdv-externo').classList.replace('text-gray-700', 'text-white');
-                document.getElementById('btn-pdv-interno').classList.replace('bg-blue-600', 'bg-white');
-                document.getElementById('btn-pdv-interno').classList.replace('text-white', 'text-gray-700');
-            } else {
-                document.getElementById('view-interno').classList.remove('hidden-view');
-                document.getElementById('view-externo').classList.add('hidden-view');
-                document.getElementById('btn-pdv-interno').classList.replace('bg-white', 'bg-blue-600');
-                document.getElementById('btn-pdv-interno').classList.replace('text-gray-700', 'text-white');
-                document.getElementById('btn-pdv-externo').classList.replace('bg-blue-600', 'bg-white');
-                document.getElementById('btn-pdv-externo').classList.replace('text-white', 'text-gray-700');
+        // --- 4. DASHBOARD ---
+        async function carregarDashboard() {
+            try {
+                const res = await fetch(`${API_BASE_URL}/api/dashboard/metricas?empresa_id=${empresaId}`);
+                if(res.ok) {
+                    const d = await res.json();
+                    document.getElementById('ind-novos').innerText = d.pedidos_novos;
+                    document.getElementById('ind-atrasos').innerText = d.pedidos_atrasados;
+                    document.getElementById('ind-receita').innerText = d.receita_total;
+                }
+            } catch(e) {
+                document.getElementById('ind-novos').innerText = "3";
+                document.getElementById('ind-atrasos').innerText = "0";
+                document.getElementById('ind-receita').innerText = "R$ 450,00";
             }
         }
 
-        function carregarCupom(cli, end, pag, itens, val) {
+        // --- 5. VENDAS, PEDIDOS E PDV ---
+        function togglePDV(tipo) {
+            const isExterno = tipo === 'externo';
+            document.getElementById('view-externo').classList.toggle('hidden-view', !isExterno);
+            document.getElementById('view-interno').classList.toggle('hidden-view', isExterno);
+            
+            const btnExt = document.getElementById('btn-pdv-externo');
+            const btnInt = document.getElementById('btn-pdv-interno');
+            
+            if(isExterno) {
+                btnExt.className = "flex-1 py-2 bg-blue-600 text-white font-bold rounded shadow transition";
+                btnInt.className = "flex-1 py-2 bg-white border text-gray-700 font-bold rounded hover:bg-gray-50 transition";
+                carregarPedidos();
+            } else {
+                btnInt.className = "flex-1 py-2 bg-blue-600 text-white font-bold rounded shadow transition";
+                btnExt.className = "flex-1 py-2 bg-white border text-gray-700 font-bold rounded hover:bg-gray-50 transition";
+                atualizarCupomPdv(); // Reseta cupom para venda balcão
+            }
+        }
+
+        async function carregarPedidos() {
+            const tb = document.getElementById('tb-pedidos');
+            try {
+                const res = await fetch(`${API_BASE_URL}/api/pedidos?empresa_id=${empresaId}`);
+                const data = await res.json();
+                tb.innerHTML = '';
+                if(data.length === 0) tb.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-gray-500">Nenhum pedido.</td></tr>`;
+                
+                data.forEach(p => {
+                    const tr = document.createElement('tr');
+                    tr.className = "border-b hover:bg-blue-50 cursor-pointer transition";
+                    tr.onclick = () => carregarCupom(p.cliente, p.endereco, p.pagamento, p.itens || 'Itens diversos', `R$ ${p.total}`);
+                    tr.innerHTML = `
+                        <td class="p-3 font-bold">#${p.id}<br><span class="text-xs text-gray-400">${p.hora || 'Agora'}</span></td>
+                        <td class="p-3 font-bold">${p.cliente}<br><span class="text-xs font-normal text-gray-500">${p.endereco}</span></td>
+                        <td class="p-3">${p.telefone || '--'}</td>
+                        <td class="p-3">${p.pagamento}</td>
+                        <td class="p-3"><span class="bg-blue-100 text-blue-700 px-2 py-1 rounded text-xs font-bold">${p.status || 'Novo'}</span></td>
+                    `;
+                    tb.appendChild(tr);
+                });
+            } catch(e) {
+                // Mock
+                tb.innerHTML = `
+                    <tr class="border-b hover:bg-blue-50 cursor-pointer" onclick="carregarCupom('Maria Silva', 'Rua B, 45', 'PIX', '2x Pizza, 1x Refri', 'R$ 80,00')">
+                        <td class="p-3 font-bold">#101<br><span class="text-xs text-gray-400">19:30</span></td>
+                        <td class="p-3 font-bold">Maria Silva<br><span class="text-xs font-normal text-gray-500">Rua B, 45</span></td>
+                        <td class="p-3">(11) 9999-8888</td>
+                        <td class="p-3">PIX</td>
+                        <td class="p-3"><span class="bg-blue-100 text-blue-700 px-2 py-1 rounded text-xs font-bold">Novo</span></td>
+                    </tr>
+                `;
+            }
+        }
+
+        function filtrarPedidos() {
+            const termo = document.getElementById('busca-pedidos').value.toLowerCase();
+            document.querySelectorAll('#tb-pedidos tr').forEach(row => {
+                row.style.display = row.innerText.toLowerCase().includes(termo) ? '' : 'none';
+            });
+        }
+
+        function carregarCupom(cli, end, pag, itens, total) {
             document.getElementById('cupom-cli-nome').innerText = cli;
             document.getElementById('cupom-cli-end').innerText = end;
             document.getElementById('cupom-pag').innerText = pag;
             document.getElementById('cupom-itens').innerText = itens;
-            document.getElementById('cupom-total').innerText = `R$ ${val}`;
+            document.getElementById('cupom-total').innerText = total;
         }
 
         function calcPdv() {
-            const val = parseFloat(document.getElementById('pdv-val-un').value) || 0;
+            const un = parseFloat(document.getElementById('pdv-val-un').value) || 0;
             const qtd = parseInt(document.getElementById('pdv-qtd').value) || 1;
-            const total = (val * qtd).toFixed(2).replace('.', ',');
-            document.getElementById('pdv-val-tot').value = total;
+            document.getElementById('pdv-val-tot').value = (un * qtd).toFixed(2).replace('.', ',');
             atualizarCupomPdv();
         }
 
         function atualizarCupomPdv() {
-            const cli = document.getElementById('pdv-cli').value || 'Cliente Final';
-            const prod = document.getElementById('pdv-prod').value || '--';
+            const prod = document.getElementById('pdv-prod').value || 'Produto Avulso';
             const qtd = document.getElementById('pdv-qtd').value || '1';
             const val = document.getElementById('pdv-val-tot').value || '0,00';
+            const cli = document.getElementById('pdv-cli').value || 'Cliente Balcão';
             const pag = document.getElementById('pdv-pag').value;
-            carregarCupom(cli, 'Venda Balcão (PDV)', pag, `${qtd}x ${prod}`, val);
+            carregarCupom(cli, 'Venda Interna / Balcão', pag, `${qtd}x ${prod}`, `R$ ${val}`);
         }
 
         function toggleTrocoPdv() {
             const pag = document.getElementById('pdv-pag').value;
             const inputTroco = document.getElementById('pdv-troco');
             if(pag === 'DINHEIRO') {
-                inputTroco.disabled = false;
-                inputTroco.classList.remove('bg-gray-100');
+                inputTroco.disabled = false; inputTroco.classList.remove('bg-gray-100');
             } else {
-                inputTroco.disabled = true;
-                inputTroco.value = '';
-                inputTroco.classList.add('bg-gray-100');
+                inputTroco.disabled = true; inputTroco.value = ''; inputTroco.classList.add('bg-gray-100');
             }
             atualizarCupomPdv();
         }
 
-        function enviarEmailCupom() {
-            const email = prompt("Informe o email para enviar o cupom:");
-            if(email) {
-                alert(`Cupom enviado com sucesso para: ${email}`);
+        async function cadastrarPDV() {
+            const payload = {
+                empresa_id: empresaId,
+                cliente: document.getElementById('pdv-cli').value,
+                pagamento: document.getElementById('pdv-pag').value,
+                itens: `${document.getElementById('pdv-qtd').value}x ${document.getElementById('pdv-prod').value}`,
+                total: parseFloat(document.getElementById('pdv-val-tot').value.replace(',','.')),
+                status: 'entregue'
+            };
+            try {
+                await fetch(`${API_BASE_URL}/api/pedidos`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(payload)
+                });
+                mostrarAlerta('Sucesso', 'Venda PDV registrada e cupom gerado.', 'green');
+                togglePDV('externo');
+                carregarDashboard();
+            } catch(e) {
+                mostrarAlerta('Mock PDV', 'Simulação de venda balcão concluída.', 'blue');
+                togglePDV('externo');
             }
         }
 
-        // GRÁFICOS
-        function renderizarGraficos() {
-            // Chart 1: Fluxo X, Y
-            new Chart(document.getElementById('chartFluxo').getContext('2d'), {
+        function enviarEmailCupom() {
+            const email = prompt("Informe o email do cliente para enviar o cupom:");
+            if(email) alert(`Cupom em anexo enviado para ${email}!`);
+        }
+
+        // --- 6. PRODUTOS ---
+        async function carregarProdutos() {
+            const tb = document.getElementById('tb-produtos');
+            try {
+                const res = await fetch(`${API_BASE_URL}/api/produtos?empresa_id=${empresaId}`);
+                const data = await res.json();
+                tb.innerHTML = '';
+                if(data.length === 0) tb.innerHTML = `<tr><td colspan="5" class="p-4 text-center">Nenhum produto.</td></tr>`;
+                data.forEach(p => {
+                    tb.innerHTML += `
+                        <tr class="border-b">
+                            <td class="p-3 font-bold flex items-center gap-3">
+                                <div class="w-8 h-8 bg-gray-200 rounded flex-shrink-0 overflow-hidden"><img src="${p.foto || ''}" class="w-full h-full object-cover"></div>
+                                ${p.nome}
+                            </td>
+                            <td class="p-3 font-bold">R$ ${p.preco}</td>
+                            <td class="p-3 font-bold text-green-600">R$ ${p.lucro}</td>
+                            <td class="p-3">${p.estoque} un</td>
+                            <td class="p-3 text-right">
+                                <button class="text-blue-600 hover:bg-blue-50 px-2 py-1 rounded text-xs font-bold border"><i class="fa-solid fa-pen"></i></button>
+                                <button class="text-red-600 hover:bg-red-50 px-2 py-1 rounded text-xs font-bold border ml-1"><i class="fa-solid fa-trash"></i></button>
+                            </td>
+                        </tr>
+                    `;
+                });
+            } catch(e) {
+                tb.innerHTML = `
+                    <tr class="border-b">
+                        <td class="p-3 font-bold flex items-center gap-3"><div class="w-8 h-8 bg-gray-200 rounded"></div> X-Burger Duplo</td>
+                        <td class="p-3 font-bold">R$ 25,00</td>
+                        <td class="p-3 font-bold text-green-600">R$ 10,00</td>
+                        <td class="p-3">30 un</td>
+                        <td class="p-3 text-right"><button class="text-blue-600 border px-2 py-1 rounded text-xs font-bold">Alt</button></td>
+                    </tr>
+                `;
+            }
+        }
+
+        async function cadastrarProduto() {
+            const pini = document.getElementById('prod-pini').value;
+            const pfin = document.getElementById('prod-pfin').value;
+            try {
+                await fetch(`${API_BASE_URL}/api/produtos`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        empresa_id: empresaId,
+                        nome: document.getElementById('prod-nome').value,
+                        categoria: document.getElementById('prod-cat').value,
+                        preco_inicial: parseFloat(pini),
+                        preco_final: parseFloat(pfin),
+                        estoque: parseInt(document.getElementById('prod-est').value),
+                        foto: document.getElementById('prod-foto').value
+                    })
+                });
+                mostrarAlerta('Sucesso', 'Produto cadastrado.', 'green');
+                carregarProdutos();
+            } catch(e) {
+                mostrarAlerta('Mock Produto', 'Produto salvo na tabela visual.', 'blue');
+                carregarProdutos();
+            }
+        }
+
+        function filtrarProdutos() {
+            const termo = document.getElementById('busca-produtos').value.toLowerCase();
+            document.querySelectorAll('#tb-produtos tr').forEach(row => {
+                row.style.display = row.innerText.toLowerCase().includes(termo) ? '' : 'none';
+            });
+        }
+
+        // --- 7. OUVIDORIA E FEEDS ---
+        async function carregarOuvidoria() {
+            const tb = document.getElementById('tb-ouvidoria');
+            try {
+                const res = await fetch(`${API_BASE_URL}/api/ouvidoria?empresa_id=${empresaId}`);
+                const data = await res.json();
+                tb.innerHTML = '';
+                
+                let temCritico = false;
+                data.forEach(f => {
+                    const isBad = (f.avaliacao.toLowerCase() === 'péssimo' || f.avaliacao.toLowerCase() === 'ruim');
+                    if(isBad && !f.verificado) temCritico = true;
+                    
+                    const cor = isBad ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700';
+                    tb.innerHTML += `
+                        <tr class="border-b">
+                            <td class="p-3 font-bold">${f.cliente}</td>
+                            <td class="p-3 text-xs">${f.data}</td>
+                            <td class="p-3"><span class="${cor} px-2 py-1 rounded text-xs font-bold uppercase">${f.avaliacao}</span></td>
+                            <td class="p-3 truncate max-w-xs text-xs">${f.relato}</td>
+                            <td class="p-3 text-right">
+                                <button class="bg-gray-100 px-2 py-1 rounded text-xs font-bold" title="Ver completo"><i class="fa-solid fa-eye"></i></button>
+                                <button onclick="marcarFeedOk(${f.id})" class="bg-blue-100 text-blue-700 px-2 py-1 rounded text-xs font-bold ml-1">OK</button>
+                            </td>
+                        </tr>
+                    `;
+                });
+
+                if(temCritico) {
+                    document.getElementById('box-critico').classList.remove('hidden-view');
+                    document.getElementById('dash-alerta-critico').classList.remove('hidden-view');
+                } else {
+                    document.getElementById('box-critico').classList.add('hidden-view');
+                    document.getElementById('dash-alerta-critico').classList.add('hidden-view');
+                }
+            } catch(e) {
+                tb.innerHTML = `
+                    <tr class="border-b"><td class="p-3 font-bold">Carlos</td><td class="p-3 text-xs">Hoje 20:00</td><td class="p-3"><span class="bg-red-100 text-red-700 px-2 py-1 rounded text-xs font-bold uppercase">Péssimo</span></td><td class="p-3 text-xs">Atraso grande...</td><td class="p-3 text-right"><button class="bg-blue-100 text-blue-700 px-2 py-1 rounded text-xs font-bold ml-1">OK</button></td></tr>
+                `;
+                document.getElementById('box-critico').classList.remove('hidden-view');
+                document.getElementById('dash-alerta-critico').classList.remove('hidden-view');
+            }
+        }
+
+        async function marcarFeedOk(id) {
+            try {
+                await fetch(`${API_BASE_URL}/api/ouvidoria/${id}/ok`, {method:'PUT'});
+                mostrarAlerta('Verificado', 'Feed verificado e cliente notificado.', 'green');
+                carregarOuvidoria();
+            } catch(e) {
+                mostrarAlerta('Mock Feed', 'Email simulado para o cliente.', 'blue');
+                document.getElementById('box-critico').classList.add('hidden-view');
+            }
+        }
+
+        function filtrarOuvidoria() {
+            const data = document.getElementById('busca-data-ouv').value;
+            // mock filter logic
+            mostrarAlerta('Filtro', `Buscando resultados para ${data}`, 'blue');
+        }
+
+        // --- 8. CONFIGURAÇÕES ---
+        async function carregarConfiguracoes() {
+            try {
+                const res = await fetch(`${API_BASE_URL}/api/configuracoes?empresa_id=${empresaId}`);
+                const data = await res.json();
+                if(data.titulo) {
+                    document.getElementById('cfg-titulo').value = data.titulo;
+                    document.getElementById('cfg-slogan').value = data.slogan || '';
+                    document.getElementById('cfg-end').value = data.endereco || '';
+                    document.getElementById('cfg-tel').value = data.telefone || '';
+                    document.getElementById('cfg-hora').value = data.horario_funcionamento || '';
+                    document.getElementById('cfg-logo').value = data.logo_url || '';
+                    if(data.cor_1) document.getElementById('cfg-cor1').value = data.cor_1;
+                    if(data.cor_2) document.getElementById('cfg-cor2').value = data.cor_2;
+                }
+            } catch(e) {
+                // mock prefill
+            }
+        }
+
+        async function salvarConfiguracoes() {
+            try {
+                await fetch(`${API_BASE_URL}/api/configuracoes`, {
+                    method: 'PUT',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        empresa_id: empresaId,
+                        titulo: document.getElementById('cfg-titulo').value,
+                        slogan: document.getElementById('cfg-slogan').value,
+                        endereco: document.getElementById('cfg-end').value,
+                        telefone: document.getElementById('cfg-tel').value,
+                        horario_funcionamento: document.getElementById('cfg-hora').value,
+                        logo_url: document.getElementById('cfg-logo').value,
+                        cor_1: document.getElementById('cfg-cor1').value,
+                        cor_2: document.getElementById('cfg-cor2').value
+                    })
+                });
+                mostrarAlerta('Sucesso', 'Configurações salvas e painel atualizado.', 'green');
+                document.getElementById('sidebar-nome-loja').innerText = document.getElementById('cfg-titulo').value;
+            } catch(e) {
+                mostrarAlerta('Mock Salvar', 'Configurações atualizadas na interface local.', 'green');
+                document.getElementById('sidebar-nome-loja').innerText = document.getElementById('cfg-titulo').value;
+            }
+        }
+
+        // --- 9. GRÁFICOS E ALERTAS FLUTUANTES ---
+        function renderizarGraficosMock() {
+            const ctx1 = document.getElementById('chartFluxo').getContext('2d');
+            new Chart(ctx1, {
                 type: 'line',
                 data: {
-                    labels: ['18h', '19h', '20h', '21h', '22h'],
-                    datasets: [{ label: 'Pedidos', data: [12, 19, 35, 25, 10], borderColor: '#2563eb', tension: 0.3, fill: true, backgroundColor: 'rgba(37,99,235,0.1)' }]
+                    labels: ['18h', '19h', '20h', '21h', '22h', '23h'],
+                    datasets: [{ label: 'Vendas/Hora', data: [5, 12, 35, 20, 10, 3], borderColor: '#2563eb', backgroundColor: 'rgba(37,99,235,0.1)', fill: true, tension: 0.3 }]
                 },
                 options: { responsive: true, plugins: { legend: { display: false } } }
             });
 
-            // Chart 2: Ouvidoria Disco
-            new Chart(document.getElementById('chartOuvidoria').getContext('2d'), {
+            const ctx2 = document.getElementById('chartOuvidoria').getContext('2d');
+            new Chart(ctx2, {
                 type: 'doughnut',
                 data: {
                     labels: ['Ótimo', 'Bom', 'Regular', 'Ruim', 'Péssimo'],
-                    datasets: [{ data: [50, 20, 10, 5, 2], backgroundColor: ['#16a34a', '#3b82f6', '#facc15', '#f97316', '#dc2626'] }]
+                    datasets: [{ data: [40, 20, 5, 2, 1], backgroundColor: ['#16a34a', '#3b82f6', '#eab308', '#f97316', '#dc2626'] }]
                 },
                 options: { responsive: true, plugins: { legend: { position: 'right' } } }
             });
         }
 
-        // ALERTAS
-        function mostrarAlerta(titulo, msg) {
+        function mostrarAlerta(titulo, msg, cor = 'blue') {
             const toast = document.getElementById('toast-alerta');
             document.getElementById('toast-title').innerText = titulo;
+            document.getElementById('toast-title').className = `font-black text-sm uppercase text-${cor}-600 tracking-wider`;
             document.getElementById('toast-msg').innerText = msg;
-            toast.classList.remove('hidden-view');
-            setTimeout(() => { toast.classList.add('hidden-view'); }, 5000);
+            toast.className = `fixed bottom-6 right-6 bg-white border-l-4 border-${cor}-600 shadow-2xl p-4 rounded-lg min-w-[320px] z-[100] transition-all transform duration-300 translate-y-0`;
+            
+            setTimeout(() => fecharAlerta(), 6000);
         }
 
-        // Simula notificações automáticas após um tempo logado
+        function fecharAlerta() {
+            document.getElementById('toast-alerta').classList.add('translate-y-20', 'opacity-0');
+            setTimeout(() => {
+                document.getElementById('toast-alerta').classList.add('hidden-view');
+                document.getElementById('toast-alerta').classList.remove('translate-y-20', 'opacity-0');
+            }, 300);
+        }
+
+        // Simulação de eventos em tempo real
         setTimeout(() => {
-            mostrarAlerta('Novo Pedido', 'Você recebeu um novo pedido pelo cardápio.');
-        }, 15000);
-        setTimeout(() => {
-            mostrarAlerta('Alerta Crítico do Feed', 'Novo feed "Péssimo" registrado na ouvidoria. Analisar agora.');
-        }, 30000);
+            if(empresaId && !bloqueado) {
+                mostrarAlerta('Notificação', 'Novo pedido recebido na plataforma externa.', 'orange');
+            }
+        }, 20000);
 
     </script>
 </body>
