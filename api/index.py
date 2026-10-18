@@ -12,7 +12,7 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 # Em produção (Vercel), essas variáveis serão injetadas automaticamente.
 # Localmente, você pode criar um arquivo .env ou setar no seu terminal.
 SENHA_MASTER = os.getenv("SENHA_MASTER", "admin123") # "admin123" é um fallback para teste local
-DATABASE_URL = os.getenv("DATABASE_URL") # String de conexão PostgreSQL fornecida pelo Supabase
+DATABASE_URL = os.getenv("DATASHOP_URL") # String de conexão PostgreSQL fornecida pelo Supabase
 
 # ================= INICIALIZAÇÃO DA APLICAÇÃO =================
 app = FastAPI(
