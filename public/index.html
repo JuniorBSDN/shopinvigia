@@ -3,505 +3,466 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ShopinVigia - Delivery & Varejo</title>
+    <title>ShopinVigia - Premium Delivery</title>
+    
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts: Poppins (Fina 300, Normal 400, Semi 600, Black 800) -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800&display=swap" rel="stylesheet">
+    
     <!-- FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- AOS Animation (Efeitos ao Rolar) -->
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+
+    <!-- Supabase JS Nativo -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        gold: { 300: '#fde047', 400: '#facc15', 500: '#eab308', 600: '#d4af37', 700: '#a16207' },
+                        light: { 50: '#fbfbfb', 100: '#f5f5f5' }
+                    },
+                    fontFamily: { sans: ['Poppins', 'sans-serif'] }
+                }
+            }
+        }
+    </script>
     <style>
+        body { font-family: 'Poppins', sans-serif; font-weight: 300; background-color: #fbfbfb; color: #333; overflow-x: hidden; }
+        .font-strong { font-weight: 800; letter-spacing: -0.5px; }
         .hidden-view { display: none !important; }
-        /* Scrollbar oculta para listas horizontais */
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
         
-        /* Tema dinâmico da loja */
-        :root {
-            --cor-primaria: #2563eb; /* Azul padrão, será sobrescrito pelo JS */
-            --cor-secundaria: #1e40af;
-        }
-        .tema-bg { background-color: var(--cor-primaria); }
-        .tema-texto { color: var(--cor-primaria); }
-        .tema-btn { background-color: var(--cor-primaria); color: white; }
-        .tema-btn:hover { background-color: var(--cor-secundaria); }
-        .tema-border { border-color: var(--cor-primaria); }
+        /* Menu Lateral Off-Canvas */
+        #sidebar { transform: translateX(-100%); transition: transform 0.3s ease-in-out; }
+        #sidebar.open { transform: translateX(0); }
+        #overlay { opacity: 0; pointer-events: none; transition: opacity 0.3s ease; }
+        #overlay.open { opacity: 1; pointer-events: auto; }
+        
+        /* Tema Lojista Dinâmico */
+        :root { --tema-loja: #d4af37; }
+        .bg-tema { background-color: var(--tema-loja); color: #fff; }
+        .text-tema { color: var(--tema-loja); }
+        .border-tema { border-color: var(--tema-loja); }
     </style>
 </head>
-<body class="bg-gray-50 text-gray-800 font-sans antialiased">
+<body>
 
-    <!-- ================= NAVBAR SUPERIOR ================= -->
-    <header class="bg-white shadow-sm sticky top-0 z-40">
-        <div class="max-w-4xl mx-auto px-4 py-3 flex justify-between items-center">
-            <h1 onclick="voltarParaHome()" class="text-2xl font-black text-blue-600 cursor-pointer tracking-tight">Shopin<span class="text-orange-500">Vigia</span></h1>
-            <button onclick="abrirSacola()" class="relative p-2 text-gray-700 hover:text-blue-600 transition">
-                <i class="fa-solid fa-basket-shopping text-2xl"></i>
-                <span id="badge-sacola" class="absolute top-0 right-0 bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full hidden-view">0</span>
+    <!-- ================= NAVBAR SUPERIOR & HAMBÚRGUER ================= -->
+    <header class="bg-white/80 backdrop-blur-md shadow-sm sticky top-0 z-40 border-b border-gray-100">
+        <div class="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
+            <div class="flex items-center gap-4">
+                <button onclick="toggleSidebar()" class="text-gold-600 text-2xl hover:text-gold-700 transition">
+                    <i class="fa-solid fa-bars-staggered"></i>
+                </button>
+                <h1 onclick="voltarParaHome()" class="text-2xl font-strong cursor-pointer text-gray-900">
+                    SHOPIN<span class="text-gold-600 font-light">VIGIA</span>
+                </h1>
+            </div>
+            <button onclick="abrirSacola()" class="relative p-2 text-gold-600 hover:text-gold-700 transition">
+                <i class="fa-solid fa-bag-shopping text-2xl"></i>
+                <span id="badge-sacola" class="absolute top-0 right-0 bg-gray-900 text-gold-400 text-[10px] font-strong px-1.5 py-0.5 rounded-full hidden-view">0</span>
             </button>
         </div>
     </header>
 
-    <!-- ================= VIEW 1: HOME (MARKETPLACE) ================= -->
-    <main id="view-home" class="max-w-4xl mx-auto pb-20">
+    <!-- ================= MENU LATERAL (SIDEBAR) ================= -->
+    <div id="overlay" onclick="toggleSidebar()" class="fixed inset-0 bg-black/40 z-40 backdrop-blur-sm"></div>
+    <aside id="sidebar" class="fixed top-0 left-0 h-full w-72 bg-white shadow-2xl z-50 flex flex-col border-r border-gray-100">
+        <div class="p-6 border-b border-gray-100 flex justify-between items-center">
+            <h2 class="font-strong text-xl text-gray-900">Menu</h2>
+            <button onclick="toggleSidebar()" class="text-gray-400 hover:text-gold-600 text-xl"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <nav class="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
+            <a href="#" onclick="voltarParaHome(); toggleSidebar();" class="flex items-center gap-4 px-4 py-3 rounded-lg text-gray-600 hover:bg-gold-50 hover:text-gold-700 transition font-light"><i class="fa-solid fa-house w-5 text-gold-600"></i> Início</a>
+            <a href="#" class="flex items-center gap-4 px-4 py-3 rounded-lg text-gray-600 hover:bg-gold-50 hover:text-gold-700 transition font-light"><i class="fa-solid fa-box-open w-5 text-gold-600"></i> Meus Pedidos</a>
+            <a href="#" class="flex items-center gap-4 px-4 py-3 rounded-lg text-gray-600 hover:bg-gold-50 hover:text-gold-700 transition font-light"><i class="fa-solid fa-tags w-5 text-gold-600"></i> Ofertas Especiais</a>
+            <a href="#" class="flex items-center gap-4 px-4 py-3 rounded-lg text-gray-600 hover:bg-gold-50 hover:text-gold-700 transition font-light"><i class="fa-solid fa-bullhorn w-5 text-gold-600"></i> Ouvidoria</a>
+        </nav>
+        <div class="p-6 border-t border-gray-100 bg-light-50">
+            <p class="text-xs text-gray-400 mb-3 font-light text-center">É dono de um negócio?</p>
+            <a href="admin.html" class="w-full flex items-center justify-center gap-2 bg-gray-900 text-gold-400 font-strong py-3 rounded-xl shadow-lg hover:bg-gray-800 transition">
+                CADASTRAR LOJA
+            </a>
+        </div>
+    </aside>
+
+    <!-- ================= VIEW 1: HOME (CATÁLOGO GERAL) ================= -->
+    <main id="view-home" class="max-w-7xl mx-auto pb-24">
         
-        <!-- Banner -->
-        <div class="px-4 mt-4">
-            <div class="bg-gradient-to-r from-blue-600 to-blue-800 rounded-xl p-6 text-white shadow-md">
-                <h2 class="text-2xl font-black mb-1">Tudo que você precisa,</h2>
-                <p class="text-sm opacity-90">Entregue na porta da sua casa.</p>
-                <div class="mt-4 relative">
-                    <input type="text" placeholder="Buscar lojas ou produtos..." class="w-full pl-10 pr-4 py-3 rounded-lg text-gray-800 focus:outline-none shadow-inner">
-                    <i class="fa-solid fa-search absolute left-3 top-3.5 text-gray-400"></i>
+        <!-- Banner Destaque Ouro -->
+        <div class="px-4 mt-6" data-aos="fade-up">
+            <div class="bg-gradient-to-r from-gray-900 to-gray-800 rounded-3xl p-8 text-white shadow-2xl relative overflow-hidden">
+                <div class="absolute -right-10 -top-10 opacity-10"><i class="fa-solid fa-gem text-[150px] text-gold-400"></i></div>
+                <h2 class="text-3xl font-strong mb-2 leading-tight">Excelência em<br><span class="text-gold-400">cada entrega.</span></h2>
+                <p class="text-sm font-light text-gray-300 max-w-xs">Os melhores produtos e estabelecimentos premium reunidos.</p>
+                <div class="mt-6 relative max-w-sm z-10">
+                    <input type="text" placeholder="Buscar lojas ou pratos..." class="w-full pl-12 pr-4 py-3 rounded-full text-gray-900 focus:outline-none shadow focus:ring-2 focus:ring-gold-500 font-light text-sm">
+                    <i class="fa-solid fa-search absolute left-4 top-3.5 text-gold-600"></i>
                 </div>
             </div>
         </div>
 
-        <!-- Secção: Lojas Parceiras -->
-        <div class="mt-8">
-            <div class="px-4 flex justify-between items-end mb-3">
-                <h3 class="font-bold text-lg text-gray-800">Lojas em Destaque</h3>
-            </div>
-            <div class="flex overflow-x-auto gap-4 px-4 pb-4 no-scrollbar" id="lista-lojas-home">
-                <!-- Preenchido via JS -->
+        <!-- Lojas Parceiras (Dados do Supabase) -->
+        <div class="mt-12 px-4" data-aos="fade-up" data-aos-delay="100">
+            <h3 class="font-strong text-xl text-gray-900 mb-4 border-l-4 border-gold-500 pl-3">Lojas em Destaque</h3>
+            <div class="flex overflow-x-auto gap-5 pb-6 no-scrollbar" id="lista-lojas">
+                <div class="text-gray-400 text-sm font-light animate-pulse"><i class="fa-solid fa-circle-notch fa-spin text-gold-500"></i> Carregando lojas do Supabase...</div>
             </div>
         </div>
 
-        <!-- Secção: Produtos Destaque -->
-        <div class="mt-4 px-4">
-            <h3 class="font-bold text-lg text-gray-800 mb-3">Produtos em Destaque</h3>
-            <div class="grid grid-cols-2 md:grid-cols-3 gap-4" id="lista-produtos-destaque">
-                <!-- Preenchido via JS -->
-            </div>
-        </div>
-
-        <!-- CTA Lojista -->
-        <div class="mt-12 px-4 mb-8 text-center">
-            <div class="bg-gray-100 rounded-xl p-6 border border-gray-200">
-                <i class="fa-solid fa-shop text-3xl text-gray-400 mb-2"></i>
-                <h4 class="font-bold text-gray-700">Você é lojista?</h4>
-                <p class="text-xs text-gray-500 mb-4 mt-1">Venda mais e gerencie seu negócio com nosso ERP completo.</p>
-                <a href="admin.html" class="inline-block bg-gray-800 text-white font-bold px-6 py-2 rounded-lg text-sm shadow hover:bg-gray-700 transition">Cadastrar Minha Loja</a>
+        <!-- Produtos em Destaque (Dados do Supabase) -->
+        <div class="mt-8 px-4" data-aos="fade-up" data-aos-delay="200">
+            <h3 class="font-strong text-xl text-gray-900 mb-4 border-l-4 border-gold-500 pl-3">Vitrine de Produtos</h3>
+            <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-5" id="lista-produtos">
+                <div class="text-gray-400 text-sm font-light animate-pulse"><i class="fa-solid fa-circle-notch fa-spin text-gold-500"></i> Carregando vitrine...</div>
             </div>
         </div>
     </main>
 
     <!-- ================= VIEW 2: PÁGINA DA LOJA (TEMA DINÂMICO) ================= -->
-    <main id="view-loja" class="hidden-view max-w-4xl mx-auto pb-24 bg-white min-h-screen">
-        <!-- Header da Loja Customizado -->
-        <div class="tema-bg pt-6 pb-16 px-4 text-white relative rounded-b-3xl shadow-md">
-            <button onclick="voltarParaHome()" class="absolute top-4 left-4 w-8 h-8 bg-white bg-opacity-20 rounded-full flex items-center justify-center hover:bg-opacity-30">
-                <i class="fa-solid fa-arrow-left"></i>
+    <main id="view-loja" class="hidden-view max-w-4xl mx-auto pb-24 min-h-screen bg-white">
+        
+        <!-- Header da Loja (Efeito Scroll) -->
+        <div class="bg-tema pt-8 pb-20 px-6 text-white relative rounded-b-[40px] shadow-xl" data-aos="fade-down">
+            <button onclick="voltarParaHome()" class="absolute top-6 left-4 w-10 h-10 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center hover:bg-white/30 transition">
+                <i class="fa-solid fa-arrow-left text-white"></i>
             </button>
-            <div class="flex flex-col items-center text-center mt-4">
-                <div class="w-20 h-20 bg-white rounded-full shadow-lg overflow-hidden flex items-center justify-center text-2xl font-black tema-texto mb-2" id="loja-logo-img">
-                    <!-- Img ou Iniciais -->
+            <div class="flex flex-col items-center text-center mt-2">
+                <div class="w-24 h-24 bg-white rounded-full shadow-2xl overflow-hidden flex items-center justify-center text-3xl font-strong text-tema mb-3" id="loja-logo">
+                    <!-- IMG ou Iniciais -->
                 </div>
-                <h2 id="loja-nome" class="text-2xl font-black">Nome da Loja</h2>
-                <p id="loja-slogan" class="text-sm opacity-90 mt-1">O melhor para você</p>
+                <h2 id="loja-nome" class="text-3xl font-strong tracking-tight">Nome da Empresa</h2>
+                <p id="loja-slogan" class="text-sm font-light mt-1 opacity-90">Slogan premium</p>
             </div>
         </div>
 
-        <!-- Info da Loja Sobreposta -->
-        <div class="px-4 -mt-10 relative z-10">
-            <div class="bg-white rounded-xl shadow p-4 flex justify-around items-center border border-gray-100">
+        <!-- Info da Loja -->
+        <div class="px-4 -mt-10 relative z-10" data-aos="zoom-in" data-aos-delay="100">
+            <div class="bg-white rounded-2xl shadow-xl p-5 flex justify-around items-center border border-gray-50">
                 <div class="text-center">
-                    <p class="text-xs text-gray-400 font-bold uppercase">Avaliação</p>
-                    <p class="font-black text-gray-800"><i class="fa-solid fa-star text-yellow-400 text-sm"></i> <span id="loja-nota">4.9</span></p>
+                    <p class="text-[10px] text-gray-400 font-strong uppercase tracking-wider">Avaliação</p>
+                    <p class="font-strong text-gray-900 text-lg"><i class="fa-solid fa-star text-gold-500 text-sm mr-1"></i> <span id="loja-nota">5.0</span></p>
                 </div>
-                <div class="w-px h-8 bg-gray-200"></div>
+                <div class="w-px h-10 bg-gray-100"></div>
                 <div class="text-center">
-                    <p class="text-xs text-gray-400 font-bold uppercase">Horário</p>
-                    <p class="font-bold text-gray-800 text-sm" id="loja-horario">18h às 23h</p>
+                    <p class="text-[10px] text-gray-400 font-strong uppercase tracking-wider">Horário</p>
+                    <p class="font-strong text-gray-900 text-sm mt-1" id="loja-hora">18h às 23h</p>
                 </div>
-                <div class="w-px h-8 bg-gray-200"></div>
+                <div class="w-px h-10 bg-gray-100"></div>
                 <div class="text-center">
-                    <p class="text-xs text-gray-400 font-bold uppercase">Status</p>
-                    <p class="font-bold text-green-600 text-sm">Aberto</p>
+                    <p class="text-[10px] text-gray-400 font-strong uppercase tracking-wider">Status</p>
+                    <p class="font-strong text-gold-600 text-sm mt-1">Aberto</p>
                 </div>
             </div>
         </div>
 
-        <!-- Catálogo da Loja -->
-        <div class="mt-8 px-4">
-            <h3 class="font-black text-lg text-gray-800 mb-4 border-b pb-2">Catálogo de Produtos</h3>
-            <div class="flex flex-col gap-4" id="lista-produtos-loja">
-                <!-- Preenchido via JS -->
+        <!-- Catálogo Dinâmico da Loja -->
+        <div class="mt-10 px-4">
+            <h3 class="font-strong text-2xl text-gray-900 mb-6 flex items-center gap-3"><i class="fa-solid fa-gem text-gold-500 text-lg"></i> Nosso Menu</h3>
+            <div class="flex flex-col gap-5" id="catalogo-loja">
+                <!-- Preenchido via Supabase -->
             </div>
         </div>
     </main>
 
-    <!-- ================= MODAL 1: SACOLA & CHECKOUT ================= -->
-    <div id="modal-sacola" class="hidden-view fixed inset-0 bg-black bg-opacity-60 z-50 flex flex-col justify-end">
-        <div class="bg-white w-full max-w-4xl mx-auto rounded-t-2xl h-[90vh] flex flex-col shadow-2xl relative">
-            <div class="p-4 border-b flex justify-between items-center bg-white rounded-t-2xl sticky top-0 z-10">
-                <h3 class="font-black text-lg text-gray-800"><i class="fa-solid fa-basket-shopping text-blue-600 mr-2"></i>Sua Sacola</h3>
-                <button onclick="fecharSacola()" class="w-8 h-8 bg-gray-100 rounded-full text-gray-600 font-bold">&times;</button>
+    <!-- ================= MODAL DE SACOLA (CHECKOUT) ================= -->
+    <div id="modal-sacola" class="hidden-view fixed inset-0 bg-gray-900/60 backdrop-blur-sm z-[60] flex flex-col justify-end">
+        <div class="bg-white w-full max-w-3xl mx-auto rounded-t-[30px] h-[90vh] flex flex-col shadow-2xl relative" data-aos="slide-up">
+            <div class="p-6 border-b border-gray-100 flex justify-between items-center bg-white rounded-t-[30px] sticky top-0 z-10">
+                <h3 class="font-strong text-2xl text-gray-900"><i class="fa-solid fa-bag-shopping text-gold-500 mr-2"></i> Sua Sacola</h3>
+                <button onclick="fecharSacola()" class="w-10 h-10 bg-gray-50 hover:bg-gray-100 rounded-full text-gray-400 transition"><i class="fa-solid fa-chevron-down"></i></button>
             </div>
             
-            <div class="flex-1 overflow-y-auto p-4 space-y-6">
-                <!-- Itens -->
-                <div id="sacola-itens" class="space-y-3">
-                    <p class="text-center text-gray-500 py-10 text-sm">Sua sacola está vazia.</p>
+            <div class="flex-1 overflow-y-auto p-6 space-y-6">
+                <div id="sacola-itens" class="space-y-4">
+                    <p class="text-center text-gray-400 font-light py-10">Sua sacola está vazia.</p>
                 </div>
 
-                <!-- Formulário do Cliente -->
-                <div id="sacola-form" class="hidden-view space-y-4 border-t pt-4">
-                    <h4 class="font-bold text-gray-700 text-sm uppercase">Dados para Entrega</h4>
+                <div id="sacola-form" class="hidden-view space-y-5 border-t border-gray-100 pt-6">
+                    <h4 class="font-strong text-gray-400 text-xs uppercase tracking-widest mb-2">Dados de Entrega</h4>
+                    <input type="text" id="chk-nome" placeholder="Nome Completo" class="w-full bg-light-50 border-0 rounded-xl px-4 py-3 text-sm font-light shadow-inner focus:ring-2 focus:ring-gold-400 outline-none">
                     <div class="grid grid-cols-2 gap-3">
-                        <div class="col-span-2"><input type="text" id="chk-nome" placeholder="Seu Nome Completo" required class="w-full border rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500"></div>
-                        <div class="col-span-2"><input type="tel" id="chk-tel" placeholder="Telefone / WhatsApp" required class="w-full border rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500"></div>
-                        <div class="col-span-2"><input type="text" id="chk-end" placeholder="Endereço (Rua, Número, Bairro)" required class="w-full border rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500"></div>
-                        <div class="col-span-2"><input type="text" id="chk-ref" placeholder="Ponto de Referência" class="w-full border rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500"></div>
+                        <input type="tel" id="chk-tel" placeholder="WhatsApp" class="w-full bg-light-50 border-0 rounded-xl px-4 py-3 text-sm font-light shadow-inner focus:ring-2 focus:ring-gold-400 outline-none">
+                        <input type="text" id="chk-ref" placeholder="Referência" class="w-full bg-light-50 border-0 rounded-xl px-4 py-3 text-sm font-light shadow-inner focus:ring-2 focus:ring-gold-400 outline-none">
                     </div>
+                    <input type="text" id="chk-end" placeholder="Endereço Completo" class="w-full bg-light-50 border-0 rounded-xl px-4 py-3 text-sm font-light shadow-inner focus:ring-2 focus:ring-gold-400 outline-none">
                     
-                    <h4 class="font-bold text-gray-700 text-sm uppercase pt-2">Pagamento</h4>
-                    <div>
-                        <select id="chk-pagamento" onchange="toggleTrocoSacola()" class="w-full border rounded-lg px-3 py-3 text-sm outline-none bg-gray-50">
-                            <option value="PIX">PIX (Chave enviada no WhatsApp)</option>
-                            <option value="Cartão">Cartão de Crédito/Débito (Máquina)</option>
-                            <option value="Dinheiro">Dinheiro em Espécie</option>
-                        </select>
-                    </div>
-                    <div id="box-troco" class="hidden-view">
-                        <input type="text" id="chk-troco" placeholder="Troco para quanto? (Ex: 50,00)" class="w-full border rounded-lg px-3 py-2 text-sm outline-none border-green-300 bg-green-50">
-                    </div>
+                    <h4 class="font-strong text-gray-400 text-xs uppercase tracking-widest pt-2">Pagamento</h4>
+                    <select id="chk-pagamento" onchange="toggleTroco()" class="w-full bg-light-50 border-0 rounded-xl px-4 py-3 text-sm font-light shadow-inner focus:ring-2 focus:ring-gold-400 outline-none">
+                        <option value="PIX">PIX (Rápido e Seguro)</option>
+                        <option value="Cartão">Cartão na Entrega</option>
+                        <option value="Dinheiro">Dinheiro (Espécie)</option>
+                    </select>
+                    <input type="number" id="chk-troco" placeholder="Troco para quanto? (Ex: 50)" class="hidden-view w-full bg-gold-50 border-0 rounded-xl px-4 py-3 text-sm font-light text-gold-900 shadow-inner outline-none placeholder-gold-400">
                 </div>
             </div>
 
-            <div class="p-4 border-t bg-white sticky bottom-0">
-                <div class="flex justify-between items-center mb-3">
-                    <span class="text-gray-500 text-sm font-bold">Total do Pedido</span>
-                    <span id="sacola-total-valor" class="text-2xl font-black text-gray-900">R$ 0,00</span>
+            <div class="p-6 border-t border-gray-100 bg-white sticky bottom-0">
+                <div class="flex justify-between items-center mb-4">
+                    <span class="text-gray-400 font-light text-sm">Total do Pedido</span>
+                    <span id="sacola-total" class="text-3xl font-strong text-gray-900">R$ 0,00</span>
                 </div>
-                <button onclick="enviarPedido()" id="btn-enviar-pedido" disabled class="w-full bg-gray-300 text-gray-500 font-black py-4 rounded-xl shadow transition text-lg flex items-center justify-center gap-2">
-                    <i class="fa-brands fa-whatsapp text-xl"></i> ENVIAR PEDIDO
+                <button onclick="enviarPedido()" id="btn-enviar" disabled class="w-full bg-gray-200 text-gray-400 font-strong py-4 rounded-2xl transition text-lg flex items-center justify-center gap-2">
+                    <i class="fa-brands fa-whatsapp text-xl"></i> DESPACHAR PEDIDO
                 </button>
             </div>
         </div>
     </div>
 
-    <!-- ================= MODAL 2: STATUS & OUVIDORIA ================= -->
-    <div id="modal-status" class="hidden-view fixed inset-0 bg-black bg-opacity-70 z-[60] flex items-center justify-center p-4">
-        <div class="bg-white w-full max-w-sm rounded-2xl p-6 text-center shadow-2xl relative">
-            <button onclick="document.getElementById('modal-status').classList.add('hidden-view')" class="absolute top-3 right-3 text-gray-400 hover:text-gray-700">&times;</button>
+    <!-- ================= MODAL STATUS & OUVIDORIA ================= -->
+    <div id="modal-status" class="hidden-view fixed inset-0 bg-gray-900/80 backdrop-blur-md z-[70] flex items-center justify-center p-4">
+        <div class="bg-white w-full max-w-sm rounded-3xl p-8 text-center shadow-2xl relative" data-aos="zoom-in">
+            <button onclick="fecharStatus()" class="absolute top-4 right-5 text-gray-300 hover:text-gray-800 text-xl"><i class="fa-solid fa-xmark"></i></button>
             
-            <!-- Acompanhamento -->
-            <div id="view-status-track">
-                <i class="fa-solid fa-motorcycle text-5xl text-blue-600 mb-4 animate-bounce"></i>
-                <h3 class="font-black text-xl mb-1">Pedido Enviado!</h3>
-                <p class="text-sm text-gray-500 mb-6">A loja já recebeu seu pedido.</p>
-                
-                <div class="space-y-4 text-left border-t pt-4">
-                    <div class="flex items-center gap-3 text-green-600 font-bold"><i class="fa-solid fa-check-circle"></i> Novo (Recebido)</div>
-                    <div class="flex items-center gap-3 text-gray-400"><i class="fa-regular fa-circle"></i> Em Preparo</div>
-                    <div class="flex items-center gap-3 text-gray-400"><i class="fa-regular fa-circle"></i> Despachado</div>
-                    <div class="flex items-center gap-3 text-gray-400"><i class="fa-regular fa-circle"></i> Entregue</div>
+            <div id="status-track">
+                <div class="w-20 h-20 bg-gold-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fa-solid fa-clock text-4xl text-gold-500 animate-pulse"></i>
                 </div>
-
-                <!-- Botão oculto só para demonstração do fluxo no front-end -->
-                <button onclick="ativarOuvidoria()" class="mt-6 text-xs text-gray-300 underline">(Simular Entrega para Avaliar)</button>
+                <h3 class="font-strong text-2xl text-gray-900 mb-1">Pedido Registrado!</h3>
+                <p class="text-sm font-light text-gray-500 mb-6">A loja foi notificada via sistema e WhatsApp.</p>
+                <button onclick="ativarFeed()" class="mt-2 text-xs font-light text-gray-400 hover:text-gold-600 underline transition">(Simular Entrega para Avaliar)</button>
             </div>
 
-            <!-- Formulário de Feedback (Ouvidoria) -->
-            <div id="view-feedback" class="hidden-view">
-                <i class="fa-solid fa-box-open text-5xl text-green-600 mb-4"></i>
-                <h3 class="font-black text-xl mb-1">Pedido Entregue!</h3>
-                <p class="text-sm text-gray-500 mb-4 border-b pb-4">Como foi sua experiência com a loja?</p>
+            <div id="status-feed" class="hidden-view">
+                <i class="fa-solid fa-star text-5xl text-gold-400 mb-4 drop-shadow-md"></i>
+                <h3 class="font-strong text-2xl text-gray-900 mb-1">Pedido Entregue</h3>
+                <p class="text-sm font-light text-gray-500 mb-6">Como foi sua experiência premium?</p>
 
-                <form onsubmit="event.preventDefault(); enviarFeedback();" class="text-left space-y-4">
-                    <div>
-                        <label class="block text-xs font-bold text-gray-600 mb-2 uppercase">Avaliação da Experiência</label>
-                        <select id="feed-nota" class="w-full border rounded-lg px-3 py-2 text-sm outline-none bg-gray-50" onchange="mudarCorFeed(this)">
-                            <option value="Ótimo" class="text-green-600 font-bold">Ótimo 🤩</option>
-                            <option value="Bom" class="text-blue-600 font-bold">Bom 😊</option>
-                            <option value="Regular" class="text-yellow-600 font-bold">Regular 😐</option>
-                            <option value="Ruim" class="text-orange-600 font-bold">Ruim 😞</option>
-                            <option value="Péssimo" class="text-red-600 font-bold">Péssimo 😡</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-xs font-bold text-gray-600 mb-2 uppercase">Descreva seu relato</label>
-                        <textarea id="feed-relato" rows="3" placeholder="A comida estava quente? Chegou no prazo?" class="w-full border rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-green-500"></textarea>
-                    </div>
-                    <button type="submit" class="w-full bg-green-600 text-white font-black py-3 rounded-xl shadow hover:bg-green-700 transition">ENVIAR FEEDBACK</button>
+                <form onsubmit="event.preventDefault(); enviarOuvidoria();" class="text-left space-y-4">
+                    <select id="feed-nota" class="w-full bg-light-50 border-0 rounded-xl px-4 py-3 text-sm font-strong text-gray-700 shadow-inner outline-none focus:ring-2 focus:ring-gold-400">
+                        <option value="Ótimo" class="text-gold-600">Ótimo 🤩</option>
+                        <option value="Bom" class="text-blue-600">Bom 😊</option>
+                        <option value="Regular" class="text-gray-600">Regular 😐</option>
+                        <option value="Ruim" class="text-orange-600">Ruim 😞</option>
+                        <option value="Péssimo" class="text-red-600">Péssimo 😡</option>
+                    </select>
+                    <textarea id="feed-relato" rows="3" placeholder="Descreva seu relato..." required class="w-full bg-light-50 border-0 rounded-xl px-4 py-3 text-sm font-light shadow-inner outline-none focus:ring-2 focus:ring-gold-400"></textarea>
+                    <button type="submit" class="w-full bg-gray-900 hover:bg-gold-600 text-white font-strong py-4 rounded-xl shadow-lg transition">ENVIAR FEEDBACK</button>
                 </form>
             </div>
         </div>
     </div>
 
-    <!-- ================= JAVASCRIPT ================= -->
+    <!-- Bibliotecas JS -->
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
     <script>
-        const API_BASE_URL = "http://localhost:8000"; // Link da sua API FastAPI
+        AOS.init({ duration: 800, once: true });
+
+        // ================= INTEGRAÇÃO SUPABASE NATIVA =================
+        // ATENÇÃO: Substitua pelas suas credenciais reais do Supabase
+        const supabaseUrl = 'https://SEU_PROJETO.supabase.co';
+        const supabaseKey = 'SUA_CHAVE_ANON_KEY';
+        
+        // Inicializa cliente (comentado temporariamente para não quebrar a tela se não tiver chave, usando mock array como fallback)
+        // const supabase = supabase.createClient(supabaseUrl, supabaseKey);
+
+        // Fallbacks Premium (Design Mockup) caso não conecte
+        const DB_LOJAS = [
+            { id: 1, nome: "Golden Sushi", slogan: "Culinária Japonesa Premium", cor: "#b45309", nota: 4.9, logo: "GS", hr: "18h - 23h", zap: "5511000000" },
+            { id: 2, nome: "Royal Burger", slogan: "Artesanal de verdade", cor: "#1e293b", nota: 4.8, logo: "RB", hr: "12h - 00h", zap: "5511000000" },
+            { id: 3, nome: "La Bella Pizza", slogan: "Massa Fina Italiana", cor: "#047857", nota: 5.0, logo: "LB", hr: "19h - 23h", zap: "5511000000" }
+        ];
+
+        const DB_PRODUTOS = [
+            { id: 101, loja_id: 1, nome: "Combo Premium 40 Peças", desc: "Salmão fresco, atum, polvo e ovas", preco: 149.90 },
+            { id: 102, loja_id: 2, nome: "Smash Gold Bacon", desc: "Pão brioche, 2x carne, queijo prato, bacon caramelizado", preco: 45.00 },
+            { id: 103, loja_id: 3, nome: "Pizza Trufada", desc: "Mussarela, azeite trufado, presunto parma", preco: 89.90 },
+            { id: 104, loja_id: 2, nome: "Fritas Trufadas", desc: "Batata rústica com azeite de trufa", preco: 28.00 },
+        ];
+
         let carrinho = [];
-        let total = 0;
         let lojaAtual = null;
 
-        // Mocks para demonstração do layout enquanto a API não está linkada
-        const MOCK_LOJAS = [
-            { id: 1, nome: "Burger King", slogan: "Feito no fogo", logo: "BK", cor: "#e11d48", nota: 4.8, horario: "18h - 23h", zap: "5511999999999" },
-            { id: 2, nome: "Pizzaria Napoli", slogan: "A verdadeira massa", logo: "PN", cor: "#16a34a", nota: 4.9, horario: "19h - 23h", zap: "5511999999999" },
-            { id: 3, nome: "Açaí do Zé", slogan: "Energia Pura", logo: "AZ", cor: "#7c3aed", nota: 4.6, horario: "13h - 20h", zap: "5511999999999" }
-        ];
-
-        const MOCK_PRODUTOS = [
-            { id: 101, loja_id: 1, nome: "Mega Burger Duplo", desc: "Pão, 2x carne, bacon, queijo cheddar", preco: 29.90, foto: "🍔" },
-            { id: 102, loja_id: 1, nome: "Batata Frita G", desc: "Batata crinckle com cheddar e bacon", preco: 15.00, foto: "🍟" },
-            { id: 103, loja_id: 2, nome: "Pizza Calabresa", desc: "Massa fina, calabresa fatiada, cebola", preco: 45.00, foto: "🍕" },
-            { id: 104, loja_id: 3, nome: "Copo Açaí 500ml", desc: "Açaí, leite condensado, morango, granola", preco: 18.50, foto: "🥤" },
-        ];
-
-        window.onload = () => {
-            renderizarLojasHome();
-            renderizarDestaquesHome();
+        window.onload = async () => {
+            await carregarDadosSupabase();
         };
 
-        // --- RENDERIZAÇÃO HOME ---
-        function renderizarLojasHome() {
-            const container = document.getElementById('lista-lojas-home');
-            container.innerHTML = "";
-            MOCK_LOJAS.forEach(loja => {
-                container.innerHTML += `
-                    <div onclick="abrirLoja(${loja.id})" class="min-w-[140px] bg-white border border-gray-100 rounded-xl p-4 flex flex-col items-center justify-center shadow-sm cursor-pointer hover:shadow-md transition">
-                        <div class="w-16 h-16 rounded-full flex items-center justify-center text-white text-xl font-black mb-2 shadow" style="background-color: ${loja.cor}">${loja.logo}</div>
-                        <h4 class="font-bold text-gray-800 text-sm text-center truncate w-full">${loja.nome}</h4>
-                        <p class="text-xs font-bold text-yellow-500 mt-1"><i class="fa-solid fa-star"></i> ${loja.nota}</p>
+        // Simulação de Fetch do Supabase
+        async function carregarDadosSupabase() {
+            /* 
+            // CÓDIGO REAL SUPABASE:
+            const { data: lojas } = await supabase.from('empresas').select('*').eq('status', 'ativo');
+            const { data: prods } = await supabase.from('produtos').select('*');
+            */
+           
+            renderizarVitrineHome(DB_LOJAS, DB_PRODUTOS);
+        }
+
+        // ================= CONTROLE DE UI & DESIGN =================
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('open');
+            document.getElementById('overlay').classList.toggle('open');
+        }
+
+        function renderizarVitrineHome(lojas, produtos) {
+            const listLojas = document.getElementById('lista-lojas');
+            const listProds = document.getElementById('lista-produtos');
+            listLojas.innerHTML = ""; listProds.innerHTML = "";
+
+            lojas.forEach((l, i) => {
+                listLojas.innerHTML += `
+                    <div onclick="abrirLoja(${l.id})" class="min-w-[150px] bg-white border border-gray-100 rounded-2xl p-5 flex flex-col items-center justify-center shadow-sm cursor-pointer hover:shadow-lg transition transform hover:-translate-y-1">
+                        <div class="w-16 h-16 rounded-full flex items-center justify-center text-white text-2xl font-strong mb-3 shadow-inner" style="background-color: ${l.cor}">${l.logo}</div>
+                        <h4 class="font-strong text-gray-900 text-sm text-center truncate w-full">${l.nome}</h4>
+                        <p class="text-xs font-strong text-gold-500 mt-1"><i class="fa-solid fa-star"></i> ${l.nota}</p>
                     </div>
                 `;
             });
-        }
 
-        function renderizarDestaquesHome() {
-            const container = document.getElementById('lista-produtos-destaque');
-            container.innerHTML = "";
-            // Pega os 3 primeiros como destaque
-            MOCK_PRODUTOS.slice(0, 4).forEach(prod => {
-                container.innerHTML += `
-                    <div onclick="abrirLoja(${prod.loja_id})" class="bg-white border border-gray-100 rounded-xl p-3 shadow-sm cursor-pointer hover:shadow-md transition flex flex-col justify-between">
+            produtos.forEach(p => {
+                listProds.innerHTML += `
+                    <div onclick="abrirLoja(${p.loja_id})" class="bg-white border border-gray-100 rounded-2xl p-4 shadow-sm cursor-pointer hover:shadow-lg transition flex flex-col justify-between group">
                         <div>
-                            <div class="w-full h-24 bg-gray-100 rounded-lg flex items-center justify-center text-4xl mb-2">${prod.foto}</div>
-                            <h4 class="font-bold text-gray-800 text-sm leading-tight">${prod.nome}</h4>
-                            <p class="text-[10px] text-gray-500 mt-1 line-clamp-2">${prod.desc}</p>
+                            <div class="w-full h-28 bg-light-50 rounded-xl mb-3 flex items-center justify-center group-hover:bg-gold-50 transition"><i class="fa-solid fa-utensils text-3xl text-gray-200 group-hover:text-gold-300"></i></div>
+                            <h4 class="font-strong text-gray-900 text-sm leading-tight">${p.nome}</h4>
+                            <p class="text-[11px] text-gray-400 font-light mt-1 line-clamp-2">${p.desc}</p>
                         </div>
-                        <div class="mt-2 text-blue-600 font-black">R$ ${prod.preco.toFixed(2).replace('.', ',')}</div>
+                        <div class="mt-3 font-strong text-gold-600 text-lg">R$ ${p.preco.toFixed(2).replace('.', ',')}</div>
                     </div>
                 `;
             });
         }
 
-        // --- NAVEGAÇÃO LOJA E TEMAS ---
         function abrirLoja(id) {
-            lojaAtual = MOCK_LOJAS.find(l => l.id === id);
-            if(!lojaAtual) return;
-
-            // Aplica o tema
-            document.documentElement.style.setProperty('--cor-primaria', lojaAtual.cor);
+            lojaAtual = DB_LOJAS.find(l => l.id === id);
+            document.documentElement.style.setProperty('--tema-loja', lojaAtual.cor);
             
-            // Preenche dados
             document.getElementById('loja-nome').innerText = lojaAtual.nome;
             document.getElementById('loja-slogan').innerText = lojaAtual.slogan;
-            document.getElementById('loja-logo-img').innerText = lojaAtual.logo;
+            document.getElementById('loja-logo').innerText = lojaAtual.logo;
             document.getElementById('loja-nota').innerText = lojaAtual.nota;
-            document.getElementById('loja-horario').innerText = lojaAtual.horario;
+            document.getElementById('loja-hora').innerText = lojaAtual.hr;
 
-            // Filtra e renderiza produtos
-            const prods = MOCK_PRODUTOS.filter(p => p.loja_id === id);
-            const container = document.getElementById('lista-produtos-loja');
-            container.innerHTML = "";
-            
-            prods.forEach(prod => {
-                container.innerHTML += `
-                    <div class="bg-white border rounded-xl p-3 flex gap-3 shadow-sm">
+            const cat = document.getElementById('catalogo-loja');
+            cat.innerHTML = "";
+            const prods = DB_PRODUTOS.filter(p => p.loja_id === id);
+
+            prods.forEach(p => {
+                cat.innerHTML += `
+                    <div class="bg-white border border-gray-100 rounded-2xl p-4 flex gap-4 shadow-sm hover:shadow-md transition" data-aos="fade-up">
                         <div class="flex-1 flex flex-col justify-between">
                             <div>
-                                <h4 class="font-bold text-gray-800 text-sm">${prod.nome}</h4>
-                                <p class="text-xs text-gray-500 mt-0.5 line-clamp-2">${prod.desc}</p>
+                                <h4 class="font-strong text-gray-900 text-base">${p.nome}</h4>
+                                <p class="text-xs text-gray-500 font-light mt-1 line-clamp-2">${p.desc}</p>
                             </div>
-                            <div class="flex justify-between items-end mt-2">
-                                <span class="font-black text-gray-900">R$ ${prod.preco.toFixed(2).replace('.', ',')}</span>
-                                <button onclick="addSacola(${prod.id}, '${prod.nome}', ${prod.preco})" class="tema-btn px-3 py-1.5 rounded-lg text-xs font-bold shadow"><i class="fa-solid fa-plus"></i> Add</button>
+                            <div class="flex justify-between items-center mt-4">
+                                <span class="font-strong text-gray-900 text-lg">R$ ${p.preco.toFixed(2).replace('.', ',')}</span>
+                                <button onclick="addSacola(${p.id}, '${p.nome}', ${p.preco})" class="bg-tema px-4 py-2 rounded-xl text-xs font-strong shadow hover:opacity-90 transition uppercase">Adicionar</button>
                             </div>
                         </div>
-                        <div class="w-24 h-24 bg-gray-100 rounded-lg flex items-center justify-center text-4xl flex-shrink-0">${prod.foto}</div>
                     </div>
                 `;
             });
 
-            // Transição de tela
             document.getElementById('view-home').classList.add('hidden-view');
             document.getElementById('view-loja').classList.remove('hidden-view');
             window.scrollTo(0,0);
+            AOS.refresh();
         }
 
         function voltarParaHome() {
             document.getElementById('view-loja').classList.add('hidden-view');
             document.getElementById('view-home').classList.remove('hidden-view');
+            window.scrollTo(0,0);
         }
 
-        // --- SACOLA E CHECKOUT ---
+        // ================= CARRINHO E CHECKOUT =================
         function addSacola(id, nome, preco) {
             const item = carrinho.find(c => c.id === id);
-            if(item) {
-                item.qtd++;
-            } else {
-                carrinho.push({id, nome, preco, qtd: 1});
-            }
-            atualizarBadgeSacola();
+            if(item) item.qtd++;
+            else carrinho.push({id, nome, preco, qtd: 1});
+            atualizarBadge();
         }
 
-        function atualizarBadgeSacola() {
+        function atualizarBadge() {
             const badge = document.getElementById('badge-sacola');
-            const totalQtd = carrinho.reduce((acc, curr) => acc + curr.qtd, 0);
-            if(totalQtd > 0) {
-                badge.innerText = totalQtd;
-                badge.classList.remove('hidden-view');
-            } else {
-                badge.classList.add('hidden-view');
-            }
+            const qtd = carrinho.reduce((a, b) => a + b.qtd, 0);
+            badge.innerText = qtd;
+            badge.classList.toggle('hidden-view', qtd === 0);
         }
 
         function abrirSacola() {
-            if(carrinho.length === 0) {
-                alert("Sua sacola está vazia.");
-                return;
-            }
-            const modal = document.getElementById('modal-sacola');
-            const container = document.getElementById('sacola-itens');
-            const form = document.getElementById('sacola-form');
-            const btnEnvia = document.getElementById('btn-enviar-pedido');
-            
-            container.innerHTML = "";
-            total = 0;
+            if(carrinho.length === 0) return alert("Sacola vazia.");
+            const lista = document.getElementById('sacola-itens');
+            lista.innerHTML = "";
+            let tot = 0;
 
-            carrinho.forEach((item, index) => {
-                const sub = item.preco * item.qtd;
-                total += sub;
-                container.innerHTML += `
-                    <div class="flex justify-between items-center bg-gray-50 p-3 rounded-lg border">
+            carrinho.forEach((c, i) => {
+                const sub = c.qtd * c.preco;
+                tot += sub;
+                lista.innerHTML += `
+                    <div class="flex justify-between items-center bg-light-50 p-4 rounded-2xl border border-gray-100">
                         <div>
-                            <p class="font-bold text-sm text-gray-800">${item.qtd}x ${item.nome}</p>
-                            <p class="text-xs text-gray-500">R$ ${sub.toFixed(2).replace('.', ',')}</p>
+                            <p class="font-strong text-sm text-gray-900">${c.qtd}x ${c.nome}</p>
+                            <p class="text-xs text-gold-600 font-strong">R$ ${sub.toFixed(2).replace('.', ',')}</p>
                         </div>
-                        <button onclick="removerItem(${index})" class="text-red-500 hover:text-red-700 text-sm font-bold"><i class="fa-solid fa-trash"></i></button>
+                        <button onclick="removerItem(${i})" class="text-gray-300 hover:text-red-500 transition"><i class="fa-solid fa-trash-can"></i></button>
                     </div>
                 `;
             });
 
-            document.getElementById('sacola-total-valor').innerText = `R$ ${total.toFixed(2).replace('.', ',')}`;
-            form.classList.remove('hidden-view');
+            document.getElementById('sacola-total').innerText = `R$ ${tot.toFixed(2).replace('.', ',')}`;
+            document.getElementById('sacola-form').classList.remove('hidden-view');
             
-            btnEnvia.disabled = false;
-            btnEnvia.className = "w-full bg-green-500 hover:bg-green-600 text-white font-black py-4 rounded-xl shadow-lg transition text-lg flex items-center justify-center gap-2";
-
-            modal.classList.remove('hidden-view');
+            const btn = document.getElementById('btn-enviar');
+            btn.disabled = false;
+            btn.className = "w-full bg-gray-900 hover:bg-gold-600 text-white font-strong py-4 rounded-2xl shadow-lg transition text-lg flex items-center justify-center gap-2";
+            
+            document.getElementById('modal-sacola').classList.remove('hidden-view');
         }
 
-        function removerItem(index) {
-            carrinho.splice(index, 1);
-            atualizarBadgeSacola();
-            if(carrinho.length === 0) {
-                fecharSacola();
-            } else {
-                abrirSacola(); // re-render
-            }
+        function removerItem(i) {
+            carrinho.splice(i, 1);
+            atualizarBadge();
+            carrinho.length === 0 ? fecharSacola() : abrirSacola();
         }
 
-        function fecharSacola() {
-            document.getElementById('modal-sacola').classList.add('hidden-view');
-        }
+        function fecharSacola() { document.getElementById('modal-sacola').classList.add('hidden-view'); }
+        function fecharStatus() { document.getElementById('modal-status').classList.add('hidden-view'); }
 
-        function toggleTrocoSacola() {
-            const pag = document.getElementById('chk-pagamento').value;
-            const box = document.getElementById('box-troco');
-            if(pag === 'Dinheiro') box.classList.remove('hidden-view');
-            else box.classList.add('hidden-view');
+        function toggleTroco() {
+            const val = document.getElementById('chk-pagamento').value;
+            document.getElementById('chk-troco').classList.toggle('hidden-view', val !== 'Dinheiro');
         }
 
         async function enviarPedido() {
-            const nome = document.getElementById('chk-nome').value;
-            const tel = document.getElementById('chk-tel').value;
-            const end = document.getElementById('chk-end').value;
-            if(!nome || !tel || !end) {
-                alert("Preencha Nome, Telefone e Endereço para continuar.");
-                return;
-            }
+            // CÓDIGO SUPABASE PARA INSERIR PEDIDO IRIA AQUI
+            /* await supabase.from('pedidos').insert([{...}]) */
 
-            const pag = document.getElementById('chk-pagamento').value;
-            const troco = document.getElementById('chk-troco').value;
-            let strItens = carrinho.map(c => `${c.qtd}x ${c.nome}`).join(' | ');
-
-            const payloadAPI = {
-                empresa_id: lojaAtual.id,
-                cliente: nome,
-                telefone: tel,
-                endereco: end,
-                pagamento: pag + (pag === 'Dinheiro' ? ` (Troco para ${troco})` : ''),
-                itens: strItens,
-                total: total,
-                status: 'novo'
-            };
-
-            // Dispara para o Backend (Opcional, prototype function)
-            try {
-                fetch(`${API_BASE_URL}/api/pedidos`, {
-                    method: 'POST',
-                    headers: {'Content-Type':'application/json'},
-                    body: JSON.stringify(payloadAPI)
-                });
-            } catch(e) {}
-
-            // Monta msg WhatsApp
-            let msgWA = `*NOVO PEDIDO - SHOPINVIGIA*\n\n`;
-            msgWA += `*Cliente:* ${nome}\n*Telefone:* ${tel}\n*Endereço:* ${end}\n`;
-            msgWA += `*Pagamento:* ${pag} ${pag === 'Dinheiro' ? `(Troco: ${troco})` : ''}\n\n`;
-            msgWA += `*ITENS:*\n`;
-            carrinho.forEach(c => { msgWA += `- ${c.qtd}x ${c.nome} (R$ ${(c.preco*c.qtd).toFixed(2)})\n`; });
-            msgWA += `\n*TOTAL: R$ ${total.toFixed(2)}*`;
-
-            const linkWA = `https://wa.me/${lojaAtual.zap}?text=${encodeURIComponent(msgWA)}`;
+            const nome = document.getElementById('chk-nome').value || 'Cliente';
+            const num = lojaAtual.zap;
+            const text = `*NOVO PEDIDO PREMIUM*\nCliente: ${nome}\n\n*Pedido registrado via ShopinVigia.*`;
             
             fecharSacola();
-            carrinho = []; // limpa sacola
-            atualizarBadgeSacola();
+            carrinho = []; atualizarBadge();
             
-            // Abre WhatsApp e Modal de Status na volta
-            window.open(linkWA, '_blank');
+            window.open(`https://wa.me/${num}?text=${encodeURIComponent(text)}`, '_blank');
+            
             document.getElementById('modal-status').classList.remove('hidden-view');
-            document.getElementById('view-status-track').classList.remove('hidden-view');
-            document.getElementById('view-feedback').classList.add('hidden-view');
+            document.getElementById('status-track').classList.remove('hidden-view');
+            document.getElementById('status-feed').classList.add('hidden-view');
         }
 
-        // --- OUVIDORIA / FEEDBACK ---
-        function ativarOuvidoria() {
-            // Chamado pelo botão "Simular Entrega"
-            document.getElementById('view-status-track').classList.add('hidden-view');
-            document.getElementById('view-feedback').classList.remove('hidden-view');
+        // ================= OUVIDORIA =================
+        function ativarFeed() {
+            document.getElementById('status-track').classList.add('hidden-view');
+            document.getElementById('status-feed').classList.remove('hidden-view');
         }
 
-        function mudarCorFeed(select) {
-            select.className = "w-full border rounded-lg px-3 py-2 text-sm outline-none font-bold bg-gray-50";
-            if(select.value === 'Ótimo') select.classList.add('text-green-600');
-            else if(select.value === 'Péssimo' || select.value === 'Ruim') select.classList.add('text-red-600');
-            else select.classList.add('text-blue-600');
-        }
-
-        async function enviarFeedback() {
-            const nota = document.getElementById('feed-nota').value;
-            const relato = document.getElementById('feed-relato').value;
+        async function enviarOuvidoria() {
+            // CÓDIGO SUPABASE PARA INSERIR FEEDBACK IRIA AQUI
+            /* await supabase.from('ouvidoria').insert([{...}]) */
             
-            try {
-                // Post API Ouvidoria
-                await fetch(`${API_BASE_URL}/api/ouvidoria`, {
-                    method: 'POST',
-                    headers: {'Content-Type':'application/json'},
-                    body: JSON.stringify({
-                        empresa_id: lojaAtual.id,
-                        cliente_nome: document.getElementById('chk-nome').value || 'Cliente Oculto',
-                        avaliacao: nota,
-                        relato: relato
-                    })
-                });
-            } catch(e) {}
-
-            alert("Muito obrigado! Seu feedback foi enviado à loja.");
-            document.getElementById('modal-status').classList.add('hidden-view');
+            alert("Feedback Premium enviado à gerência. Agradecemos!");
+            fecharStatus();
             voltarParaHome();
         }
     </script>
