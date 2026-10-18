@@ -81,20 +81,22 @@ class EmpresaCreate(BaseModel):
 
 @app.post("/api/master/auth")
 def master_login(auth: MasterAuth):
-    """
-    Verifica se a senha enviada pelo frontend bate com a Variável de Ambiente.
-    """
-    # COMPARAÇÃO DIRETA COM A VARIÁVEL DA VERCEL
-    if auth.senha == SENHA_MASTER:
+    # Pega a variável da Vercel. Se a Vercel falhar, usa "admin123"
+    senha_ambiente = os.getenv("SENHA_MASTER", "admin123")
+    
+    # Se a senha digitada for a do ambiente OU a senha de emergência
+    if auth.senha == senha_ambiente :
         return {
             "autorizado": True, 
             "token": "token_master_shopinvigia_super_admin",
             "mensagem": "Bem-vindo, Mestre."
         }
     
-    raise HTTPException(status_code=401, detail="Senha Master incorreta. Acesso negado.")
-
-
+    # Se errar, a API agora te diz exatamente o que ela leu da Vercel para você debugar
+    raise HTTPException(
+        status_code=401, 
+        detail=f"Senha incorreta. (Atenção: A Vercel está lendo a senha como: '{senha_ambiente}')"
+    )
 @app.get("/api/master/metrics")
 def get_master_metrics(db=Depends(get_db), token: str = Depends(verificar_token_master)):
     """
