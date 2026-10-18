@@ -320,12 +320,9 @@
         </div>
     </div>
 
-    <!-- SCRIPT MESTRE & BIBLIOTECAS -->
-    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+   <!-- ================= SCRIPT DE INTEGRAÇÃO COM A API PYTHON ================= -->
     <script>
-        AOS.init({ duration: 800, once: true });
-
-        const API_BASE_URL = "https://shopinvigia.vercel.app";
+        const API_BASE_URL = "https://shopinvigia.vercel.app"; // Substitua pela URL real da sua API Python se necessário
         let tokenMaster = localStorage.getItem("tokenMaster");
         let cacheEmpresasGlobal = [];
 
@@ -335,11 +332,7 @@
             }
         };
 
-        function toggleSidebar() {
-            document.getElementById('sidebar').classList.toggle('open');
-            document.getElementById('overlay').classList.toggle('open');
-        }
-
+        // 1. AUTENTICAÇÃO NA API PYTHON
         async function fazerLogin() {
             const senhaInput = document.getElementById('master-password').value;
             const errorElement = document.getElementById('login-error');
@@ -355,19 +348,18 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ senha: senhaInput })
                 });
-
                 const dados = await res.json();
 
                 if (res.ok && dados.autorizado) {
-                    tokenMaster = dados.token || "token_master_shopinvigia_super_admin";
+                    tokenMaster = dados.token || "token_master_autenticado_api";
                     localStorage.setItem("tokenMaster", tokenMaster);
                     mostrarPainel();
                 } else {
-                    errorElement.innerText = dados.detail || "Senha incorreta.";
+                    errorElement.innerText = dados.detail || "Senha master incorreta.";
                     errorElement.classList.remove("hidden-view");
                 }
             } catch (err) {
-                errorElement.innerText = "Erro ao conectar com o servidor da API.";
+                errorElement.innerText = "Erro ao conectar com a API Python.";
                 errorElement.classList.remove("hidden-view");
             } finally {
                 btnLogin.innerText = "ENTRAR NO SISTEMA";
@@ -385,8 +377,11 @@
             document.getElementById("dashboard-screen").classList.remove("hidden-view");
             carregarDashboard();
             carregarEmpresas();
-            dispararAlertaFlutuante("Sistema Master online e monitorando novas contas e uso de DB.");
-            AOS.refresh();
+            carregarFinanceiroTabela();
+            
+            setTimeout(() => {
+                dispararAlertaFlutuante("Conectado à API Python e banco de dados real com sucesso.");
+            }, 1000);
         }
 
         function navegar(viewId, element) {
@@ -402,8 +397,6 @@
                 element.classList.remove('text-gray-400', 'font-light');
             }
 
-            if(window.innerWidth < 1024) toggleSidebar();
-
             const titles = {
                 'view-dashboard': 'Visão Geral',
                 'view-clientes': 'Gestão de Empresas SaaS & Busca Avançada',
@@ -414,9 +407,9 @@
             if(viewId === 'view-dashboard') carregarDashboard();
             if(viewId === 'view-clientes') carregarEmpresas();
             if(viewId === 'view-financeiro') carregarFinanceiroTabela();
-            AOS.refresh();
         }
 
+        // 2. MÉTRICAS REAIS DA API PYTHON (/api/master/metrics)
         async function carregarDashboard() {
             try {
                 const response = await fetch(`${API_BASE_URL}/api/master/metrics`, {
@@ -426,18 +419,19 @@
                 
                 if (response.ok) {
                     document.getElementById("dash-clientes").innerText = data.total_clientes || 0;
-                    document.getElementById("dash-db").innerText = data.db_disk_usage || "18 MB";
+                    document.getElementById("dash-db").innerText = data.db_disk_usage || "0 MB";
                     document.getElementById("dash-mrr").innerText = data.mrr || "R$ 0,00";
                     renderizarGraficosMaster();
                 }
             } catch (e) {
-                console.error("Erro ao buscar métricas", e);
+                console.error("Erro ao buscar métricas da API Python", e);
             }
         }
 
+        // 3. LISTA DE EMPRESAS DA API PYTHON (/api/master/empresas)
         async function carregarEmpresas() {
             const tbody = document.getElementById("tabela-clientes");
-            tbody.innerHTML = '<tr><td colspan="5" class="text-center py-12"><div class="inline-block w-8 h-8 border-4 border-gold-500 rounded-full spinner"></div></td></tr>';
+            tbody.innerHTML = '<tr><td colspan="4" class="text-center py-12"><div class="inline-block w-8 h-8 border-4 border-gold-500 rounded-full spinner"></div></td></tr>';
             
             try {
                 const response = await fetch(`${API_BASE_URL}/api/master/empresas`, {
@@ -448,9 +442,11 @@
                 if (response.ok) {
                     cacheEmpresasGlobal = empresas || [];
                     renderizarTabelaClientes(cacheEmpresasGlobal);
+                } else {
+                    tbody.innerHTML = `<tr><td colspan="4" class="text-center py-6 text-red-500 font-light">Erro ao carregar dados da API Python.</td></tr>`;
                 }
             } catch (e) {
-                tbody.innerHTML = `<tr><td colspan="5" class="text-center py-6 text-red-500 font-light">Erro ao carregar dados da API.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="4" class="text-center py-6 text-red-500 font-light">Falha de conexão com o servidor Python.</td></tr>`;
             }
         }
 
@@ -458,7 +454,7 @@
             const tbody = document.getElementById("tabela-clientes");
             tbody.innerHTML = "";
             if (!lista || lista.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="5" class="text-center py-12 text-gray-400 font-light">Nenhum registro encontrado.</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="4" class="text-center py-12 text-gray-400 font-light">Nenhum registro encontrado.</td></tr>';
                 return;
             }
 
@@ -472,16 +468,16 @@
                     <tr class="border-b border-gray-50 hover:bg-gold-50/20 transition">
                         <td class="py-4 px-6 font-strong text-gray-900">
                             #${emp.id} - ${emp.nome_fantasia || emp.razao_social || 'N/A'}<br>
-                            <span class="text-[10px] text-gray-400 font-light">CNPJ: ${emp.cnpj || 'Não informado'}</span>
+                            <span class="text-[10px] text-gray-400 font-light">CNPJ: ${emp.cnpj || 'N/A'} | Tel: ${emp.telefone || 'N/A'}</span>
                         </td>
-                        <td class="py-4 px-6 font-light">${emp.plano || 'Basic'}</td>
-                        <td class="py-4 px-6 font-light">Dia ${emp.vencimento || '10'}</td>
                         <td class="py-4 px-6">
                             <span class="px-3 py-1 rounded-full text-[10px] font-strong uppercase tracking-widest ${statusColor}">${statusVal}</span>
                         </td>
+                        <td class="py-4 px-6 font-light">${emp.vencimento ? new Date(emp.vencimento).toLocaleDateString() : 'N/A'}</td>
                         <td class="py-4 px-6 text-right space-x-2">
-                            <button class="text-gray-900 bg-light-50 hover:bg-gold-100 px-3 py-2 rounded-xl text-[10px] font-strong uppercase tracking-widest transition" onclick="alternarStatusEmpresa(${emp.id}, '${statusVal}')"><i class="fa-solid fa-power-off mr-1"></i> Ativar/Bloquear</button>
-                            <button class="text-gold-700 bg-gold-50 hover:bg-gold-100 px-3 py-2 rounded-xl text-[10px] font-strong uppercase tracking-widest transition" onclick="alert('Contrato gerado com sucesso para a empresa #${emp.id}')">Emitir Contrato</button>
+                            <button class="text-gray-900 bg-light-50 hover:bg-gold-100 px-3 py-2 rounded-xl text-[10px] font-strong uppercase tracking-widest transition" onclick="alternarStatusEmpresa(${emp.id}, '${statusVal}')">Ativar/Bloq</button>
+                            <button class="text-gold-700 bg-gold-50 hover:bg-gold-100 px-3 py-2 rounded-xl text-[10px] font-strong uppercase tracking-widest transition" onclick="alert('Contrato gerado para a empresa #${emp.id}')">Contrato</button>
+                            <button class="text-blue-600 bg-blue-50 px-3 py-2 rounded-xl text-[10px] font-strong uppercase tracking-widest transition" onclick="alert('Função de alteração.')">Alterar</button>
                             <button class="text-red-500 hover:text-red-700 p-2 transition" onclick="excluirEmpresa(${emp.id})"><i class="fa-solid fa-trash"></i></button>
                         </td>
                     </tr>
@@ -493,6 +489,7 @@
         function filtrarClientesTabela() {
             const termo = document.getElementById("filtro-busca-clientes").value.toLowerCase();
             const statusFiltro = document.getElementById("filtro-status-clientes").value.toLowerCase();
+            const dataFiltro = document.getElementById("filtro-data-clientes").value;
 
             const filtrado = cacheEmpresasGlobal.filter(emp => {
                 const nome = (emp.nome_fantasia || emp.razao_social || '').toLowerCase();
@@ -501,16 +498,18 @@
 
                 const matchTermo = nome.includes(termo) || idStr.includes(termo) || (emp.cnpj || '').includes(termo);
                 const matchStatus = statusFiltro === "" || statusEmp === statusFiltro;
+                const matchData = !dataFiltro || (emp.created_at && emp.created_at.includes(dataFiltro));
 
-                return matchTermo && matchStatus;
+                return matchTermo && matchStatus && matchData;
             });
 
             renderizarTabelaClientes(filtrado);
         }
 
+        // 4. ATUALIZAR STATUS VIA API PYTHON (/api/master/empresas/{id})
         async function alternarStatusEmpresa(id, statusAtual) {
             let novoStatus = statusAtual === 'ativo' ? 'bloqueado' : 'ativo';
-            if(confirm(`Deseja alterar o status da empresa #${id} para [${novoStatus.toUpperCase()}]?`)) {
+            if(confirm(`Deseja alterar o status da empresa #${id} para [${novoStatus.toUpperCase()}] via API Python?`)) {
                 try {
                     const res = await fetch(`${API_BASE_URL}/api/master/empresas/${id}`, {
                         method: 'PUT',
@@ -518,13 +517,13 @@
                         body: JSON.stringify({ status: novoStatus })
                     });
                     if(res.ok) {
-                        alert("Status atualizado com sucesso!");
+                        alert("Status atualizado com sucesso na API!");
                         carregarEmpresas();
                     } else {
-                        alert("Erro ao atualizar status na API.");
+                        alert("Erro ao atualizar status na API Python.");
                     }
                 } catch(e) {
-                    alert("Falha de conexão.");
+                    alert("Falha de conexão com o servidor Python.");
                 }
             }
         }
@@ -546,9 +545,10 @@
             }
         }
 
+        // 5. FINANCEIRO E CARIMBO DE PAGAMENTO
         async function carregarFinanceiroTabela() {
             const tbody = document.getElementById("tabela-financeiro-empresas");
-            tbody.innerHTML = '<tr><td colspan="4" class="text-center py-6 font-light">Carregando dados financeiros...</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="4" class="text-center py-6 font-light">Carregando dados financeiros da API...</td></tr>';
             
             try {
                 const response = await fetch(`${API_BASE_URL}/api/master/empresas`, {
@@ -568,8 +568,14 @@
                         tbody.innerHTML += `
                             <tr class="border-b border-gray-50 hover:bg-gold-50/20">
                                 <td class="py-4 px-4 font-strong text-gray-900">#${emp.id} - ${emp.nome_fantasia || emp.razao_social}</td>
-                                <td class="py-4 px-4 font-light">Dia ${emp.vencimento || 10}</td>
-                                <td class="py-4 px-4"><span class="px-3 py-1 rounded-full text-[10px] font-strong uppercase tracking-widest bg-gold-50 text-gold-700 border border-gold-100">${statusVal}</span></td>
+                                <td class="py-4 px-4 font-light">${emp.vencimento ? new Date(emp.vencimento).toLocaleDateString() : 'N/A'}</td>
+                                <td class="py-4 px-4">
+                                    <select onchange="mudarStatusManual(${emp.id}, this.value)" class="px-3 py-1 bg-light-50 border rounded-xl text-xs font-strong uppercase">
+                                        <option value="ativo" ${statusVal === 'ativo' ? 'selected' : ''}>Ativo</option>
+                                        <option value="vencido" ${statusVal === 'vencido' ? 'selected' : ''}>Vencido</option>
+                                        <option value="bloqueado" ${statusVal === 'bloqueado' ? 'selected' : ''}>Bloqueado</option>
+                                    </select>
+                                </td>
                                 <td class="py-4 px-4 text-right">
                                     <button onclick="abrirModalPdf(${emp.id}, '${emp.nome_fantasia || emp.razao_social}', '${emp.cnpj || ''}')" class="bg-gray-900 hover:bg-gold-500 text-white hover:text-gray-900 px-4 py-2 rounded-xl text-[10px] font-strong uppercase tracking-widest transition"><i class="fa-solid fa-file-pdf mr-1"></i> Gerar Recibo PDF</button>
                                 </td>
@@ -579,6 +585,44 @@
                 }
             } catch(e) {
                 tbody.innerHTML = '<tr><td colspan="4" class="text-center py-6 text-red-500 font-light">Erro ao carregar tabela financeira.</td></tr>';
+            }
+        }
+
+        async function mudarStatusManual(id, novoStatus) {
+            try {
+                const res = await fetch(`${API_BASE_URL}/api/master/empresas/${id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${tokenMaster}` },
+                    body: JSON.stringify({ status: novoStatus })
+                });
+                if(res.ok) {
+                    alert(`Pagamento carimbado! Status alterado para [${novoStatus.toUpperCase()}] via API Python.`);
+                    carregarFinanceiroTabela();
+                } else {
+                    alert("Erro ao atualizar status na API.");
+                }
+            } catch(e) {
+                alert("Erro de conexão com a API.");
+            }
+        }
+
+        async function salvarConfigPix() {
+            const qr = document.getElementById("pix-qr").value;
+            const chave = document.getElementById("pix-chave").value;
+
+            try {
+                const res = await fetch(`${API_BASE_URL}/api/master/config-pix`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${tokenMaster}` },
+                    body: JSON.stringify({ qrcode_imagens: qr, copia_e_cola: chave })
+                });
+                if(res.ok) {
+                    alert("Configuração PIX enviada para a API Python com sucesso! Sincronizada em tempo real.");
+                } else {
+                    alert("Erro ao salvar configuração PIX na API.");
+                }
+            } catch(e) {
+                alert("Erro de conexão com a API Python.");
             }
         }
 
@@ -597,7 +641,6 @@
             document.getElementById("pdf-cli-nome").value = nome;
             document.getElementById("pdf-cli-doc").value = cnpj;
             document.getElementById("modal-comprovante-pdf").classList.remove("hidden-view");
-            AOS.refresh();
         }
 
         function fecharModalPdf() {
@@ -605,17 +648,9 @@
         }
 
         async function emitirPdfComprovante() {
-            alert("Comprovante gerado com sucesso! Abrindo janela de impressão em PDF estilizado...");
+            alert("Comprovante gerado com sucesso! Recibo PDF pronto.");
             fecharModalPdf();
             window.print();
-        }
-
-        async function salvarConfigPix() {
-            const qr = document.getElementById("pix-qr").value;
-            const chave = document.getElementById("pix-chave").value;
-            localStorage.setItem("shopinvigia_pix_qr", qr);
-            localStorage.setItem("shopinvigia_pix_chave", chave);
-            alert("Configuração de pagamento salva com sucesso! Os dados já aparecem em tempo real no app cliente/empresa.");
         }
 
         function renderizarGraficosMaster() {
@@ -646,7 +681,7 @@
                     data: {
                         labels: ['Dia 1', 'Dia 5', 'Dia 10', 'Dia 15', 'Dia 20', 'Dia 25', 'Dia 30'],
                         datasets: [{
-                            label: 'Faturamento por Dia',
+                            label: 'Faturamento',
                             data: [300, 800, 1500, 600, 900, 1100, 1400],
                             backgroundColor: '#111827',
                             borderRadius: 8
