@@ -1,10 +1,13 @@
 import os
 import uuid
-from fastapi import FastAPI, HTTPException, Depends, Header, UploadFile, File, Form
+from fastapi import FastAPI, HTTPException, Depends, Header, UploadFile, File, Form, Security
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from pydantic import BaseModel
 from typing import Optional
 from supabase import create_client, Client
+
+security = HTTPBearer()
 
 app = FastAPI(title="ShopinVigia API - Módulo Master SaaS")
 
@@ -19,7 +22,7 @@ app.add_middleware(
 # =====================================================================
 # CONFIGURAÇÕES (VERCEL & SUPABASE)
 # =====================================================================
-SENHA_MASTER_VERCEL = os.getenv("SENHA_MASTER")
+MASTER_SECRET = os.getenv("SENHA_MASTER", "123456")
 SUPABASE_URL = os.getenv("SUPABASE_URL")
 SUPABASE_KEY = os.getenv("SUPABASE_KEY")
 
@@ -32,8 +35,8 @@ supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 # =====================================================================
 # MODELOS DE DADOS (PYDANTIC)
 # =====================================================================
-class LoginRequest(BaseModel):
-    senha_master: str
+class MasterAuth(BaseModel):
+    senha: str
 
 class ClienteAtualizarRequest(BaseModel):
     nome: Optional[str] = None
@@ -53,38 +56,35 @@ class ReciboRequest(BaseModel):
     obs: str
 
 # =====================================================================
-# AUTENTICAÇÃO
+# AUTENTICAÇÃO (NOVO PADRÃO)
 # =====================================================================
-def verificar_token(authorization: str = Header(None)):
-    if not authorization or not authorization.startswith("Bearer "):
-        raise HTTPException(status_code=401, detail="Não autorizado")
-    if authorization.split(" ")[1] != "token_master_producao_shopinvigia":
+def verificar_token(credentials: HTTPAuthorizationCredentials = Security(security)):
+    if not credentials.credentials or credentials.credentials == "undefined":
+        raise HTTPException(status_code=401, detail="Token Master Inválido")
+    if credentials.credentials != "token_master_valido":
         raise HTTPException(status_code=401, detail="Sessão inválida")
-    return True
+    return credentials.credentials
+
+# ================= ROTAS DO MASTER =================
+@app.post("/api/master/auth")
+def master_login(auth: MasterAuth):
+    if auth.senha == MASTER_SECRET:
+        return {"autorizado": True, "token": "token_master_valido"}
+    raise HTTPException(status_code=401, detail="Senha Master incorreta")
 
 # =====================================================================
-# ROTAS DE LOGIN E DASHBOARD
+# ROTAS DE DASHBOARD E CLIENTES EMPRESA (CONSULTAS REAIS SUPABASE)
 # =====================================================================
-@app.post("/api/master/login")
-def login(dados: LoginRequest):
-    """Valida a senha master diretamente contra a variável da Vercel."""
-    if SENHA_MASTER_VERCEL and dados.senha_master == SENHA_MASTER_VERCEL:
-        return {"mensagem": "Autenticado", "token": "token_master_producao_shopinvigia"}
-    raise HTTPException(status_code=401, detail="Acesso Negado")
-
 @app.get("/api/master/dashboard", dependencies=[Depends(verificar_token)])
 def dashboard():
     """Consulta métricas reais de clientes e status direto no Supabase."""
     try:
-        # Busca contagem de clientes vencidos no Supabase
         vencidos_res = supabase.table('clientes').select('id', count='exact').eq('status', 'vencido').execute()
         vencidos_count = vencidos_res.count or 0
 
-        # Busca contagem de novos clientes no Supabase
         novos_res = supabase.table('clientes').select('id', count='exact').eq('status', 'novo').execute()
         novos_count = novos_res.count or 0
 
-        # Busca total geral de clientes para estimativa de DB
         total_res = supabase.table('clientes').select('id', count='exact').execute()
         total_count = total_res.count or 0
 
@@ -98,9 +98,6 @@ def dashboard():
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Erro no Supabase: {str(e)}")
 
-# =====================================================================
-# ROTAS: CLIENTES EMPRESA (CONSULTAS REAIS SUPABASE)
-# =====================================================================
 @app.get("/api/master/clientes", dependencies=[Depends(verificar_token)])
 def listar_clientes(busca: str = "", status: str = ""):
     """Busca registros reais na tabela 'clientes' do Supabase com filtros."""
@@ -233,14 +230,12 @@ async def configurar_pix(qr_code: UploadFile = File(...), chave_pix: str = Form(
         foto_bytes = await qr_code.read()
         filename = f"qr_{uuid.uuid4()}.png"
 
-        # Upload para o Supabase Storage (Bucket 'pix')
         try:
             supabase.storage.from_("pix").upload(filename, foto_bytes)
             public_url = supabase.storage.from_("pix").get_public_url(filename)
         except Exception:
             public_url = ""
 
-        # Upsert na tabela 'config_pagamento'
         supabase.table('config_pagamento').upsert({'id': 1, 'chave_pix': chave_pix, 'qr_code_url': public_url}).execute()
         return {"mensagem": "Configuração PIX salva com sucesso no Supabase!"}
     except Exception as e:
