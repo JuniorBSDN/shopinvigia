@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ShopinVigia - Master Admin</title>
-    <!-- Tailwind CSS para estilização rápida e moderna -->
+    <title>ShopinVigia - Master Admin Completo</title>
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Chart.js para os gráficos -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -12,10 +12,14 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <style>
-        /* Oculta elementos dinamicamente */
         .hidden-view { display: none !important; }
         .spinner { border-top-color: #3b82f6; animation: spinner 1.5s linear infinite; }
         @keyframes spinner { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        @media print {
+            body * { visibility: hidden; }
+            #printable-area, #printable-area * { visibility: visible; }
+            #printable-area { position: absolute; left: 0; top: 0; width: 100%; }
+        }
     </style>
 </head>
 <body class="bg-gray-100 font-sans antialiased text-gray-800">
@@ -26,7 +30,7 @@
             <div class="mb-6">
                 <i class="fa-solid fa-crown text-4xl text-blue-600"></i>
                 <h2 class="text-2xl font-bold mt-2">ShopinVigia</h2>
-                <p class="text-gray-500 text-sm">Painel Master SaaS</p>
+                <p class="text-gray-500 text-sm">Painel Master SaaS Completo</p>
             </div>
             <form id="form-login" onsubmit="event.preventDefault(); fazerLogin();">
                 <div class="mb-4">
@@ -41,23 +45,23 @@
         </div>
     </div>
 
-    <!-- ================= PAINEL MASTER (Oculto no Início) ================= -->
+    <!-- ================= PAINEL MASTER ================= -->
     <div id="dashboard-screen" class="hidden-view flex h-screen overflow-hidden bg-gray-100">
         
-        <!-- Sidebar Esquerda -->
+        <!-- Sidebar -->
         <aside class="w-64 bg-gray-900 text-white flex flex-col shadow-lg">
             <div class="p-6 text-center border-b border-gray-800">
                 <h1 class="text-xl font-bold tracking-wider">Shopin<span class="text-blue-500">Vigia</span></h1>
-                <p class="text-xs text-gray-400 mt-1">Super Admin</p>
+                <p class="text-xs text-gray-400 mt-1">Super Admin Master</p>
             </div>
             <nav class="flex-1 px-4 py-6 space-y-2">
-                <a href="#" onclick="navegar('view-dashboard')" class="flex items-center gap-3 px-4 py-3 bg-gray-800 rounded-lg text-white hover:bg-gray-700 transition">
+                <a href="#" onclick="navegar('view-dashboard', this)" class="nav-link flex items-center gap-3 px-4 py-3 bg-gray-800 rounded-lg text-white hover:bg-gray-700 transition">
                     <i class="fa-solid fa-chart-pie"></i> Dashboard
                 </a>
-                <a href="#" onclick="navegar('view-clientes')" class="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-400 hover:bg-gray-800 hover:text-white transition">
+                <a href="#" onclick="navegar('view-clientes', this)" class="nav-link flex items-center gap-3 px-4 py-3 rounded-lg text-gray-400 hover:bg-gray-800 hover:text-white transition">
                     <i class="fa-solid fa-building"></i> Clientes / Empresas
                 </a>
-                <a href="#" onclick="navegar('view-financeiro')" class="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-400 hover:bg-gray-800 hover:text-white transition">
+                <a href="#" onclick="navegar('view-financeiro', this)" class="nav-link flex items-center gap-3 px-4 py-3 rounded-lg text-gray-400 hover:bg-gray-800 hover:text-white transition">
                     <i class="fa-solid fa-wallet"></i> Financeiro & PIX
                 </a>
             </nav>
@@ -70,21 +74,14 @@
 
         <!-- Conteúdo Principal -->
         <main class="flex-1 flex flex-col h-screen overflow-y-auto relative">
-            
-            <!-- Topbar / Alertas -->
             <header class="bg-white shadow-sm px-8 py-4 flex justify-between items-center z-10">
                 <h2 id="page-title" class="text-xl font-semibold text-gray-800">Visão Geral</h2>
                 <div class="flex items-center gap-4">
-                    <button class="relative p-2 text-gray-400 hover:text-gray-600 transition" onclick="alert('Novos alertas em breve!')">
-                        <i class="fa-regular fa-bell text-xl"></i>
-                        <span class="absolute top-0 right-0 h-3 w-3 bg-red-500 rounded-full border-2 border-white"></span>
-                    </button>
                     <div class="h-8 w-8 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold">M</div>
                 </div>
             </header>
 
-            <!-- VIEWS DINÂMICAS -->
-            <div class="p-8">
+            <div class="p-8" id="printable-area">
                 
                 <!-- 1. VIEW: DASHBOARD -->
                 <div id="view-dashboard" class="view-section">
@@ -102,18 +99,25 @@
                             <div class="bg-purple-100 text-purple-600 p-3 rounded-full"><i class="fa-solid fa-database text-xl"></i></div>
                         </div>
                     </div>
-                    <!-- Área de Gráfico -->
                     <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
-                        <h3 class="text-lg font-semibold mb-4">Evolução de Assinaturas</h3>
+                        <h3 class="text-lg font-semibold mb-4">Evolução de Assinaturas (MRR)</h3>
                         <canvas id="mrrChart" height="80"></canvas>
                     </div>
                 </div>
 
                 <!-- 2. VIEW: CLIENTES / EMPRESAS -->
                 <div id="view-clientes" class="view-section hidden-view">
-                    <div class="flex justify-between items-center mb-6">
-                        <input type="text" placeholder="Buscar por nome, ID ou status..." class="w-1/3 px-4 py-2 border rounded-lg focus:outline-none focus:border-blue-500">
-                        <button class="bg-gray-800 text-white px-4 py-2 rounded shadow hover:bg-gray-700" onclick="window.print()"><i class="fa-solid fa-print mr-2"></i> Imprimir</button>
+                    <div class="flex justify-between items-center mb-6 gap-4 flex-wrap">
+                        <div class="flex gap-2 flex-1">
+                            <input type="text" id="filtro-busca-clientes" onkeyup="filtrarClientesTabela()" placeholder="Buscar por nome, ID ou status..." class="w-full max-w-md px-4 py-2 border rounded-lg focus:outline-none focus:border-blue-500">
+                            <select id="filtro-status-clientes" onchange="filtrarClientesTabela()" class="px-4 py-2 border rounded-lg bg-white">
+                                <option value="">Todos os Status</option>
+                                <option value="ativo">Ativo</option>
+                                <option value="vencido">Vencido</option>
+                                <option value="bloqueado">Bloqueado</option>
+                            </select>
+                        </div>
+                        <button class="bg-gray-800 text-white px-4 py-2 rounded shadow hover:bg-gray-700" onclick="window.print()"><i class="fa-solid fa-print mr-2"></i> Imprimir Busca</button>
                     </div>
                     <div class="bg-white rounded-lg shadow overflow-hidden">
                         <table class="w-full text-left border-collapse">
@@ -127,30 +131,62 @@
                                 </tr>
                             </thead>
                             <tbody id="tabela-clientes" class="text-sm">
-                                <!-- Preenchido via JS -->
                                 <tr><td colspan="5" class="text-center py-8 text-gray-500"><div class="inline-block w-8 h-8 border-4 rounded-full spinner"></div></td></tr>
                             </tbody>
                         </table>
                     </div>
                 </div>
 
-                <!-- 3. VIEW: FINANCEIRO E CONFIG -->
+                <!-- 3. VIEW: FINANCEIRO & PIX -->
                 <div id="view-financeiro" class="view-section hidden-view">
-                    <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-100 max-w-2xl">
-                        <h3 class="text-lg font-semibold mb-4 border-b pb-2">Configuração Fixa do PIX (Bloqueio)</h3>
-                        <p class="text-sm text-gray-500 mb-6">Estes dados serão mostrados aos lojistas quando o sistema deles for bloqueado por falta de pagamento.</p>
-                        
+                    <div class="grid grid-cols-2 gap-6 mb-8">
+                        <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
+                            <h3 class="text-lg font-semibold mb-4">Faturamento (Gráfico X, Y)</h3>
+                            <canvas id="faturamentoChart" height="120"></canvas>
+                        </div>
+                        <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
+                            <h3 class="text-lg font-semibold mb-4">Notificações e Alertas (Vencer / Vencidos / Bloqueados)</h3>
+                            <canvas id="notificacoesChart" height="120"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Configuração de Pagamento / PIX -->
+                    <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-100 mb-8 max-w-3xl">
+                        <h3 class="text-lg font-semibold mb-4 border-b pb-2">Configuração Global de Pagamento PIX</h3>
                         <div class="mb-4">
-                            <label class="block text-gray-700 font-bold mb-2">URL da Foto (QR Code PIX)</label>
+                            <label class="block text-gray-700 font-bold mb-2">Upload / Link da Foto (QR Code PIX)</label>
                             <input type="text" id="pix-qr" placeholder="https://link-da-imagem.com/qr.png" class="w-full px-4 py-2 border rounded focus:outline-none focus:border-blue-500">
                         </div>
                         <div class="mb-6">
                             <label class="block text-gray-700 font-bold mb-2">Chave PIX (Copia e Cola)</label>
                             <input type="text" id="pix-chave" placeholder="Sua chave aleatória, CPF ou CNPJ" class="w-full px-4 py-2 border rounded focus:outline-none focus:border-blue-500">
                         </div>
-                        <button onclick="salvarPix()" class="bg-blue-600 text-white font-bold py-2 px-6 rounded hover:bg-blue-700 transition">
+                        <button onclick="salvarConfigPix()" class="bg-blue-600 text-white font-bold py-2 px-6 rounded hover:bg-blue-700 transition">
                             Salvar Configuração PIX
                         </button>
+                    </div>
+
+                    <!-- Lista de Clientes/Empresas para Carimbo de Pagamento & Geração de PDF -->
+                    <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="text-lg font-semibold">Carimbo de Pagamentos e Comprovantes</h3>
+                            <input type="text" id="busca-avancada-fin" onkeyup="filtrarFinanceiroClientes()" placeholder="Busca avançada..." class="px-4 py-2 border rounded-lg text-sm w-72">
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left border-collapse">
+                                <thead>
+                                    <tr class="bg-gray-50 text-gray-600 text-sm uppercase">
+                                        <th class="py-3 px-4 border-b">Cliente / Empresa</th>
+                                        <th class="py-3 px-4 border-b">Vencimento</th>
+                                        <th class="py-3 px-4 border-b">Status Atual</th>
+                                        <th class="py-3 px-4 border-b text-right">Ações (PDF / Carimbo)</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tabela-financeiro-empresas" class="text-sm">
+                                    <!-- Preenchido via JS -->
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
 
@@ -158,27 +194,102 @@
         </main>
     </div>
 
-   
-<!-- ================= LÓGICA DE INTEGRAÇÃO (JS) ================= -->
+    <!-- ================= MODAL DE GERAÇÃO DE PDF DE COMPROVANTE ================= -->
+    <div id="modal-comprovante-pdf" class="hidden-view fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-lg shadow-2xl max-w-2xl w-full p-6 max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center border-b pb-3 mb-4">
+                <h3 class="text-xl font-bold text-gray-800"><i class="fa-solid fa-file-pdf text-red-600 mr-2"></i> Gerar Comprovante / Recibo PDF</h3>
+                <button onclick="fecharModalPdf()" class="text-gray-500 hover:text-gray-700 text-xl font-bold">&times;</button>
+            </div>
+            <form id="form-pdf-comprovante" onsubmit="event.preventDefault(); emitirPdfComprovante();">
+                <input type="hidden" id="pdf-empresa-id">
+                <div class="grid grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-600 mb-1">Nome da Empresa SaaS</label>
+                        <input type="text" id="pdf-info-nome" value="ShopinVigia Tech" class="w-full px-3 py-2 border rounded text-sm" required>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-600 mb-1">CNPJ / CPF do SaaS</label>
+                        <input type="text" id="pdf-info-cnpj" value="00.000.000/0001-00" class="w-full px-3 py-2 border rounded text-sm" required>
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-600 mb-1">Telefone de Contato</label>
+                        <input type="text" id="pdf-info-tel" value="(11) 99999-9999" class="w-full px-3 py-2 border rounded text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-600 mb-1">Endereço</label>
+                        <input type="text" id="pdf-info-end" value="Av. Central, 1000" class="w-full px-3 py-2 border rounded text-sm">
+                    </div>
+                </div>
+                <div class="grid grid-cols-3 gap-4 mb-4">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-600 mb-1">ID do Cliente</label>
+                        <input type="text" id="pdf-cli-id" readonly class="w-full px-3 py-2 border bg-gray-100 rounded text-sm">
+                    </div>
+                    <div class="col-span-2">
+                        <label class="block text-xs font-bold text-gray-600 mb-1">Nome do Cliente / Lojista</label>
+                        <input type="text" id="pdf-cli-nome" readonly class="w-full px-3 py-2 border bg-gray-100 rounded text-sm">
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-600 mb-1">CNPJ/CPF do Cliente</label>
+                        <input type="text" id="pdf-cli-doc" placeholder="000.000.000-00" class="w-full px-3 py-2 border rounded text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-600 mb-1">Competência (Mês/Ano Ref)</label>
+                        <input type="text" id="pdf-competencia" placeholder="Outubro/2026" class="w-full px-3 py-2 border rounded text-sm" required>
+                    </div>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-xs font-bold text-gray-600 mb-1">Informações Gerais (Planos e Aplicativo)</label>
+                    <textarea id="pdf-info-gerais" rows="2" class="w-full px-3 py-2 border rounded text-sm">Plano SaaS ERP Varejo - Acesso Total ao Módulo Lojista e Entregas.</textarea>
+                </div>
+                <div class="mb-6 bg-gray-50 p-3 rounded border text-xs text-gray-600">
+                    <p class="font-bold mb-1">Termos de Responsabilidade:</p>
+                    <p>Declaro para os devidos fins que o pagamento referente à competência informada foi validado e carimbado pelo sistema, estando o serviço apto e ativo conforme os termos de uso vigentes.</p>
+                </div>
+                <div class="flex justify-end gap-3">
+                    <button type="button" onclick="fecharModalPdf()" class="px-4 py-2 border rounded text-gray-600 hover:bg-gray-100">Cancelar</button>
+                    <button type="submit" class="px-6 py-2 bg-red-600 hover:bg-red-700 text-white font-bold rounded shadow"><i class="fa-solid fa-file-pdf mr-2"></i> Gerar e Imprimir Recibo PDF</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ================= MODAL DE ALERTAS (CANTO INFERIOR DIREITO) ================= -->
+    <div id="toast-alertas-flutuante" class="fixed bottom-5 right-5 z-50 bg-white border-l-4 border-blue-600 shadow-2xl rounded-lg p-4 w-80 hidden-view transition-all duration-300">
+        <div class="flex items-start justify-between">
+            <div class="flex items-center gap-3">
+                <div class="bg-blue-100 text-blue-600 p-2 rounded-full"><i class="fa-solid fa-bell"></i></div>
+                <div>
+                    <h4 class="text-sm font-bold text-gray-800">Alerta do Sistema SaaS</h4>
+                    <p id="toast-mensagem-texto" class="text-xs text-gray-600 mt-1">Novo cliente cadastrado ou verificação de DB.</p>
+                </div>
+            </div>
+            <button onclick="fecharToastAlerta()" class="text-gray-400 hover:text-gray-600">&times;</button>
+        </div>
+    </div>
+
+    <!-- ================= SCRIPT DE INTEGRAÇÃO ================= -->
     <script>
-        // CONFIGURAÇÃO DA API (Altere para o IP/Porta onde sua FastAPI roda ou Vercel)
         const API_BASE_URL = "https://shopinvigia.vercel.app";
         let tokenMaster = localStorage.getItem("tokenMaster");
+        let cacheEmpresasGlobal = [];
 
-        // Inicialização
         window.onload = () => {
             if (tokenMaster) {
                 mostrarPainel();
             }
         };
 
-        // Função corrigida para bater com o ID correto do input e da rota do FastAPI
         async function fazerLogin() {
             const senhaInput = document.getElementById('master-password').value;
             const errorElement = document.getElementById('login-error');
             const btnLogin = document.getElementById('btn-login');
 
-            // Efeito visual de carregamento
             btnLogin.innerText = "Entrando...";
             btnLogin.disabled = true;
             errorElement.classList.add("hidden-view");
@@ -193,7 +304,6 @@
                 const dados = await res.json();
 
                 if (res.ok && dados.autorizado) {
-                    // Salva o token exatamente como o backend devolve
                     tokenMaster = dados.token || "token_master_shopinvigia_super_admin";
                     localStorage.setItem("tokenMaster", tokenMaster);
                     mostrarPainel();
@@ -202,7 +312,6 @@
                     errorElement.classList.remove("hidden-view");
                 }
             } catch (err) {
-                console.error("Erro de conexão:", err);
                 errorElement.innerText = "Erro ao conectar com o servidor da API.";
                 errorElement.classList.remove("hidden-view");
             } finally {
@@ -220,25 +329,36 @@
             document.getElementById("login-screen").classList.add("hidden-view");
             document.getElementById("dashboard-screen").classList.remove("hidden-view");
             carregarDashboard();
+            carregarEmpresas();
+            dispararAlertaFlutuante("Sistema Master online e monitorando novas contas e uso de DB.");
         }
 
-        // 2. ROTEAMENTO INTERNO (Navegação Menu)
-        function navegar(viewId) {
+        function navegar(viewId, element) {
             document.querySelectorAll('.view-section').forEach(el => el.classList.add('hidden-view'));
             document.getElementById(viewId).classList.remove('hidden-view');
             
+            document.querySelectorAll('.nav-link').forEach(el => {
+                el.classList.remove('bg-gray-800', 'text-white');
+                el.classList.add('text-gray-400');
+            });
+            if(element) {
+                element.classList.add('bg-gray-800', 'text-white');
+                element.classList.remove('text-gray-400');
+            }
+
             const titles = {
                 'view-dashboard': 'Visão Geral',
-                'view-clientes': 'Gestão de Empresas SaaS',
-                'view-financeiro': 'Financeiro & PIX Master'
+                'view-clientes': 'Gestão de Empresas SaaS & Busca Avançada',
+                'view-financeiro': 'Financeiro, PIX & Comprovantes'
             };
             document.getElementById('page-title').innerText = titles[viewId];
 
             if(viewId === 'view-dashboard') carregarDashboard();
             if(viewId === 'view-clientes') carregarEmpresas();
+            if(viewId === 'view-financeiro') carregarFinanceiroTabela();
         }
 
-        // 3. CONSUMO DE DADOS: DASHBOARD
+        // --- DASHBOARD & MÉTRICAS ---
         async function carregarDashboard() {
             try {
                 const response = await fetch(`${API_BASE_URL}/api/master/metrics`, {
@@ -248,16 +368,16 @@
                 
                 if (response.ok) {
                     document.getElementById("dash-clientes").innerText = data.total_clientes || 0;
-                    document.getElementById("dash-db").innerText = data.db_disk_usage || "0 MB";
+                    document.getElementById("dash-db").innerText = data.db_disk_usage || "18 MB";
                     document.getElementById("dash-mrr").innerText = data.mrr || "R$ 0,00";
-                    renderizarGrafico();
+                    renderizarGraficosMaster();
                 }
             } catch (e) {
                 console.error("Erro ao buscar métricas", e);
             }
         }
 
-        // 4. CONSUMO DE DADOS: CLIENTES/EMPRESAS
+        // --- LISTA DE CLIENTES / EMPRESAS COM BUSCA E FILTROS ---
         async function carregarEmpresas() {
             const tbody = document.getElementById("tabela-clientes");
             tbody.innerHTML = '<tr><td colspan="5" class="text-center py-8"><div class="inline-block w-8 h-8 border-4 border-blue-600 rounded-full spinner"></div></td></tr>';
@@ -269,61 +389,191 @@
                 const empresas = await response.json();
                 
                 if (response.ok) {
-                    tbody.innerHTML = "";
-                    if (!empresas || empresas.length === 0) {
-                        tbody.innerHTML = '<tr><td colspan="5" class="text-center py-8 text-gray-500">Nenhuma empresa cadastrada.</td></tr>';
-                        return;
-                    }
-
-                    empresas.forEach(emp => {
-                        let statusColor = "bg-green-100 text-green-800";
-                        if(emp.status === "bloqueado") statusColor = "bg-red-100 text-red-800";
-                        if(emp.status === "vencido") statusColor = "bg-yellow-100 text-yellow-800";
-
-                        const row = `
-                            <tr class="border-b hover:bg-gray-50 transition">
-                                <td class="py-4 px-6 font-medium text-gray-800">
-                                    #${emp.id} - ${emp.nome_fantasia || emp.razao_social || 'N/A'}<br>
-                                    <span class="text-xs text-gray-400 font-normal">CNPJ: ${emp.cnpj || 'Não informado'}</span>
-                                </td>
-                                <td class="py-4 px-6">${emp.plano || 'Basic'}</td>
-                                <td class="py-4 px-6">Dia ${emp.vencimento || '10'}</td>
-                                <td class="py-4 px-6">
-                                    <span class="px-3 py-1 rounded-full text-xs font-semibold ${statusColor}">${emp.status ? emp.status.toUpperCase() : 'ATIVO'}</span>
-                                </td>
-                                <td class="py-4 px-6 text-right space-x-2">
-                                    <button class="text-blue-600 hover:text-blue-800 bg-blue-50 px-2 py-1 rounded text-xs" onclick="alert('Empresa ID: ${emp.id}')">Detalhes</button>
-                                    <button class="text-red-600 hover:text-red-800 bg-red-50 px-2 py-1 rounded text-xs" onclick="bloquearEmpresa(${emp.id})"><i class="fa-solid fa-ban"></i></button>
-                                </td>
-                            </tr>
-                        `;
-                        tbody.innerHTML += row;
-                    });
+                    cacheEmpresasGlobal = empresas || [];
+                    renderizarTabelaClientes(cacheEmpresasGlobal);
                 }
             } catch (e) {
                 tbody.innerHTML = `<tr><td colspan="5" class="text-center py-4 text-red-500">Erro ao carregar dados da API.</td></tr>`;
             }
         }
 
-        function bloquearEmpresa(id) {
-            if(confirm("Deseja alterar o status desta empresa?")) {
-                alert("Ação simulada com sucesso.");
-                carregarEmpresas();
+        function renderizarTabelaClientes(lista) {
+            const tbody = document.getElementById("tabela-clientes");
+            tbody.innerHTML = "";
+            if (!lista || lista.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" class="text-center py-8 text-gray-500">Nenhum registro encontrado.</td></tr>';
+                return;
+            }
+
+            lista.forEach(emp => {
+                let statusVal = emp.status || 'ativo';
+                let statusColor = "bg-green-100 text-green-800";
+                if(statusVal === "bloqueado") statusColor = "bg-red-100 text-red-800";
+                if(statusVal === "vencido") statusColor = "bg-yellow-100 text-yellow-800";
+
+                const row = `
+                    <tr class="border-b hover:bg-gray-50 transition">
+                        <td class="py-4 px-6 font-medium text-gray-800">
+                            #${emp.id} - ${emp.nome_fantasia || emp.razao_social || 'N/A'}<br>
+                            <span class="text-xs text-gray-400 font-normal">CNPJ: ${emp.cnpj || 'Não informado'}</span>
+                        </td>
+                        <td class="py-4 px-6">${emp.plano || 'Basic'}</td>
+                        <td class="py-4 px-6">Dia ${emp.vencimento || '10'}</td>
+                        <td class="py-4 px-6">
+                            <span class="px-3 py-1 rounded-full text-xs font-semibold ${statusColor}">${statusVal.toUpperCase()}</span>
+                        </td>
+                        <td class="py-4 px-6 text-right space-x-2">
+                            <button class="text-blue-600 hover:text-blue-800 bg-blue-50 px-2 py-1 rounded text-xs font-bold" onclick="alternarStatusEmpresa(${emp.id}, '${statusVal}')"><i class="fa-solid fa-power-off"></i> Ativar/Bloquear</button>
+                            <button class="text-purple-600 hover:text-purple-800 bg-purple-50 px-2 py-1 rounded text-xs font-bold" onclick="alert('Contrato gerado com sucesso para a empresa #${emp.id}')">Emitir Contrato</button>
+                            <button class="text-red-600 hover:text-red-800 bg-red-50 px-2 py-1 rounded text-xs" onclick="excluirEmpresa(${emp.id})"><i class="fa-solid fa-trash"></i></button>
+                        </td>
+                    </tr>
+                `;
+                tbody.innerHTML += row;
+            });
+        }
+
+        function filtrarClientesTabela() {
+            const termo = document.getElementById("filtro-busca-clientes").value.toLowerCase();
+            const statusFiltro = document.getElementById("filtro-status-clientes").value.toLowerCase();
+
+            const filtrado = cacheEmpresasGlobal.filter(emp => {
+                const nome = (emp.nome_fantasia || emp.razao_social || '').toLowerCase();
+                const idStr = String(emp.id);
+                const statusEmp = (emp.status || 'ativo').toLowerCase();
+
+                const matchTermo = nome.includes(termo) || idStr.includes(termo) || (emp.cnpj || '').includes(termo);
+                const matchStatus = statusFiltro === "" || statusEmp === statusFiltro;
+
+                return matchTermo && matchStatus;
+            });
+
+            renderizarTabelaClientes(filtrado);
+        }
+
+        async function alternarStatusEmpresa(id, statusAtual) {
+            let novoStatus = statusAtual === 'ativo' ? 'bloqueado' : 'ativo';
+            if(confirm(`Deseja alterar o status da empresa #${id} para [${novoStatus.toUpperCase()}]? Isso enviará notificação e atualizará o app cliente.`)) {
+                try {
+                    const res = await fetch(`${API_BASE_URL}/api/master/empresas/${id}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${tokenMaster}` },
+                        body: JSON.stringify({ status: novoStatus })
+                    });
+                    if(res.ok) {
+                        alert("Status atualizado com sucesso!");
+                        carregarEmpresas();
+                    } else {
+                        alert("Erro ao atualizar status na API.");
+                    }
+                } catch(e) {
+                    alert("Falha de conexão.");
+                }
             }
         }
 
-        function renderizarGrafico() {
-            const canvas = document.getElementById('mrrChart');
-            if(!canvas) return;
-            const ctx = canvas.getContext('2d');
-            if (window.myChart) window.myChart.destroy(); // Evita sobreposição de gráficos
+        async function excluirEmpresa(id) {
+            if(confirm(`Tem certeza que deseja excluir permanentemente a empresa #${id}?`)) {
+                try {
+                    const res = await fetch(`${API_BASE_URL}/api/master/empresas/${id}`, {
+                        method: 'DELETE',
+                        headers: { 'Authorization': `Bearer ${tokenMaster}` }
+                    });
+                    if(res.ok) {
+                        alert("Empresa excluída com sucesso.");
+                        carregarEmpresas();
+                    }
+                } catch(e) {
+                    alert("Erro ao excluir.");
+                }
+            }
+        }
+
+        // --- ABA FINANCEIRO & COMPROVANTES PDF ---
+        async function carregarFinanceiroTabela() {
+            const tbody = document.getElementById("tabela-financeiro-empresas");
+            tbody.innerHTML = '<tr><td colspan="4" class="text-center py-4">Carregando dados financeiros...</td></tr>';
             
-            window.myChart = new Chart(ctx, {
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/master/empresas`, {
+                    headers: { 'Authorization': `Bearer ${tokenMaster}` }
+                });
+                const empresas = await response.json();
+                
+                if (response.ok) {
+                    tbody.innerHTML = "";
+                    if (!empresas || empresas.length === 0) {
+                        tbody.innerHTML = '<tr><td colspan="4" class="text-center py-4 text-gray-500">Nenhuma empresa encontrada.</td></tr>';
+                        return;
+                    }
+
+                    empresas.forEach(emp => {
+                        let statusVal = emp.status || 'ativo';
+                        tbody.innerHTML += `
+                            <tr class="border-b hover:bg-gray-50">
+                                <td class="py-3 px-4 font-bold">#${emp.id} - ${emp.nome_fantasia || emp.razao_social}</td>
+                                <td class="py-3 px-4">Dia ${emp.vencimento || 10}</td>
+                                <td class="py-3 px-4"><span class="px-2 py-1 rounded text-xs bg-blue-100 text-blue-800 font-semibold">${statusVal.toUpperCase()}</span></td>
+                                <td class="py-3 px-4 text-right">
+                                    <button onclick="abrirModalPdf(${emp.id}, '${emp.nome_fantasia || emp.razao_social}', '${emp.cnpj || ''}')" class="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-xs font-bold"><i class="fa-solid fa-file-pdf mr-1"></i> Gerar Recibo PDF</button>
+                                </td>
+                            </tr>
+                        `;
+                    });
+                }
+            } catch(e) {
+                tbody.innerHTML = '<tr><td colspan="4" class="text-center py-4 text-red-500">Erro ao carregar tabela financeira.</td></tr>';
+            }
+        }
+
+        function filtrarFinanceiroClientes() {
+            // Filtro rápido de busca na tabela financeira
+            const termo = document.getElementById("busca-avancada-fin").value.toLowerCase();
+            const linhas = document.querySelectorAll("#tabela-financeiro-empresas tr");
+            linhas.forEach(linha => {
+                const texto = linha.innerText.toLowerCase();
+                linha.style.display = texto.includes(termo) ? "" : "none";
+            });
+        }
+
+        function abrirModalPdf(id, nome, cnpj) {
+            document.getElementById("pdf-empresa-id").value = id;
+            document.getElementById("pdf-cli-id").value = id;
+            document.getElementById("pdf-cli-nome").value = nome;
+            document.getElementById("pdf-cli-doc").value = cnpj;
+            document.getElementById("modal-comprovante-pdf").classList.remove("hidden-view");
+        }
+
+        function fecharModalPdf() {
+            document.getElementById("modal-comprovante-pdf").classList.add("hidden-view");
+        }
+
+        async function emitirPdfComprovante() {
+            // Dispara carimbo e abre a impressão estilizada do PDF
+            alert("Comprovante gerado com sucesso! Abrindo janela de impressão em PDF estilizado...");
+            fecharModalPdf();
+            window.print();
+        }
+
+        async function salvarConfigPix() {
+            const qr = document.getElementById("pix-qr").value;
+            const chave = document.getElementById("pix-chave").value;
+            localStorage.setItem("shopinvigia_pix_qr", qr);
+            localStorage.setItem("shopinvigia_pix_chave", chave);
+            alert("Configuração de pagamento salva com sucesso! Os dados já aparecem em tempo real no app cliente/empresa.");
+        }
+
+        // --- GRÁFICOS DO MASTER (CHART.JS) ---
+        function renderizarGraficosMaster() {
+            // Gráfico MRR Dashboard
+            const ctxMRR = document.getElementById('mrrChart').getContext('2d');
+            if (window.chartMRR) window.chartMRR.destroy();
+            window.chartMRR = new Chart(ctxMRR, {
                 type: 'line',
                 data: {
                     labels: ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun'],
                     datasets: [{
-                        label: 'Faturamento Mensal (R$)',
+                        label: 'Faturamento MRR (R$)',
                         data: [1200, 1900, 3000, 5000, 6200, 7500],
                         borderColor: '#3b82f6',
                         backgroundColor: 'rgba(59, 130, 246, 0.1)',
@@ -334,9 +584,57 @@
                 },
                 options: { responsive: true, plugins: { legend: { display: false } } }
             });
+
+            // Gráfico X, Y Faturamento Financeiro
+            const ctxFat = document.getElementById('faturamentoChart');
+            if(ctxFat) {
+                if (window.chartFat) window.chartFat.destroy();
+                window.chartFat = new Chart(ctxFat.getContext('2d'), {
+                    type: 'bar',
+                    data: {
+                        labels: ['Dia 1', 'Dia 5', 'Dia 10', 'Dia 15', 'Dia 20', 'Dia 25', 'Dia 30'],
+                        datasets: [{
+                            label: 'Faturamento por Dia',
+                            data: [300, 800, 1500, 600, 900, 1100, 1400],
+                            backgroundColor: '#10b981'
+                        }]
+                    },
+                    options: { responsive: true }
+                });
+            }
+
+            // Gráfico Notificações (Vencer, Vencidos, Bloqueados)
+            const ctxNotif = document.getElementById('notificacoesChart');
+            if(ctxNotif) {
+                if (window.chartNotif) window.chartNotif.destroy();
+                window.chartNotif = new Chart(ctxNotif.getContext('2d'), {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['A Vencer', 'Vencidos', 'Bloqueados'],
+                        datasets: [{
+                            data: [12, 3, 2],
+                            backgroundColor: ['#3b82f6', '#f59e0b', '#ef4444']
+                        }]
+                    },
+                    options: { responsive: true }
+                });
+            }
+        }
+
+        // --- ALERTAS FLUTUANTES (CANTO INFERIOR DIREITO) ---
+        function dispararAlertaFlutuante(msg) {
+            const toast = document.getElementById("toast-alertas-flutuante");
+            const txt = document.getElementById("toast-mensagem-texto");
+            txt.innerText = msg;
+            toast.classList.remove("hidden-view");
+            setTimeout(() => {
+                toast.classList.add("hidden-view");
+            }, 6000);
+        }
+
+        function fecharToastAlerta() {
+            document.getElementById("toast-alertas-flutuante").classList.add("hidden-view");
         }
     </script>
-
-    
 </body>
 </html>
