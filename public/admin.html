@@ -577,15 +577,10 @@
         </div>
     </div>
 
-    <!-- SCRIPTS MESTRES -->
+   <!-- SCRIPTS MESTRES -->
     <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
     <script>
         AOS.init({ duration: 800, once: true });
-
-        // INTEGRAÇÃO SUPABASE PREPARADA E ESTRUTURADA
-        const supabaseUrl = 'https://SEU_PROJETO.supabase.co';
-        const supabaseKey = 'SUA_CHAVE_ANON_KEY';
-        // const supabase = supabase.createClient(supabaseUrl, supabaseKey);
 
         let empresaId = localStorage.getItem("erp_empresa_id");
         let filaAlertas = [];
@@ -607,12 +602,25 @@
             }
         };
 
+        // --- COMUNICAÇÃO COM A API PYTHON (VERCEL) ---
+        async function carregarPedidos() {
+            try {
+                const resposta = await fetch('https://shopinvigia.vercel.app/api/master/empresas'); 
+                const dados = await resposta.json();
+                
+                // Aqui você pode iterar sobre 'dados' vindos da sua API Python e renderizar na tabela 'tb-pedidos'
+                console.log("Dados recebidos da API Python:", dados);
+            } catch (erro) {
+                console.error("Erro ao carregar dados da API:", erro);
+            }
+        }
+
         // --- SISTEMA DE ALERTAS OCULTOS ---
         function processarFilaAlertas() {
             if (filaAlertas.length === 0) return;
             const alertaAtual = filaAlertas.shift();
             mostrarAlerta(alertaAtual.title, alertaAtual.msg);
-            setTimeout(processarFilaAlertas, 4500); // Chama o próximo alerta após o término do atual
+            setTimeout(processarFilaAlertas, 4500); 
         }
 
         function mostrarAlerta(titulo, msg) {
@@ -622,6 +630,7 @@
             toast.className = `fixed bottom-6 right-6 bg-gray-900 shadow-2xl p-5 rounded-2xl min-w-[300px] z-[120] transition-all transform duration-300 translate-y-0 border border-gray-800`;
             setTimeout(() => fecharAlerta(), 4000);
         }
+        
         function fecharAlerta() {
             const toast = document.getElementById('toast-alerta');
             toast.classList.add('translate-y-20', 'opacity-0');
@@ -646,11 +655,11 @@
             localStorage.setItem("erp_loja_nome", "SHOP PREMIUM");
             empresaId = "999";
             entrarNoPainel();
-            location.reload(); // Recarrega para iniciar a fila de alertas
+            location.reload(); 
         }
 
         function criarConta() {
-            alert("Sua conta foi criada no Supabase e você tem 1 semana grátis!");
+            alert("Sua conta foi criada e você tem 1 semana grátis!");
             toggleCadastro(false);
         }
 
@@ -705,21 +714,6 @@
             document.getElementById('btn-pdv-interno').className = !ext ? "flex-1 py-3 bg-white text-gray-900 shadow font-strong rounded-xl transition text-sm uppercase" : "flex-1 py-3 text-gray-500 font-light rounded-xl hover:text-gray-900 transition text-sm uppercase";
         }
 
-        function carregarPedidos() {
-            const tb = document.getElementById('tb-pedidos');
-            tb.innerHTML = `
-                <tr class="border-b border-gray-50 hover:bg-gold-50 cursor-pointer transition group" onclick="carregarCupom('Carlos Silva', 'Rua B, 400', 'PIX', '2x Burger Dourado', 'R$ 90,00')">
-                    <td class="p-4 font-strong text-gray-900">#012 <br><span class="text-[10px] font-light text-gray-400">19:35</span></td>
-                    <td class="p-4 font-strong text-gray-900">Carlos Silva<br><span class="text-[10px] font-light text-gray-500">End: Rua B, 400<br>Ref: Posto BR</span></td>
-                    <td class="p-4 text-xs">(11) 9999-9999</td>
-                    <td class="p-4 text-xs">PIX<br><span class="font-strong text-gold-600">R$ 90,00</span></td>
-                    <td class="p-4 text-xs font-strong text-blue-600 uppercase">Novo / 19:35</td>
-                </tr>
-            `;
-            document.getElementById('ind-novos').innerText = "1";
-            document.getElementById('ind-atrasos').innerText = "0";
-            document.getElementById('ind-receita').innerText = "R$ 90,00";
-        }
         function filtrarPedidos() { /* lógica JS padrão display block/none */ }
 
         function carregarCupom(cli, end, pag, itens, tot) {
@@ -766,7 +760,7 @@
             `;
         }
         function filtrarProdutos() { /* JS simples display row */ }
-        function cadastrarProduto() { mostrarAlerta('Salvo', 'Produto gravado no Supabase.'); carregarProdutos(); }
+        function cadastrarProduto() { mostrarAlerta('Salvo', 'Produto gravado.'); carregarProdutos(); }
 
         // --- OUVIDORIA ---
         function carregarOuvidoria() {
@@ -786,7 +780,7 @@
                 </tr>
             `;
         }
-        function filtrarOuvidoria() { mostrarAlerta('Busca', 'Filtrando data no Supabase...'); }
+        function filtrarOuvidoria() { mostrarAlerta('Busca', 'Filtrando data...'); }
         function marcarFeedOk() { 
             alert("Email confirmando a análise do gargalo operacional enviado ao cliente.");
             document.getElementById('box-critico').classList.add('hidden-view');
