@@ -158,10 +158,11 @@
         </main>
     </div>
 
-    <!-- ================= LÓGICA DE INTEGRAÇÃO (JS) ================= -->
+   
+<!-- ================= LÓGICA DE INTEGRAÇÃO (JS) ================= -->
     <script>
-        // CONFIGURAÇÃO DA API (Altere para o IP/Porta onde sua FastAPI roda)
-        const API_BASE_URL = "https://shopinvigia.vercel.app/";
+        // CONFIGURAÇÃO DA API (Altere para o IP/Porta onde sua FastAPI roda ou Vercel)
+        const API_BASE_URL = "https://shopinvigia.vercel.app";
         let tokenMaster = localStorage.getItem("tokenMaster");
 
         // Inicialização
@@ -171,30 +172,44 @@
             }
         };
 
-      async function fazerLoginMaster() {
-    const senhaInput = document.getElementById('input-login-senha').value; // Ajuste para o ID do seu input de senha master
-    try {
-        const res = await fetch(`${API_BASE_URL}/master/auth`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ senha: senhaInput })
-        });
+        // Função corrigida para bater com o ID correto do input e da rota do FastAPI
+        async function fazerLogin() {
+            const senhaInput = document.getElementById('master-password').value;
+            const errorElement = document.getElementById('login-error');
+            const btnLogin = document.getElementById('btn-login');
 
-        if (res.ok) {
-            const dados = await res.json();
-            // Salva o token no localStorage exatamente como o deliveryON faz
-            localStorage.setItem('shopinvigia_master_token', dados.token);
+            // Efeito visual de carregamento
+            btnLogin.innerText = "Entrando...";
+            btnLogin.disabled = true;
+            errorElement.classList.add("hidden-view");
 
-            // Oculta a tela de login e inicializa o painel
-            document.getElementById('auth-overlay').style.display = 'none';
-            inicializarPainelMaster();
-        } else {
-            alert("Senha incorreta. Verifique a senha configurada no ambiente da Vercel.");
+            try {
+                const res = await fetch(`${API_BASE_URL}/api/master/auth`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ senha: senhaInput })
+                });
+
+                const dados = await res.json();
+
+                if (res.ok && dados.autorizado) {
+                    // Salva o token exatamente como o backend devolve
+                    tokenMaster = dados.token || "token_master_shopinvigia_super_admin";
+                    localStorage.setItem("tokenMaster", tokenMaster);
+                    mostrarPainel();
+                } else {
+                    errorElement.innerText = dados.detail || "Senha incorreta.";
+                    errorElement.classList.remove("hidden-view");
+                }
+            } catch (err) {
+                console.error("Erro de conexão:", err);
+                errorElement.innerText = "Erro ao conectar com o servidor da API.";
+                errorElement.classList.remove("hidden-view");
+            } finally {
+                btnLogin.innerText = "Entrar no Sistema";
+                btnLogin.disabled = false;
+            }
         }
-    } catch (err) {
-        alert("Erro ao conectar com o servidor.");
-    }
-}
 
         function sair() {
             localStorage.removeItem("tokenMaster");
@@ -209,12 +224,9 @@
 
         // 2. ROTEAMENTO INTERNO (Navegação Menu)
         function navegar(viewId) {
-            // Esconde todas
             document.querySelectorAll('.view-section').forEach(el => el.classList.add('hidden-view'));
-            // Mostra a selecionada
             document.getElementById(viewId).classList.remove('hidden-view');
             
-            // Atualiza Título
             const titles = {
                 'view-dashboard': 'Visão Geral',
                 'view-clientes': 'Gestão de Empresas SaaS',
@@ -222,7 +234,6 @@
             };
             document.getElementById('page-title').innerText = titles[viewId];
 
-            // Carrega dados se necessário
             if(viewId === 'view-dashboard') carregarDashboard();
             if(viewId === 'view-clientes') carregarEmpresas();
         }
@@ -230,16 +241,16 @@
         // 3. CONSUMO DE DADOS: DASHBOARD
         async function carregarDashboard() {
             try {
-                const response = await fetch(`${API_BASE_URL}/master/metrics`, {
+                const response = await fetch(`${API_BASE_URL}/api/master/metrics`, {
                     headers: { 'Authorization': `Bearer ${tokenMaster}` }
                 });
                 const data = await response.json();
                 
                 if (response.ok) {
-                    document.getElementById("dash-clientes").innerText = data.total_clientes;
-                    document.getElementById("dash-db").innerText = data.db_disk_usage;
-                    document.getElementById("dash-mrr").innerText = data.mrr;
-                    renderizarGrafico(); // Mock do Chart.js
+                    document.getElementById("dash-clientes").innerText = data.total_clientes || 0;
+                    document.getElementById("dash-db").innerText = data.db_disk_usage || "0 MB";
+                    document.getElementById("dash-mrr").innerText = data.mrr || "R$ 0,00";
+                    renderizarGrafico();
                 }
             } catch (e) {
                 console.error("Erro ao buscar métricas", e);
@@ -249,18 +260,22 @@
         // 4. CONSUMO DE DADOS: CLIENTES/EMPRESAS
         async function carregarEmpresas() {
             const tbody = document.getElementById("tabela-clientes");
-            tbody.innerHTML = '<tr><td colspan="5" class="text-center py-8"><div class="inline-block w-8 h-8 border-4 rounded-full spinner"></div></td></tr>';
+            tbody.innerHTML = '<tr><td colspan="5" class="text-center py-8"><div class="inline-block w-8 h-8 border-4 border-blue-600 rounded-full spinner"></div></td></tr>';
             
             try {
-                const response = await fetch(`${API_BASE_URL}/master/empresas`, {
+                const response = await fetch(`${API_BASE_URL}/api/master/empresas`, {
                     headers: { 'Authorization': `Bearer ${tokenMaster}` }
                 });
                 const empresas = await response.json();
                 
                 if (response.ok) {
                     tbody.innerHTML = "";
+                    if (!empresas || empresas.length === 0) {
+                        tbody.innerHTML = '<tr><td colspan="5" class="text-center py-8 text-gray-500">Nenhuma empresa cadastrada.</td></tr>';
+                        return;
+                    }
+
                     empresas.forEach(emp => {
-                        // Lógica de cores de Status
                         let statusColor = "bg-green-100 text-green-800";
                         if(emp.status === "bloqueado") statusColor = "bg-red-100 text-red-800";
                         if(emp.status === "vencido") statusColor = "bg-yellow-100 text-yellow-800";
@@ -268,8 +283,8 @@
                         const row = `
                             <tr class="border-b hover:bg-gray-50 transition">
                                 <td class="py-4 px-6 font-medium text-gray-800">
-                                    #${emp.id} - ${emp.nome_fantasia || 'N/A'}<br>
-                                    <span class="text-xs text-gray-400 font-normal">CNPJ: ${emp.cnpj}</span>
+                                    #${emp.id} - ${emp.nome_fantasia || emp.razao_social || 'N/A'}<br>
+                                    <span class="text-xs text-gray-400 font-normal">CNPJ: ${emp.cnpj || 'Não informado'}</span>
                                 </td>
                                 <td class="py-4 px-6">${emp.plano || 'Basic'}</td>
                                 <td class="py-4 px-6">Dia ${emp.vencimento || '10'}</td>
@@ -277,7 +292,7 @@
                                     <span class="px-3 py-1 rounded-full text-xs font-semibold ${statusColor}">${emp.status ? emp.status.toUpperCase() : 'ATIVO'}</span>
                                 </td>
                                 <td class="py-4 px-6 text-right space-x-2">
-                                    <button class="text-blue-600 hover:text-blue-800 bg-blue-50 px-2 py-1 rounded text-xs" onclick="alert('Emitir contrato da empresa ${emp.id}')">Contrato</button>
+                                    <button class="text-blue-600 hover:text-blue-800 bg-blue-50 px-2 py-1 rounded text-xs" onclick="alert('Empresa ID: ${emp.id}')">Detalhes</button>
                                     <button class="text-red-600 hover:text-red-800 bg-red-50 px-2 py-1 rounded text-xs" onclick="bloquearEmpresa(${emp.id})"><i class="fa-solid fa-ban"></i></button>
                                 </td>
                             </tr>
@@ -290,19 +305,20 @@
             }
         }
 
-        // Função stub para o botão de bloqueio
         function bloquearEmpresa(id) {
-            if(confirm("Deseja alterar o status desta empresa? O lojista verá a tela de bloqueio com o PIX.")) {
-                // Aqui você faria um fetch(PUT) para a sua API atualizando o status
-                alert("Simulação: Status alterado. Backend será atualizado.");
+            if(confirm("Deseja alterar o status desta empresa?")) {
+                alert("Ação simulada com sucesso.");
                 carregarEmpresas();
             }
         }
 
-        // Simulação do Chart.js
         function renderizarGrafico() {
-            const ctx = document.getElementById('mrrChart').getContext('2d');
-            new Chart(ctx, {
+            const canvas = document.getElementById('mrrChart');
+            if(!canvas) return;
+            const ctx = canvas.getContext('2d');
+            if (window.myChart) window.myChart.destroy(); // Evita sobreposição de gráficos
+            
+            window.myChart = new Chart(ctx, {
                 type: 'line',
                 data: {
                     labels: ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun'],
@@ -320,5 +336,7 @@
             });
         }
     </script>
+
+    
 </body>
 </html>
