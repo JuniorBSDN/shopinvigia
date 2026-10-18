@@ -3,511 +3,333 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Painel Master - ERP SaaS</title>
-
-    <!-- Ícones Modernos -->
-    <script src="https://unpkg.com/@phosphor-icons/web"></script>
-
+    <title>ShopinVigia - Master Admin</title>
+    <!-- Tailwind CSS para estilização rápida e moderna -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js para os gráficos -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- FontAwesome para ícones -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
     <style>
-        :root {
-            --brand-primary: #ff5722;
-            --brand-secondary: #e64a19;
-            --bg-color: #f4f7f6;
-            --sidebar-bg: #ffffff;
-            --sidebar-text: #333333;
-            --card-bg: #ffffff;
-            --text-main: #333333;
-            --text-muted: #777777;
-            --border-color: #e0e0e0;
-            --success: #28a745;
-            --danger: #dc3545;
-            --warning: #ffc107;
-            --info: #17a2b8;
-            --sidebar-width: 260px;
-            --topbar-height: 60px;
-        }
-
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Roboto, sans-serif; }
-
-        body { background-color: var(--bg-color); color: var(--text-main); display: none; height: 100vh; overflow: hidden; }
-
-        .hidden { display: none !important; }
-        .flex { display: flex; }
-        .justify-between { justify-content: space-between; }
-        .align-center { align-items: center; }
-        .gap-10 { gap: 10px; } .mt-20 { margin-top: 20px; } .mb-20 { margin-bottom: 20px; }
-
-        .badge { padding: 5px 10px; border-radius: 6px; font-size: 0.8rem; font-weight: bold; color: white; display: inline-flex; align-items: center; gap: 4px; }
-        .badge-success { background-color: var(--success); }
-        .badge-danger { background-color: var(--danger); }
-        .badge-warning { background-color: var(--warning); color: #333; }
-        .badge-info { background-color: var(--info); }
-
-        /* LOGOTIPO */
-        .on-logo-container { display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 0.85; user-select: none; }
-        .on-logo-top { font-size: 2.8rem; font-weight: 900; color: white; -webkit-text-stroke: 1.5px var(--brand-primary); font-family: 'Arial Black', Impact, sans-serif; letter-spacing: 1px; }
-        .on-logo-bottom { font-size: 1.3rem; font-weight: 700; color: #1a1a1a; letter-spacing: -0.5px; margin-top: 2px; }
-        .topbar .on-logo-container { transform: scale(0.65); }
-        .sidebar-header .on-logo-container { transform: scale(0.85); margin-top: 10px; }
-
-        /* BARRA LATERAL */
-        .sidebar { width: var(--sidebar-width); background-color: var(--sidebar-bg); color: var(--sidebar-text); display: flex; flex-direction: column; position: fixed; height: 100%; left: 0; top: 0; z-index: 1000; transition: transform 0.3s ease; border-right: 1px solid var(--border-color); box-shadow: 2px 0 5px rgba(0,0,0,0.02); }
-        .sidebar-header { height: 100px; display: flex; flex-direction: column; align-items: center; justify-content: center; border-bottom: 1px solid var(--border-color); padding: 0 20px; background-color: #fafafa; }
-        .nav-menu { list-style: none; padding: 15px 10px; flex: 1; overflow-y: auto; }
-        .nav-link { display: flex; align-items: center; text-decoration: none; color: var(--text-main); padding: 12px 15px; border-radius: 8px; font-weight: 500; transition: all 0.2s; cursor: pointer; margin-bottom: 5px; }
-        .nav-link:hover, .nav-link.active { background-color: rgba(255, 87, 34, 0.1); color: var(--brand-primary); }
-        .nav-icon { margin-right: 12px; font-size: 1.4rem; display: flex; align-items: center; color: var(--brand-primary); }
-        .nav-footer { padding: 15px; border-top: 1px solid var(--border-color); background-color: #fafafa; }
-
-        /* ÁREA PRINCIPAL */
-        .main-content { flex: 1; margin-left: var(--sidebar-width); display: flex; flex-direction: column; height: 100vh; overflow-y: auto;}
-        .topbar { display: none; height: var(--topbar-height); background: var(--card-bg); border-bottom: 1px solid var(--border-color); align-items: center; justify-content: space-between; padding: 0 20px; }
-        .menu-toggle { background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--text-main); }
-        .content-container { padding: 25px; flex: 1; }
-
-        .page-header { margin-bottom: 25px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; }
-        .page-title { font-size: 1.6rem; font-weight: 700; display: flex; align-items: center; gap: 8px; }
-
-        .card { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 10px; padding: 20px; margin-bottom: 20px; box-shadow: 0 2px 6px rgba(0,0,0,0.02); }
-        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; }
-        .form-group { display: flex; flex-direction: column; margin-bottom: 15px; }
-        .form-group label { font-size: 0.85rem; font-weight: 600; margin-bottom: 5px; color: var(--text-muted); }
-        .form-control { padding: 10px; border: 1px solid #ccc; border-radius: 6px; font-size: 0.95rem; outline: none; width: 100%; }
-        .form-control:focus { border-color: var(--brand-primary); }
-
-        .btn { padding: 8px 14px; border-radius: 6px; border: none; cursor: pointer; font-weight: 600; font-size: 0.9rem; display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
-        .btn:hover { opacity: 0.85; }
-        .btn-primary { background: var(--brand-primary); color: white; }
-        .btn-success { background: var(--success); color: white; }
-        .btn-danger { background: var(--danger); color: white; }
-        .btn-secondary { background: #6c757d; color: white; }
-        .btn-outline { background: transparent; border: 1px solid #ccc; color: var(--text-main); }
-
-        .btn-action { padding: 6px 10px; border-radius: 4px; background: #f8f9fa; border: 1px solid #ddd; cursor: pointer; color: #555; font-size: 1.1rem; transition: all 0.2s; }
-        .btn-action:hover { background: #e0e0e0; color: var(--brand-primary); }
-
-        .table-responsive { width: 100%; overflow-x: auto; }
-        table { width: 100%; border-collapse: collapse; white-space: nowrap; }
-        th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid var(--border-color); font-size: 0.9rem; }
-        th { background: #f9f9f9; font-weight: 600; color: var(--text-muted); text-transform: uppercase; font-size: 0.75rem; }
-
-        /* MODAIS */
-        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 2000; display: flex; justify-content: center; align-items: center; opacity: 0; visibility: hidden; transition: all 0.2s; }
-        .modal-overlay.active { opacity: 1; visibility: visible; }
-        .modal-content { background: white; width: 90%; max-width: 650px; border-radius: 10px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); display: flex; flex-direction: column; max-height: 90vh; }
-        .modal-header { padding: 15px 20px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; }
-        .close-modal { background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #aaa; }
-        .modal-body { padding: 20px; overflow-y: auto; flex: 1; }
-        .modal-footer { padding: 15px 20px; border-top: 1px solid var(--border-color); display: flex; justify-content: flex-end; gap: 10px; }
-
-        @media (max-width: 768px) {
-            .sidebar { transform: translateX(-100%); }
-            .sidebar.open { transform: translateX(0); }
-            .main-content { margin-left: 0; width: 100vw; }
-            .topbar { display: flex; }
-        }
-
-        /* TOAST DE NOTIFICAÇÕES */
-        #toast-container { position: fixed; bottom: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 10px; pointer-events: none; }
-        .toast { width: 320px; background: white; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.15); border-left: 5px solid var(--brand-primary); padding: 15px; display: flex; align-items: flex-start; gap: 12px; transform: translateX(120%); transition: transform 0.3s; pointer-events: auto; }
-        .toast.show { transform: translateX(0); }
-        .toast-icon { font-size: 1.5rem; }
-        .toast-title { font-weight: 700; font-size: 0.95rem; color: var(--text-main); }
-        .toast-message { font-size: 0.85rem; color: var(--text-muted); }
-        .toast.warning { border-left-color: var(--warning); } .toast.warning .toast-icon { color: var(--warning); }
-        .toast.danger { border-left-color: var(--danger); } .toast.danger .toast-icon { color: var(--danger); }
-        .toast.success { border-left-color: var(--success); } .toast.success .toast-icon { color: var(--success); }
+        /* Oculta elementos dinamicamente */
+        .hidden-view { display: none !important; }
+        .spinner { border-top-color: #3b82f6; animation: spinner 1.5s linear infinite; }
+        @keyframes spinner { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
-<body>
+<body class="bg-gray-100 font-sans antialiased text-gray-800">
 
-    <div class="modal-overlay" id="mobile-overlay" style="z-index: 999;" onclick="toggleSidebar()"></div>
-
-    <!-- BARRA LATERAL -->
-    <aside class="sidebar" id="sidebar">
-        <div class="sidebar-header">
-            <div class="on-logo-container">
-                <span class="on-logo-top">ERP</span>
-                <span class="on-logo-bottom">Master</span>
+    <!-- ================= TELA DE LOGIN ================= -->
+    <div id="login-screen" class="min-h-screen flex items-center justify-center bg-gray-900">
+        <div class="bg-white p-8 rounded-lg shadow-2xl w-96 text-center">
+            <div class="mb-6">
+                <i class="fa-solid fa-crown text-4xl text-blue-600"></i>
+                <h2 class="text-2xl font-bold mt-2">ShopinVigia</h2>
+                <p class="text-gray-500 text-sm">Painel Master SaaS</p>
             </div>
+            <form id="form-login" onsubmit="event.preventDefault(); fazerLogin();">
+                <div class="mb-4">
+                    <input type="password" id="master-password" placeholder="Digite sua Senha Master" required
+                        class="w-full px-4 py-3 rounded border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <button type="submit" id="btn-login" class="w-full bg-blue-600 text-white font-bold py-3 px-4 rounded hover:bg-blue-700 transition">
+                    Entrar no Sistema
+                </button>
+                <p id="login-error" class="text-red-500 text-sm mt-3 hidden-view">Senha incorreta ou erro na API.</p>
+            </form>
         </div>
-        <ul class="nav-menu">
-            <li><a class="nav-link active" onclick="navigate('dashboard', this)"><span class="nav-icon"><i class="ph ph-squares-four"></i></span> Dashboard</a></li>
-            <li><a class="nav-link" onclick="navigate('empresas', this)"><span class="nav-icon"><i class="ph ph-storefront"></i></span> Lojas (Tenants)</a></li>
-            <li><a class="nav-link" onclick="navigate('financeiro', this)"><span class="nav-icon"><i class="ph ph-currency-dollar"></i></span> Financeiro SaaS</a></li>
-            <li><a class="nav-link" onclick="navigate('helpdesk', this)"><span class="nav-icon"><i class="ph ph-headset"></i></span> Helpdesk</a></li>
-        </ul>
-        <div class="nav-footer">
-            <a href="#" class="nav-link" style="color: #ff5252; margin: 0;" onclick="fazerLogout()"><span class="nav-icon" style="color: #ff5252;"><i class="ph ph-sign-out"></i></span> Sair do Master</a>
-        </div>
-    </aside>
+    </div>
 
-    <!-- CONTEÚDO PRINCIPAL -->
-    <main class="main-content">
-        <header class="topbar">
-            <button class="menu-toggle" onclick="toggleSidebar()"><i class="ph ph-list"></i></button>
-            <div class="on-logo-container">
-                <span class="on-logo-top" style="font-size: 1.5rem;">ERP</span>
+    <!-- ================= PAINEL MASTER (Oculto no Início) ================= -->
+    <div id="dashboard-screen" class="hidden-view flex h-screen overflow-hidden bg-gray-100">
+        
+        <!-- Sidebar Esquerda -->
+        <aside class="w-64 bg-gray-900 text-white flex flex-col shadow-lg">
+            <div class="p-6 text-center border-b border-gray-800">
+                <h1 class="text-xl font-bold tracking-wider">Shopin<span class="text-blue-500">Vigia</span></h1>
+                <p class="text-xs text-gray-400 mt-1">Super Admin</p>
             </div>
-            <div style="width: 24px;"></div>
-        </header>
+            <nav class="flex-1 px-4 py-6 space-y-2">
+                <a href="#" onclick="navegar('view-dashboard')" class="flex items-center gap-3 px-4 py-3 bg-gray-800 rounded-lg text-white hover:bg-gray-700 transition">
+                    <i class="fa-solid fa-chart-pie"></i> Dashboard
+                </a>
+                <a href="#" onclick="navegar('view-clientes')" class="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-400 hover:bg-gray-800 hover:text-white transition">
+                    <i class="fa-solid fa-building"></i> Clientes / Empresas
+                </a>
+                <a href="#" onclick="navegar('view-financeiro')" class="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-400 hover:bg-gray-800 hover:text-white transition">
+                    <i class="fa-solid fa-wallet"></i> Financeiro & PIX
+                </a>
+            </nav>
+            <div class="p-4 border-t border-gray-800">
+                <button onclick="sair()" class="w-full flex items-center justify-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 rounded text-sm transition">
+                    <i class="fa-solid fa-power-off"></i> Sair
+                </button>
+            </div>
+        </aside>
 
-        <div class="content-container">
-
-            <!-- ================= DASHBOARD MASTER ================= -->
-            <section id="sec-dashboard" class="page-section">
-                <div class="page-header">
-                    <h1 class="page-title"><i class="ph-duotone ph-chart-line-up"></i> Visão Geral do SaaS</h1>
+        <!-- Conteúdo Principal -->
+        <main class="flex-1 flex flex-col h-screen overflow-y-auto relative">
+            
+            <!-- Topbar / Alertas -->
+            <header class="bg-white shadow-sm px-8 py-4 flex justify-between items-center z-10">
+                <h2 id="page-title" class="text-xl font-semibold text-gray-800">Visão Geral</h2>
+                <div class="flex items-center gap-4">
+                    <button class="relative p-2 text-gray-400 hover:text-gray-600 transition" onclick="alert('Novos alertas em breve!')">
+                        <i class="fa-regular fa-bell text-xl"></i>
+                        <span class="absolute top-0 right-0 h-3 w-3 bg-red-500 rounded-full border-2 border-white"></span>
+                    </button>
+                    <div class="h-8 w-8 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold">M</div>
                 </div>
+            </header>
 
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px;">
-                    <div class="card" style="border-top: 4px solid var(--info);">
-                        <span style="color: var(--text-muted); font-size: 0.9rem;"><i class="ph ph-hard-drives"></i> DB Disk Usage</span>
-                        <h2 style="font-size: 1.8rem;" id="metric-disk">--</h2>
-                    </div>
-                    <div class="card" style="border-top: 4px solid var(--brand-primary);">
-                        <span style="color: var(--text-muted); font-size: 0.9rem;"><i class="ph ph-storefront"></i> Lojas Ativas</span>
-                        <h2 style="font-size: 1.8rem;" id="metric-clientes">--</h2>
-                    </div>
-                    <div class="card" style="border-top: 4px solid var(--success);">
-                        <span style="color: var(--text-muted); font-size: 0.9rem;"><i class="ph ph-currency-circle-dollar"></i> MRR Projetado</span>
-                        <h2 style="font-size: 1.8rem; color: var(--success);" id="metric-mrr">--</h2>
-                    </div>
-                </div>
-            </section>
-
-            <!-- ================= LOJAS (TENANTS) ================= -->
-            <section id="sec-empresas" class="page-section hidden">
-                <div class="page-header flex justify-between align-center">
-                    <h1 class="page-title"><i class="ph-duotone ph-storefront"></i> Gestão de Lojas (Tenants)</h1>
-                    <button class="btn btn-primary" onclick="toggleCadastroForm()"><i class="ph ph-plus-circle"></i> Nova Loja</button>
-                </div>
-
-                <div class="card hidden" id="card-novo-cliente" style="border-top: 4px solid var(--brand-primary);">
-                    <h3 class="mb-20">Cadastrar Nova Loja</h3>
-                    <form id="form-cad-empresa" onsubmit="cadastrarEmpresa(event)">
-                        <div class="form-grid">
-                            <div class="form-group"><label>Razão Social</label><input type="text" id="cad-razao" class="form-control" required></div>
-                            <div class="form-group"><label>Nome Fantasia (Loja)</label><input type="text" id="cad-fantasia" class="form-control" required></div>
-                            <div class="form-group"><label>CNPJ</label><input type="text" id="cad-cnpj" class="form-control" required></div>
-                            <div class="form-group"><label>Responsável</label><input type="text" id="cad-resp" class="form-control" required></div>
-                            <div class="form-group"><label>WhatsApp</label><input type="text" id="cad-contato" class="form-control" required></div>
-                            <div class="form-group" style="grid-column: 1 / -1;"><label>Endereço</label><input type="text" id="cad-endereco" class="form-control" required></div>
-                            <div class="form-group"><label>Plano</label>
-                                <select id="cad-plano" class="form-control">
-                                    <option value="basic">ERP Básico (R$ 90)</option>
-                                    <option value="pro">ERP Pro (R$ 150)</option>
-                                </select>
-                            </div>
-                            <div class="form-group"><label>Dia Vencimento</label><input type="number" id="cad-vencimento" class="form-control" min="1" max="31" value="5" required></div>
+            <!-- VIEWS DINÂMICAS -->
+            <div class="p-8">
+                
+                <!-- 1. VIEW: DASHBOARD -->
+                <div id="view-dashboard" class="view-section">
+                    <div class="grid grid-cols-3 gap-6 mb-8">
+                        <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-100 flex items-center justify-between">
+                            <div><p class="text-sm text-gray-500 mb-1">Total de Clientes</p><h3 id="dash-clientes" class="text-3xl font-bold">0</h3></div>
+                            <div class="bg-blue-100 text-blue-600 p-3 rounded-full"><i class="fa-solid fa-users text-xl"></i></div>
                         </div>
-                        <div class="flex mt-20" style="justify-content: flex-end; gap: 10px;">
-                            <button type="button" class="btn btn-outline" onclick="toggleCadastroForm()">Cancelar</button>
-                            <button type="submit" class="btn btn-primary"><i class="ph ph-floppy-disk"></i> Salvar Loja</button>
+                        <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-100 flex items-center justify-between">
+                            <div><p class="text-sm text-gray-500 mb-1">MRR (Receita Recorrente)</p><h3 id="dash-mrr" class="text-3xl font-bold text-green-600">R$ 0,00</h3></div>
+                            <div class="bg-green-100 text-green-600 p-3 rounded-full"><i class="fa-solid fa-money-bill-trend-up text-xl"></i></div>
                         </div>
-                    </form>
+                        <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-100 flex items-center justify-between">
+                            <div><p class="text-sm text-gray-500 mb-1">Uso de Banco de Dados</p><h3 id="dash-db" class="text-3xl font-bold">0 MB</h3></div>
+                            <div class="bg-purple-100 text-purple-600 p-3 rounded-full"><i class="fa-solid fa-database text-xl"></i></div>
+                        </div>
+                    </div>
+                    <!-- Área de Gráfico -->
+                    <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
+                        <h3 class="text-lg font-semibold mb-4">Evolução de Assinaturas</h3>
+                        <canvas id="mrrChart" height="80"></canvas>
+                    </div>
                 </div>
 
-                <div class="card" style="padding: 0;">
-                    <div style="padding: 20px; border-bottom: 1px solid var(--border-color); background: #fafafa; border-radius: 10px 10px 0 0;">
-                        <input type="text" id="busca-empresas" onkeyup="filtrarEmpresas()" class="form-control" placeholder="Buscar loja por nome ou CNPJ..." style="max-width: 400px; margin-bottom: 0;">
+                <!-- 2. VIEW: CLIENTES / EMPRESAS -->
+                <div id="view-clientes" class="view-section hidden-view">
+                    <div class="flex justify-between items-center mb-6">
+                        <input type="text" placeholder="Buscar por nome, ID ou status..." class="w-1/3 px-4 py-2 border rounded-lg focus:outline-none focus:border-blue-500">
+                        <button class="bg-gray-800 text-white px-4 py-2 rounded shadow hover:bg-gray-700" onclick="window.print()"><i class="fa-solid fa-print mr-2"></i> Imprimir</button>
                     </div>
-                    <div class="table-responsive">
-                        <table>
+                    <div class="bg-white rounded-lg shadow overflow-hidden">
+                        <table class="w-full text-left border-collapse">
                             <thead>
-                                <tr>
-                                    <th>Loja / Razão Social</th>
-                                    <th>CNPJ</th>
-                                    <th>Vencimento</th>
-                                    <th>Status Master</th>
-                                    <th style="text-align: right;">Controles</th>
+                                <tr class="bg-gray-50 text-gray-600 text-sm uppercase">
+                                    <th class="py-4 px-6 border-b">ID / Empresa</th>
+                                    <th class="py-4 px-6 border-b">Plano</th>
+                                    <th class="py-4 px-6 border-b">Vencimento</th>
+                                    <th class="py-4 px-6 border-b">Status</th>
+                                    <th class="py-4 px-6 border-b text-right">Ações</th>
                                 </tr>
                             </thead>
-                            <tbody id="tabela-empresas">
-                                <tr><td colspan="5" style="text-align: center; color: var(--text-muted);">Carregando...</td></tr>
+                            <tbody id="tabela-clientes" class="text-sm">
+                                <!-- Preenchido via JS -->
+                                <tr><td colspan="5" class="text-center py-8 text-gray-500"><div class="inline-block w-8 h-8 border-4 rounded-full spinner"></div></td></tr>
                             </tbody>
                         </table>
                     </div>
                 </div>
-            </section>
 
-            <!-- ================= FINANCEIRO SAAS ================= -->
-            <section id="sec-financeiro" class="page-section hidden">
-                <div class="page-header">
-                    <h1 class="page-title"><i class="ph-duotone ph-currency-dollar"></i> Financeiro SaaS</h1>
-                    <button class="btn btn-primary" onclick="carregarFinanceiro()"><i class="ph ph-arrows-clockwise"></i> Atualizar Dados</button>
-                </div>
-
-                <div class="card" style="border-left: 5px solid #673ab7; background: #faf8ff;">
-                    <h3 style="color: #673ab7; margin-bottom: 15px;"><i class="ph ph-sliders-horizontal"></i> Configuração PIX Padrão (SaaS)</h3>
-                    <div class="form-grid">
-                        <div class="form-group">
-                            <label>Chave Pix Copia e Cola (Aparecerá para as Lojas)</label>
-                            <textarea id="global-pix-chave" class="form-control" rows="2" placeholder="Cole sua chave Aleatória/CNPJ..."></textarea>
+                <!-- 3. VIEW: FINANCEIRO E CONFIG -->
+                <div id="view-financeiro" class="view-section hidden-view">
+                    <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-100 max-w-2xl">
+                        <h3 class="text-lg font-semibold mb-4 border-b pb-2">Configuração Fixa do PIX (Bloqueio)</h3>
+                        <p class="text-sm text-gray-500 mb-6">Estes dados serão mostrados aos lojistas quando o sistema deles for bloqueado por falta de pagamento.</p>
+                        
+                        <div class="mb-4">
+                            <label class="block text-gray-700 font-bold mb-2">URL da Foto (QR Code PIX)</label>
+                            <input type="text" id="pix-qr" placeholder="https://link-da-imagem.com/qr.png" class="w-full px-4 py-2 border rounded focus:outline-none focus:border-blue-500">
                         </div>
-                    </div>
-                    <button class="btn btn-primary" style="background: #673ab7;" onclick="salvarPixGlobal()">Salvar Padrão de Cobrança</button>
-                </div>
-
-                <div class="card">
-                    <h3 class="mb-20">Faturas e Cobranças Ativas</h3>
-                    <div class="table-responsive">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>Loja Cliente</th>
-                                    <th>Plano</th>
-                                    <th>Mensalidade</th>
-                                    <th>Status Fatura</th>
-                                    <th style="text-align: right;">Ações de Cobrança</th>
-                                </tr>
-                            </thead>
-                            <tbody id="tabela-financeiro">
-                            </tbody>
-                        </table>
+                        <div class="mb-6">
+                            <label class="block text-gray-700 font-bold mb-2">Chave PIX (Copia e Cola)</label>
+                            <input type="text" id="pix-chave" placeholder="Sua chave aleatória, CPF ou CNPJ" class="w-full px-4 py-2 border rounded focus:outline-none focus:border-blue-500">
+                        </div>
+                        <button onclick="salvarPix()" class="bg-blue-600 text-white font-bold py-2 px-6 rounded hover:bg-blue-700 transition">
+                            Salvar Configuração PIX
+                        </button>
                     </div>
                 </div>
-            </section>
 
-            <!-- ================= HELPDESK ================= -->
-            <section id="sec-helpdesk" class="page-section hidden">
-                <div class="page-header">
-                    <h1 class="page-title"><i class="ph-duotone ph-headset"></i> Suporte às Lojas</h1>
-                </div>
-                <div class="card" style="padding: 0;">
-                    <div class="table-responsive">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>Loja</th>
-                                    <th>Problema Relatado</th>
-                                    <th>Status</th>
-                                    <th style="text-align: right;">Ações</th>
-                                </tr>
-                            </thead>
-                            <tbody id="tabela-chamados">
-                                <tr><td colspan="4" style="text-align: center; color: var(--text-muted);">Nenhum chamado aberto.</td></tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </section>
-        </div>
-    </main>
+            </div>
+        </main>
+    </div>
 
-    <!-- CONTAINER DE TOASTS -->
-    <div id="toast-container"></div>
-
+    <!-- ================= LÓGICA DE INTEGRAÇÃO (JS) ================= -->
     <script>
-        const API_URL = '/api/master';
-        let empresasCache = [];
+        // CONFIGURAÇÃO DA API (Altere para o IP/Porta onde sua FastAPI roda)
+        const API_BASE_URL = "http://localhost:8000/api";
+        let tokenMaster = localStorage.getItem("tokenMaster");
 
-        window.onload = autenticarMaster;
+        // Inicialização
+        window.onload = () => {
+            if (tokenMaster) {
+                mostrarPainel();
+            }
+        };
 
-        async function masterApiRequest(endpoint, method = 'GET', data = null) {
-            const token = localStorage.getItem('erp_master_token');
-            if (!token) { autenticarMaster(); return null; }
-
-            const options = { method, headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }};
-            if (data && (method === 'POST' || method === 'PUT')) options.body = JSON.stringify(data);
+        // 1. AUTENTICAÇÃO
+        async function fazerLogin() {
+            const senha = document.getElementById("master-password").value;
+            const btn = document.getElementById("btn-login");
+            const err = document.getElementById("login-error");
+            
+            btn.innerHTML = "Autenticando...";
+            btn.disabled = true;
 
             try {
-                const response = await fetch(`${API_URL}${endpoint}`, options);
-                if (response.status === 401) {
-                    localStorage.removeItem('erp_master_token');
-                    alert("Sessão expirada.");
-                    autenticarMaster();
-                    return null;
+                // Rota que você forneceu no código Python
+                const response = await fetch(`${API_BASE_URL}/master/auth`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ senha: senha })
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data.autorizado) {
+                    tokenMaster = data.token;
+                    localStorage.setItem("tokenMaster", tokenMaster);
+                    mostrarPainel();
+                } else {
+                    err.innerText = data.detail || "Senha Incorreta.";
+                    err.classList.remove("hidden-view");
                 }
-                if (!response.ok) throw new Error(`HTTP ${response.status}`);
-                return await response.json();
             } catch (error) {
-                console.error("Erro API Master:", error);
-                return null;
+                err.innerText = "Erro ao conectar com a API.";
+                err.classList.remove("hidden-view");
+            } finally {
+                btn.innerHTML = "Entrar no Sistema";
+                btn.disabled = false;
             }
         }
 
-        async function autenticarMaster() {
-            const token = localStorage.getItem('erp_master_token');
-            if (token) { liberarPainel(); return; }
+        function sair() {
+            localStorage.removeItem("tokenMaster");
+            location.reload();
+        }
 
-            const senha = prompt("🔒 Área Restrita Master ERP.\nInsira a Senha de Segurança:");
-            if (!senha) return;
+        function mostrarPainel() {
+            document.getElementById("login-screen").classList.add("hidden-view");
+            document.getElementById("dashboard-screen").classList.remove("hidden-view");
+            carregarDashboard();
+        }
 
+        // 2. ROTEAMENTO INTERNO (Navegação Menu)
+        function navegar(viewId) {
+            // Esconde todas
+            document.querySelectorAll('.view-section').forEach(el => el.classList.add('hidden-view'));
+            // Mostra a selecionada
+            document.getElementById(viewId).classList.remove('hidden-view');
+            
+            // Atualiza Título
+            const titles = {
+                'view-dashboard': 'Visão Geral',
+                'view-clientes': 'Gestão de Empresas SaaS',
+                'view-financeiro': 'Financeiro & PIX Master'
+            };
+            document.getElementById('page-title').innerText = titles[viewId];
+
+            // Carrega dados se necessário
+            if(viewId === 'view-dashboard') carregarDashboard();
+            if(viewId === 'view-clientes') carregarEmpresas();
+        }
+
+        // 3. CONSUMO DE DADOS: DASHBOARD
+        async function carregarDashboard() {
             try {
-                const res = await fetch(`${API_URL}/auth`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ senha }) });
-                if (res.ok) {
-                    const data = await res.json();
-                    localStorage.setItem('erp_master_token', data.token);
-                    liberarPainel();
-                } else {
-                    alert("Acesso Negado.");
-                    window.location.reload();
+                const response = await fetch(`${API_BASE_URL}/master/metrics`, {
+                    headers: { 'Authorization': `Bearer ${tokenMaster}` }
+                });
+                const data = await response.json();
+                
+                if (response.ok) {
+                    document.getElementById("dash-clientes").innerText = data.total_clientes;
+                    document.getElementById("dash-db").innerText = data.db_disk_usage;
+                    document.getElementById("dash-mrr").innerText = data.mrr;
+                    renderizarGrafico(); // Mock do Chart.js
                 }
             } catch (e) {
-                // Modo dev/fallback se API offline
-                localStorage.setItem('erp_master_token', 'dev_token');
-                liberarPainel();
+                console.error("Erro ao buscar métricas", e);
             }
         }
 
-        function liberarPainel() {
-            document.body.style.display = "flex";
-            carregarMetricas();
-            carregarEmpresas();
-        }
-
-        function fazerLogout() {
-            localStorage.removeItem('erp_master_token');
-            window.location.reload();
-        }
-
-        function navigate(sectionId, element) {
-            document.querySelectorAll('.page-section').forEach(sec => sec.classList.add('hidden'));
-            document.getElementById('sec-' + sectionId).classList.remove('hidden');
-            document.querySelectorAll('.nav-link').forEach(link => link.classList.remove('active'));
-            if(element) element.classList.add('active');
-
-            if (sectionId === 'dashboard') carregarMetricas();
-            if (sectionId === 'empresas') carregarEmpresas();
-            if (sectionId === 'financeiro') carregarFinanceiro();
-        }
-
-        function toggleSidebar() { 
-            document.getElementById('sidebar').classList.toggle('open'); 
-            document.getElementById('mobile-overlay').classList.toggle('active'); 
-        }
-
-        function toggleCadastroForm() {
-            document.getElementById('card-novo-cliente').classList.toggle('hidden');
-        }
-
-        function mostrarToast(titulo, mensagem, tipo = 'info') {
-            const container = document.getElementById('toast-container');
-            const toast = document.createElement('div');
-            toast.className = `toast ${tipo}`;
-            const icons = { 'info': 'ph-info', 'warning': 'ph-warning', 'danger': 'ph-warning-circle', 'success': 'ph-check-circle' };
-            toast.innerHTML = `
-                <div class="toast-icon"><i class="ph ${icons[tipo]}"></i></div>
-                <div><div class="toast-title">${titulo}</div><div class="toast-message">${mensagem}</div></div>
-            `;
-            container.appendChild(toast);
-            setTimeout(() => toast.classList.add('show'), 10);
-            setTimeout(() => { toast.classList.remove('show'); setTimeout(() => toast.remove(), 300); }, 4000);
-        }
-
-        // --- DASHBOARD ---
-        async function carregarMetricas() {
-            const data = await masterApiRequest('/metrics');
-            if (data) {
-                document.getElementById('metric-disk').textContent = data.db_disk_usage || '0 MB';
-                document.getElementById('metric-clientes').textContent = data.total_clientes || '0';
-                document.getElementById('metric-mrr').textContent = data.mrr || 'R$ 0,00';
-            }
-        }
-
-        // --- LOJAS (TENANTS) ---
+        // 4. CONSUMO DE DADOS: CLIENTES/EMPRESAS
         async function carregarEmpresas() {
-            const res = await masterApiRequest('/empresas');
-            empresasCache = res || [];
-            renderTabelaEmpresas(empresasCache);
+            const tbody = document.getElementById("tabela-clientes");
+            tbody.innerHTML = '<tr><td colspan="5" class="text-center py-8"><div class="inline-block w-8 h-8 border-4 rounded-full spinner"></div></td></tr>';
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/master/empresas`, {
+                    headers: { 'Authorization': `Bearer ${tokenMaster}` }
+                });
+                const empresas = await response.json();
+                
+                if (response.ok) {
+                    tbody.innerHTML = "";
+                    empresas.forEach(emp => {
+                        // Lógica de cores de Status
+                        let statusColor = "bg-green-100 text-green-800";
+                        if(emp.status === "bloqueado") statusColor = "bg-red-100 text-red-800";
+                        if(emp.status === "vencido") statusColor = "bg-yellow-100 text-yellow-800";
+
+                        const row = `
+                            <tr class="border-b hover:bg-gray-50 transition">
+                                <td class="py-4 px-6 font-medium text-gray-800">
+                                    #${emp.id} - ${emp.nome_fantasia || 'N/A'}<br>
+                                    <span class="text-xs text-gray-400 font-normal">CNPJ: ${emp.cnpj}</span>
+                                </td>
+                                <td class="py-4 px-6">${emp.plano || 'Basic'}</td>
+                                <td class="py-4 px-6">Dia ${emp.vencimento || '10'}</td>
+                                <td class="py-4 px-6">
+                                    <span class="px-3 py-1 rounded-full text-xs font-semibold ${statusColor}">${emp.status ? emp.status.toUpperCase() : 'ATIVO'}</span>
+                                </td>
+                                <td class="py-4 px-6 text-right space-x-2">
+                                    <button class="text-blue-600 hover:text-blue-800 bg-blue-50 px-2 py-1 rounded text-xs" onclick="alert('Emitir contrato da empresa ${emp.id}')">Contrato</button>
+                                    <button class="text-red-600 hover:text-red-800 bg-red-50 px-2 py-1 rounded text-xs" onclick="bloquearEmpresa(${emp.id})"><i class="fa-solid fa-ban"></i></button>
+                                </td>
+                            </tr>
+                        `;
+                        tbody.innerHTML += row;
+                    });
+                }
+            } catch (e) {
+                tbody.innerHTML = `<tr><td colspan="5" class="text-center py-4 text-red-500">Erro ao carregar dados da API.</td></tr>`;
+            }
         }
 
-        function renderTabelaEmpresas(lista) {
-            const tbody = document.getElementById('tabela-empresas');
-            tbody.innerHTML = '';
-            if(lista.length === 0) { tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">Nenhuma loja cadastrada.</td></tr>'; return; }
-
-            lista.forEach(emp => {
-                const statusBadge = emp.status === 'ativo' ? '<span class="badge badge-success">Ativo</span>' : '<span class="badge badge-danger">Bloqueado</span>';
-                tbody.innerHTML += `
-                    <tr>
-                        <td><strong>${emp.nome_fantasia}</strong><br><small style="color:var(--text-muted)">${emp.razao_social}</small></td>
-                        <td>${emp.cnpj}</td>
-                        <td>Dia ${emp.vencimento}</td>
-                        <td>${statusBadge}</td>
-                        <td style="text-align: right; display: flex; gap: 4px; justify-content: flex-end;">
-                            <button class="btn-action" title="Bloquear/Desbloquear" onclick="alert('Função de Toggle Status')"><i class="ph ph-power"></i></button>
-                            <button class="btn-action" title="Excluir Loja" onclick="deletarEmpresa(${emp.id})" style="color:var(--danger); border-color:var(--danger);"><i class="ph ph-trash"></i></button>
-                        </td>
-                    </tr>
-                `;
-            });
-        }
-
-        async function cadastrarEmpresa(e) {
-            e.preventDefault();
-            const payload = {
-                razao_social: document.getElementById('cad-razao').value,
-                nome_fantasia: document.getElementById('cad-fantasia').value,
-                cnpj: document.getElementById('cad-cnpj').value,
-                responsavel: document.getElementById('cad-resp').value,
-                contato: document.getElementById('cad-contato').value,
-                endereco: document.getElementById('cad-endereco').value,
-                plano: document.getElementById('cad-plano').value,
-                vencimento: parseInt(document.getElementById('cad-vencimento').value),
-                limite_usuarios: 5,
-                email_admin: 'admin@loja.com' // Simplificação para o form
-            };
-            await masterApiRequest('/empresas', 'POST', payload);
-            mostrarToast('Sucesso', 'Nova Loja provisionada no banco de dados.', 'success');
-            document.getElementById('form-cad-empresa').reset();
-            toggleCadastroForm();
-            carregarEmpresas();
-        }
-
-        async function deletarEmpresa(id) {
-            if(confirm("ATENÇÃO: Excluir esta loja apagará todo o estoque e vendas dela. Confirmar?")) {
-                await masterApiRequest(`/empresas/${id}`, 'DELETE');
-                mostrarToast('Excluído', 'A loja foi removida do sistema.', 'danger');
+        // Função stub para o botão de bloqueio
+        function bloquearEmpresa(id) {
+            if(confirm("Deseja alterar o status desta empresa? O lojista verá a tela de bloqueio com o PIX.")) {
+                // Aqui você faria um fetch(PUT) para a sua API atualizando o status
+                alert("Simulação: Status alterado. Backend será atualizado.");
                 carregarEmpresas();
             }
         }
 
-        function filtrarEmpresas() {
-            const filtro = document.getElementById('busca-empresas').value.toLowerCase();
-            const filtrado = empresasCache.filter(e => e.nome_fantasia.toLowerCase().includes(filtro) || e.cnpj.includes(filtro));
-            renderTabelaEmpresas(filtrado);
-        }
-
-        // --- FINANCEIRO SAAS ---
-        async function carregarFinanceiro() {
-            const tbody = document.getElementById('tabela-financeiro');
-            tbody.innerHTML = '';
-            
-            const chaveLocal = localStorage.getItem('erp_pix_global');
-            if(chaveLocal) document.getElementById('global-pix-chave').value = chaveLocal;
-
-            if(empresasCache.length === 0) await carregarEmpresas();
-
-            empresasCache.forEach(emp => {
-                const valorPlano = emp.plano === 'pro' ? '150,00' : '90,00';
-                tbody.innerHTML += `
-                    <tr>
-                        <td><strong>${emp.nome_fantasia}</strong></td>
-                        <td><span class="badge badge-info">${emp.plano.toUpperCase()}</span></td>
-                        <td><strong>R$ ${valorPlano}</strong></td>
-                        <td><span class="badge badge-warning">Aguardando Pagamento</span></td>
-                        <td style="text-align: right; display: flex; gap: 4px; justify-content: flex-end;">
-                            <button class="btn-action" title="Cobrar no WhatsApp" onclick="enviarCobranca('${emp.contato}', '${emp.nome_fantasia}', '${valorPlano}')"><i class="ph ph-whatsapp-logo" style="color: #25D366;"></i></button>
-                            <button class="btn-action" title="Confirmar Pagamento" onclick="alert('Pagamento carimbado!')" style="color: var(--success); border-color: var(--success);"><i class="ph ph-check-circle"></i></button>
-                        </td>
-                    </tr>
-                `;
+        // Simulação do Chart.js
+        function renderizarGrafico() {
+            const ctx = document.getElementById('mrrChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun'],
+                    datasets: [{
+                        label: 'Faturamento Mensal (R$)',
+                        data: [1200, 1900, 3000, 5000, 6200, 7500],
+                        borderColor: '#3b82f6',
+                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.3
+                    }]
+                },
+                options: { responsive: true, plugins: { legend: { display: false } } }
             });
         }
-
-        function salvarPixGlobal() {
-            const chave = document.getElementById('global-pix-chave').value;
-            localStorage.setItem('erp_pix_global', chave);
-            mostrarToast('PIX Salvo', 'A chave padrão foi atualizada para todas as faturas das lojas.', 'success');
-        }
-
-        function enviarCobranca(telefone, loja, valor) {
-            const msg = `Olá, equipe da *${loja}*.\nAqui é do financeiro do *ERP*.\nSua fatura mensal de *R$ ${valor}* está disponível.`;
-            window.open(`https://wa.me/55${telefone.replace(/\D/g, '')}?text=${encodeURIComponent(msg)}`, '_blank');
-        }
-
     </script>
 </body>
 </html>
