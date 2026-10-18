@@ -1,16 +1,26 @@
 import os
-import uuid
-from fastapi import FastAPI, HTTPException, Depends, Header, UploadFile, File, Form, Security
+from fastapi import FastAPI, HTTPException, Depends, Security
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from pydantic import BaseModel
 from typing import Optional
-from supabase import create_client, Client
+import psycopg2
+from psycopg2.extras import RealDictConnection
+from psycopg2 import pool
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 
-security = HTTPBearer()
+# ================= VARIÁVEIS DE AMBIENTE (VERCEL / SUPABASE) =================
+# Em produção (Vercel), essas variáveis serão injetadas automaticamente.
+# Localmente, você pode criar um arquivo .env ou setar no seu terminal.
+SENHA_MASTER = os.getenv("SENHA_MASTER", "admin123") # "admin123" é um fallback para teste local
+DATABASE_URL = os.getenv("DATABASE_URL") # String de conexão PostgreSQL fornecida pelo Supabase
 
-app = FastAPI(title="ShopinVigia API - Módulo Master SaaS")
+# ================= INICIALIZAÇÃO DA APLICAÇÃO =================
+app = FastAPI(
+    title="ShopinVigia API - ERP Varejo",
+    description="Backend consolidado para SaaS de Lojas de Roupas, Sapatos e Acessórios"
+)
 
+# Libera o CORS para o frontend (seu painel em HTML/JS) conseguir comunicar
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -19,233 +29,132 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# =====================================================================
-# CONFIGURAÇÕES (VERCEL & SUPABASE)
-# =====================================================================
-MASTER_SECRET = os.getenv("SENHA_MASTER", "123456")
-SUPABASE_URL = os.getenv("SUPABASE_URL")
-SUPABASE_KEY = os.getenv("SUPABASE_KEY")
+# ================= CONEXÃO COM O BANCO DE DADOS (SUPABASE) =================
+# Usamos Connection Pool para suportar múltiplos acessos simultâneos sem derrubar o banco
+try:
+    db_pool = pool.ThreadedConnectionPool(
+        minconn=2,
+        maxconn=20,
+        dsn=DATABASE_URL,
+        connection_factory=RealDictConnection
+    )
+    print("Conexão com o Supabase estabelecida com sucesso!")
+except Exception as e:
+    print(f"Aviso: Não foi possível conectar ao banco de dados no momento. Verifique a DATABASE_URL. Erro: {e}")
+    db_pool = None
 
-if not SUPABASE_URL or not SUPABASE_KEY:
-    raise RuntimeError("As variáveis SUPABASE_URL e SUPABASE_KEY devem estar configuradas no ambiente.")
+def get_db():
+    if not db_pool:
+        raise HTTPException(status_code=500, detail="Banco de dados não conectado.")
+    conn = db_pool.getconn()
+    try:
+        yield conn
+    finally:
+        db_pool.putconn(conn)
 
-# Cliente oficial do Supabase
-supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
-# =====================================================================
-# MODELOS DE DADOS (PYDANTIC)
-# =====================================================================
+# ================= TRAVAS DE SEGURANÇA =================
+security = HTTPBearer()
+
+def verificar_token_master(credentials: HTTPAuthorizationCredentials = Security(security)):
+    # O painel Master envia o token no cabeçalho.
+    # Em um cenário real, você gera um JWT. Aqui validamos a string fixa para o Super Admin.
+    if credentials.credentials != "token_master_shopinvigia_super_admin":
+        raise HTTPException(status_code=401, detail="Sessão Master Inválida ou Expirada")
+    return credentials.credentials
+
+
+# ================= MODELOS PYDANTIC (PAYLOADS) =================
 class MasterAuth(BaseModel):
     senha: str
 
-class ClienteAtualizarRequest(BaseModel):
-    nome: Optional[str] = None
-    cnpj: Optional[str] = None
-    email: Optional[str] = None
+class EmpresaCreate(BaseModel):
+    razao_social: str
+    nome_fantasia: str
+    cnpj: str
+    telefone: str
+    email_admin: str
+    endereco: str
 
-class StatusFinanceiroRequest(BaseModel):
-    id: int
-    status: str
-
-class ReciboRequest(BaseModel):
-    id_cliente: str
-    info_empresa: dict
-    info_cliente: dict
-    competencia: str
-    informacoes: str
-    obs: str
-
-# =====================================================================
-# AUTENTICAÇÃO (NOVO PADRÃO)
-# =====================================================================
-def verificar_token(credentials: HTTPAuthorizationCredentials = Security(security)):
-    if not credentials.credentials or credentials.credentials == "undefined":
-        raise HTTPException(status_code=401, detail="Token Master Inválido")
-    if credentials.credentials != "token_master_valido":
-        raise HTTPException(status_code=401, detail="Sessão inválida")
-    return credentials.credentials
 
 # ================= ROTAS DO MASTER =================
+
 @app.post("/api/master/auth")
 def master_login(auth: MasterAuth):
-    if auth.senha == MASTER_SECRET:
-        return {"autorizado": True, "token": "token_master_valido"}
-    raise HTTPException(status_code=401, detail="Senha Master incorreta")
-
-# =====================================================================
-# ROTAS DE DASHBOARD E CLIENTES EMPRESA (CONSULTAS REAIS SUPABASE)
-# =====================================================================
-@app.get("/api/master/dashboard", dependencies=[Depends(verificar_token)])
-def dashboard():
-    """Consulta métricas reais de clientes e status direto no Supabase."""
-    try:
-        vencidos_res = supabase.table('clientes').select('id', count='exact').eq('status', 'vencido').execute()
-        vencidos_count = vencidos_res.count or 0
-
-        novos_res = supabase.table('clientes').select('id', count='exact').eq('status', 'novo').execute()
-        novos_count = novos_res.count or 0
-
-        total_res = supabase.table('clientes').select('id', count='exact').execute()
-        total_count = total_res.count or 0
-
-        db_usado_estimado = min(500, max(10, total_count * 5))
-
+    """
+    Verifica se a senha enviada pelo frontend bate com a Variável de Ambiente.
+    """
+    # COMPARAÇÃO DIRETA COM A VARIÁVEL DA VERCEL
+    if auth.senha == SENHA_MASTER:
         return {
-            "db_usado": db_usado_estimado,
-            "novos_clientes": novos_count,
-            "vencidos": vencidos_count
+            "autorizado": True, 
+            "token": "token_master_shopinvigia_super_admin",
+            "mensagem": "Bem-vindo, Mestre."
         }
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Erro no Supabase: {str(e)}")
+    
+    raise HTTPException(status_code=401, detail="Senha Master incorreta. Acesso negado.")
 
-@app.get("/api/master/clientes", dependencies=[Depends(verificar_token)])
-def listar_clientes(busca: str = "", status: str = ""):
-    """Busca registros reais na tabela 'clientes' do Supabase com filtros."""
+
+@app.get("/api/master/metrics")
+def get_master_metrics(db=Depends(get_db), token: str = Depends(verificar_token_master)):
+    """
+    Retorna os indicadores para o Dashboard do Master (Total de Lojas, Faturamento MRR).
+    """
+    cursor = db.cursor()
     try:
-        query = supabase.table('clientes').select('*')
+        # Conta empresas ativas
+        cursor.execute("SELECT COUNT(*) as total FROM empresas WHERE status != 'excluido'")
+        total_clientes = cursor.fetchone()['total']
         
-        if busca:
-            query = query.or_(f"nome.ilike.%{busca}%,cnpj.ilike.%{busca}%")
-        if status:
-            query = query.eq('status', status)
-
-        res = query.order('id', desc=True).execute()
-        return res.data
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Erro ao listar clientes no Supabase: {str(e)}")
-
-@app.put("/api/master/clientes/{id_cliente}/toggle-status", dependencies=[Depends(verificar_token)])
-def toggle_status(id_cliente: int):
-    """Busca o cliente no Supabase, inverte o status (ativo/bloqueado) e atualiza."""
-    try:
-        res = supabase.table('clientes').select('status').eq('id', id_cliente).execute()
-        if not res.data:
-            raise HTTPException(status_code=404, detail="Cliente não encontrado")
+        # Simula o MRR (Receita Recorrente) assumindo R$ 150 por cliente ativo
+        cursor.execute("SELECT COUNT(*) as pagantes FROM empresas WHERE plano != 'Trial' AND status = 'ativo'")
+        pagantes = cursor.fetchone()['pagantes']
+        mrr = float(pagantes) * 150.00 
         
-        status_atual = res.data[0].get('status')
-        novo_status = 'bloqueado' if status_atual == 'ativo' else 'ativo'
+        return {
+            "db_disk_usage": "18 MB", # Num cenário real, usaríamos pg_database_size()
+            "total_clientes": total_clientes, 
+            "mrr": f"R$ {mrr:,.2f}".replace('.', ',')
+        }
+    finally:
+        cursor.close()
 
-        supabase.table('clientes').update({'status': novo_status}).eq('id', id_cliente).execute()
-        return {"mensagem": f"Status do cliente {id_cliente} alterado para {novo_status} no Supabase."}
-    except HTTPException:
-        raise
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Erro ao alterar status no Supabase: {str(e)}")
 
-@app.put("/api/master/clientes/{id_cliente}", dependencies=[Depends(verificar_token)])
-def alterar_cliente(id_cliente: int, dados: ClienteAtualizarRequest):
-    """Atualiza colunas do cliente diretamente na tabela 'clientes' do Supabase."""
+@app.get("/api/master/empresas")
+def list_empresas(db=Depends(get_db), token: str = Depends(verificar_token_master)):
+    """
+    Lista todos os clientes (lojistas) cadastrados no SaaS.
+    """
+    cursor = db.cursor()
     try:
-        payload = {k: v for k, v in dados.dict().items() if v is not None}
-        if payload:
-            supabase.table('clientes').update(payload).eq('id', id_cliente).execute()
-        return {"mensagem": "Dados do cliente atualizados com sucesso no Supabase."}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Erro ao atualizar cliente no Supabase: {str(e)}")
+        cursor.execute("SELECT id, razao_social, nome_fantasia, cnpj, plano, vencimento, status FROM empresas ORDER BY id DESC")
+        res = cursor.fetchall()
+        return res
+    finally:
+        cursor.close()
 
-@app.delete("/api/master/clientes/{id_cliente}", dependencies=[Depends(verificar_token)])
-def excluir_cliente(id_cliente: int):
-    """Exclui o registro da tabela 'clientes' no Supabase."""
+
+@app.post("/api/master/empresas")
+def create_empresa(emp: EmpresaCreate, db=Depends(get_db), token: str = Depends(verificar_token_master)):
+    """
+    Cria uma nova loja manualmente via Painel Master.
+    """
+    cursor = db.cursor()
     try:
-        supabase.table('clientes').delete().eq('id', id_cliente).execute()
-        return {"mensagem": f"Cliente {id_cliente} excluído do Supabase."}
+        cursor.execute("""
+            INSERT INTO empresas (razao_social, nome_fantasia, cnpj, telefone, email_admin, endereco, plano, vencimento, status)
+            VALUES (%s, %s, %s, %s, %s, %s, 'Trial', 5, 'ativo') RETURNING id;
+        """, (emp.razao_social, emp.nome_fantasia, emp.cnpj, emp.telefone, emp.email_admin, emp.endereco))
+        db.commit()
+        novo_id = cursor.fetchone()['id']
+        return {"mensagem": "Loja cadastrada com sucesso", "id": novo_id}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Erro ao excluir cliente no Supabase: {str(e)}")
+        db.rollback()
+        raise HTTPException(status_code=400, detail=f"Erro ao cadastrar: {str(e)}")
+    finally:
+        cursor.close()
 
-@app.post("/api/master/clientes/{id_cliente}/contrato", dependencies=[Depends(verificar_token)])
-def emitir_contrato(id_cliente: int):
-    """Insere o contrato na tabela 'contratos' do Supabase."""
-    try:
-        res = supabase.table('clientes').select('id, nome').eq('id', id_cliente).execute()
-        if not res.data:
-            raise HTTPException(status_code=404, detail="Cliente não encontrado")
-
-        supabase.table('contratos').insert({
-            'cliente_id': id_cliente,
-            'status': 'emitido',
-            'detalhes': f"Contrato emitido para {res.data[0].get('nome')}"
-        }).execute()
-
-        return {"mensagem": f"Contrato do cliente {id_cliente} gravado no Supabase."}
-    except HTTPException:
-        raise
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Erro ao emitir contrato no Supabase: {str(e)}")
-
-# =====================================================================
-# ROTAS: FINANCEIRO E RECIBOS (SUPABASE REAL)
-# =====================================================================
-@app.get("/api/master/financeiro/graficos", dependencies=[Depends(verificar_token)])
-def graficos_faturamento(periodo: str = "mes"):
-    """Consulta os dados de faturamento na tabela 'faturamentos' do Supabase."""
-    try:
-        res = supabase.table('faturamentos').select('label, valor').order('id', desc=False).execute()
-        if res.data:
-            labels = [item.get('label', '') for item in res.data]
-            valores = [float(item.get('valor', 0)) for item in res.data]
-        else:
-            labels = []
-            valores = []
-        return {"labels": labels, "valores": valores}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Erro ao buscar faturamento no Supabase: {str(e)}")
-
-@app.get("/api/master/financeiro/notificacoes", dependencies=[Depends(verificar_token)])
-def notificacoes_inadimplencia():
-    """Contagem dinâmica de adimplência/inadimplência na tabela 'clientes' do Supabase."""
-    try:
-        a_vencer = supabase.table('clientes').select('id', count='exact').eq('status', 'a_vencer').execute().count or 0
-        vencidos = supabase.table('clientes').select('id', count='exact').eq('status', 'vencido').execute().count or 0
-        bloqueados = supabase.table('clientes').select('id', count='exact').eq('status', 'bloqueado').execute().count or 0
-        return {"a_vencer": a_vencer, "vencidos": vencidos, "bloqueados": bloqueados}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Erro ao consultar inadimplência no Supabase: {str(e)}")
-
-@app.get("/api/master/financeiro/lista", dependencies=[Depends(verificar_token)])
-def financeiro_lista(busca: str = ""):
-    """Consulta a lista de cobranças/clientes diretamente na tabela 'clientes' do Supabase."""
-    try:
-        query = supabase.table('clientes').select('id, nome, cnpj, data_vencimento, status')
-        if busca:
-            query = query.or_(f"nome.ilike.%{busca}%,cnpj.ilike.%{busca}%")
-        
-        res = query.order('id', desc=True).execute()
-        return res.data
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Erro ao listar financeiro no Supabase: {str(e)}")
-
-@app.put("/api/master/financeiro/status", dependencies=[Depends(verificar_token)])
-def atualizar_status_financeiro(dados: StatusFinanceiroRequest):
-    """Atualiza o status financeiro do cliente na tabela 'clientes' do Supabase."""
-    try:
-        supabase.table('clientes').update({'status': dados.status}).eq('id', dados.id).execute()
-        return {"mensagem": f"Status financeiro do cliente {dados.id} atualizado para {dados.status} no Supabase."}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Erro ao atualizar status no Supabase: {str(e)}")
-
-@app.post("/api/master/config/pix", dependencies=[Depends(verificar_token)])
-async def configurar_pix(qr_code: UploadFile = File(...), chave_pix: str = Form(...)):
-    """Faz upload da imagem do QR Code para o Bucket 'pix' do Supabase e salva a chave na tabela 'config_pagamento'."""
-    try:
-        foto_bytes = await qr_code.read()
-        filename = f"qr_{uuid.uuid4()}.png"
-
-        try:
-            supabase.storage.from_("pix").upload(filename, foto_bytes)
-            public_url = supabase.storage.from_("pix").get_public_url(filename)
-        except Exception:
-            public_url = ""
-
-        supabase.table('config_pagamento').upsert({'id': 1, 'chave_pix': chave_pix, 'qr_code_url': public_url}).execute()
-        return {"mensagem": "Configuração PIX salva com sucesso no Supabase!"}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Erro ao salvar PIX no Supabase: {str(e)}")
-
-@app.post("/api/master/recibos", dependencies=[Depends(verificar_token)])
-def gerar_comprovante(dados: ReciboRequest):
-    """Insere o comprovante emitido na tabela 'recibos' do Supabase."""
-    try:
-        supabase.table('recibos').insert(dados.dict()).execute()
-        return {"mensagem": "Comprovante gravado no Supabase com sucesso."}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Erro ao gravar recibo no Supabase: {str(e)}")
+# Rota extra para simular se a API está online antes do banco estar configurado
+@app.get("/ping")
+def ping():
+    return {"status": "ShopinVigia API Online", "environment": os.getenv("VERCEL_ENV", "local")}
