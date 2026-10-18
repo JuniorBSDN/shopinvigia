@@ -79,19 +79,23 @@ class EmpresaCreate(BaseModel):
 
 # ================= ROTAS DO MASTER =================
 
-SENHA_MASTER = os.getenv("SENHA_MASTER") or "admin123"
-
 @app.post("/api/master/auth")
 def master_login(auth: MasterAuth):
-    if auth.senha and auth.senha.strip() == SENHA_MASTER.strip():
+    # Pega a senha da Vercel ou usa "admin123" como fallback local para nunca travar
+    senha_ambiente = os.getenv("SENHA_MASTER", "admin123")
+    
+    # Remove espaços em branco acidentais que venham do input ou da Vercel
+    if auth.senha and auth.senha.strip() == senha_ambiente.strip():
         return {
             "autorizado": True, 
             "token": "token_master_shopinvigia_super_admin",
             "mensagem": "Bem-vindo, Mestre."
         }
     
-    raise HTTPException(status_code=401, detail="Senha Master incorreta.")
-    
+    raise HTTPException(
+        status_code=401, 
+        detail="Senha Master incorreta."
+    )
 @app.get("/api/master/metrics")
 def get_master_metrics(db=Depends(get_db), token: str = Depends(verificar_token_master)):
     """
