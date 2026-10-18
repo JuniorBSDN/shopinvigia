@@ -48,22 +48,23 @@
                 <div class="text-center mb-4">
                     <h2 class="text-xl font-bold">Cadastrar Novo Cliente/Empresa</h2>
                 </div>
+               <!-- FORMULÁRIO DE CADASTRO -->
                 <form onsubmit="event.preventDefault(); criarConta();" class="space-y-3">
                     <div>
-                        <input type="text" placeholder="Nome da Loja" required class="w-full px-3 py-2 border rounded text-sm">
+                        <input type="text" id="cad-nome" placeholder="Nome da Loja" required class="w-full px-3 py-2 border rounded text-sm">
                     </div>
                     <div>
-                        <input type="text" placeholder="CNPJ" required class="w-full px-3 py-2 border rounded text-sm">
+                        <input type="text" id="cad-cnpj" placeholder="CNPJ" required class="w-full px-3 py-2 border rounded text-sm">
                     </div>
                     <div class="grid grid-cols-2 gap-2">
-                        <input type="text" placeholder="WhatsApp" required class="w-full px-3 py-2 border rounded text-sm">
-                        <input type="email" placeholder="E-mail" required class="w-full px-3 py-2 border rounded text-sm">
+                        <input type="text" id="cad-tel" placeholder="WhatsApp" required class="w-full px-3 py-2 border rounded text-sm">
+                        <input type="email" id="cad-email" placeholder="E-mail" required class="w-full px-3 py-2 border rounded text-sm">
                     </div>
                     <div class="flex items-start gap-2 bg-gray-50 p-2 rounded text-xs">
-                        <input type="checkbox" required class="mt-0.5">
+                        <input type="checkbox" id="cad-termo" required class="mt-0.5">
                         <label>Aceito o Termo de Responsabilidade e políticas de uso.</label>
                     </div>
-                    <button type="submit" class="w-full bg-green-600 text-white font-bold py-2 rounded">Criar Acesso à Conta</button>
+                    <button id="btn-cadastrar" type="submit" class="w-full bg-green-600 text-white font-bold py-2 rounded">Criar Acesso à Conta</button>
                     <button type="button" onclick="toggleCadastro(false)" class="w-full bg-gray-200 text-gray-700 font-bold py-2 rounded text-sm">Já tenho uma conta (Voltar)</button>
                 </form>
             </div>
@@ -464,13 +465,89 @@
 
     <!-- ================= SCRIPTS DE FUNCIONALIDADE ================= -->
     <script>
-        // LOGIN E CADASTRO
-        function fazerLogin() {
+        const API_BASE_URL = "https://shopinvigia.vercel.app/"; 
+        let empresaIdLogada = localStorage.getItem("erp_empresa_id");
+
+        window.onload = () => {
+            if (empresaIdLogada) {
+                entrarNoPainel();
+            }
+        };
+
+        // LOGIN REAL NA API
+        async function fazerLogin() {
+            const cnpj = document.getElementById('login-cnpj').value;
+            try {
+                const res = await fetch(`${API_BASE_URL}/api/gestor/login`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ cnpj: cnpj })
+                });
+                const data = await res.json();
+                
+                if(res.ok) {
+                    localStorage.setItem("erp_empresa_id", data.empresa_id);
+                    localStorage.setItem("erp_loja_nome", data.nome_loja);
+                    empresaIdLogada = data.empresa_id;
+                    entrarNoPainel();
+                } else {
+                    alert(data.detail || "CNPJ não encontrado na base de dados.");
+                }
+            } catch(e) {
+                alert("Erro ao conectar com a API. Verifique se o backend está rodando.");
+            }
+        }
+
+        // CADASTRO REAL DIRETO NO SUPABASE
+        async function criarConta() {
+            const btn = document.getElementById('btn-cadastrar');
+            btn.innerText = "Criando conta...";
+            btn.disabled = true;
+
+            const payload = {
+                nome_loja: document.getElementById('cad-nome').value,
+                cnpj: document.getElementById('cad-cnpj').value,
+                whatsapp: document.getElementById('cad-tel').value,
+                email: document.getElementById('cad-email').value,
+                termo_aceite: document.getElementById('cad-termo').checked
+            };
+
+            try {
+                const res = await fetch(`${API_BASE_URL}/api/gestor/criar-conta`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(payload)
+                });
+                
+                const data = await res.json();
+                
+                if(res.ok) {
+                    alert("Conta criada com sucesso no banco de dados! Faça login para continuar.");
+                    document.getElementById('login-cnpj').value = payload.cnpj; // Já preenche o login
+                    toggleCadastro(false);
+                } else {
+                    alert(data.detail || "Erro ao criar a conta.");
+                }
+            } catch(e) {
+                alert("Erro ao conectar com a API.");
+            } finally {
+                btn.innerText = "Criar Acesso à Conta";
+                btn.disabled = false;
+            }
+        }
+
+        function entrarNoPainel() {
             document.getElementById('auth-screen').classList.add('hidden-view');
             document.getElementById('main-panel').classList.remove('hidden-view');
             renderizarGraficos();
-            mostrarAlerta('Status da Licença', 'Sua licença está ativa e regularizada.');
+            mostrarAlerta('Acesso Liberado', 'Conectado com sucesso ao banco de dados.');
         }
+
+        function sair() { // Chame essa função no botão de sair
+            localStorage.removeItem("erp_empresa_id");
+            localStorage.removeItem("erp_loja_nome");
+            location.reload();
+        }   
 
         function toggleCadastro(show) {
             if(show) {
@@ -482,10 +559,7 @@
             }
         }
 
-        function criarConta() {
-            alert("Conta criada com sucesso! Redirecionando para o login.");
-            toggleCadastro(false);
-        }
+      
 
         // NAVEGAÇÃO DE ABAS
         function mudarAba(abaId) {
