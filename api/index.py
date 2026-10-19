@@ -27,22 +27,28 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# ================= CONEXÃO COM O BANCO DE DADOS =================
-try:
-    db_pool = pool.ThreadedConnectionPool(
-        minconn=2,
-        maxconn=20,
-        dsn=DATABASE_URL,
-        connection_factory=RealDictConnection
-    )
-    print("Conexão com o banco estabelecida com sucesso!")
-except Exception as e:
-    print(f"Aviso: Falha ao conectar no banco. Erro: {e}")
-    db_pool = None
+# ================= CONEXÃO BLINDADA COM O BANCO DE DADOS =================
+# Iniciamos vazio. A Vercel só tenta conectar quando alguém acessa o site.
+db_pool = None
 
 def get_db():
+    global db_pool
+    # Se a variável de ambiente não existir, avisa na hora!
+    if not DATABASE_URL:
+        raise HTTPException(status_code=500, detail="FALHA GRAVE: Variável DATASHOP_URL não encontrada na Vercel.")
+
     if not db_pool:
-        raise HTTPException(status_code=500, detail="Banco de dados não conectado.")
+        try:
+            db_pool = pool.ThreadedConnectionPool(
+                minconn=1,
+                maxconn=10,
+                dsn=DATABASE_URL,
+                connection_factory=RealDictConnection
+            )
+        except Exception as e:
+            # Se a senha do Supabase estiver errada, o erro vai aparecer no seu painel!
+            raise HTTPException(status_code=500, detail=f"ERRO NO SUPABASE: {str(e)}")
+    
     conn = db_pool.getconn()
     try:
         yield conn
@@ -57,7 +63,7 @@ def verificar_token_master(credentials: HTTPAuthorizationCredentials = Security(
         raise HTTPException(status_code=401, detail="Sessão Master Inválida ou Expirada")
     return credentials.credentials
 
-# ================= MODELOS PYDANTIC (PAYLOADS) =================
+# ================= MODELOS PYDANTIC =================
 class MasterAuth(BaseModel):
     senha: str
 
@@ -107,7 +113,7 @@ def get_master_metrics(db=Depends(get_db), token: str = Depends(verificar_token_
     finally:
         cursor.close()
 
-# ================= ROTAS DE GESTÃO DE EMPRESAS (MASTER.HTML) =================
+# ================= ROTAS DE GESTÃO DE EMPRESAS =================
 @app.get("/api/master/empresas")
 def list_empresas(db=Depends(get_db), token: str = Depends(verificar_token_master)):
     cursor = db.cursor()
@@ -119,12 +125,9 @@ def list_empresas(db=Depends(get_db), token: str = Depends(verificar_token_maste
 
 @app.put("/api/master/empresas/{empresa_id}")
 def update_status_empresa(empresa_id: int, payload: StatusUpdate, db=Depends(get_db), token: str = Depends(verificar_token_master)):
-    """Rota chamada pelo 'Ativar/Bloq' e pelo select financeiro no master.html"""
     cursor = db.cursor()
     try:
-        # Se for ativado manualmente, o master renova o vencimento para +30 dias
         vencimento_query = ", vencimento = CURRENT_DATE + INTERVAL '30 days'" if payload.status == "ativo" else ""
-        
         query = f"UPDATE empresas SET status = %s {vencimento_query} WHERE id = %s RETURNING id, status, vencimento"
         cursor.execute(query, (payload.status, empresa_id))
         db.commit()
@@ -142,7 +145,6 @@ def update_status_empresa(empresa_id: int, payload: StatusUpdate, db=Depends(get
 
 @app.delete("/api/master/empresas/{empresa_id}")
 def delete_empresa(empresa_id: int, db=Depends(get_db), token: str = Depends(verificar_token_master)):
-    """Rota chamada pelo botão de lixeira no master.html"""
     cursor = db.cursor()
     try:
         cursor.execute("DELETE FROM empresas WHERE id = %s RETURNING id", (empresa_id,))
@@ -159,17 +161,14 @@ def delete_empresa(empresa_id: int, db=Depends(get_db), token: str = Depends(ver
 # ================= ROTA DE CONFIGURAÇÃO GLOBAL (PIX) =================
 @app.put("/api/master/config-pix")
 def update_config_pix(payload: ConfigPixUpdate, db=Depends(get_db), token: str = Depends(verificar_token_master)):
-    """Rota chamada pelo botão 'Salvar Configuração PIX' no master.html"""
     cursor = db.cursor()
     try:
-        # Assumindo que existe uma tabela "configuracoes" com id=1 para armazenar as globais do sistema
         cursor.execute("""
             UPDATE configuracoes 
             SET pix_qrcode = %s, pix_chave = %s 
             WHERE id = 1 RETURNING id
         """, (payload.qrcode_imagens, payload.copia_e_cola))
         
-        # Se a tabela estiver vazia, faz um insert
         if not cursor.fetchone():
             cursor.execute("""
                 INSERT INTO configuracoes (id, pix_qrcode, pix_chave) 
@@ -184,10 +183,9 @@ def update_config_pix(payload: ConfigPixUpdate, db=Depends(get_db), token: str =
     finally:
         cursor.close()
 
-# ================= ROTA DE AUTO-CADASTRO (ADMIN.HTML) =================
+# ================= ROTA DE CADASTRO =================
 @app.post("/api/empresas/cadastro", status_code=201)
 def cadastrar_lojista_trial(data: LojistaCadastro, db=Depends(get_db)):
-    """Criada em 100% FastAPI: Gera vencimento automático de +7 dias"""
     vencimento = datetime.now() + timedelta(days=7)
     razao = data.razao_social if data.razao_social else data.nome_fantasia
 
