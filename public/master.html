@@ -59,27 +59,27 @@
 </head>
 <body class="bg-light-50 text-gray-800 antialiased h-screen flex overflow-hidden">
 
-    <!-- ================= TELA DE LOGIN MASTER ================= -->
-    <div id="login-screen" class="fixed inset-0 z-[100] flex items-center justify-center bg-gray-900 bg-cover bg-center" style="background-image: linear-gradient(to bottom, rgba(17,24,39,0.95), rgba(17,24,39,0.98)), url('https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?auto=format&fit=crop&w=1920&q=80');">
-        <div class="bg-white/95 backdrop-blur-md p-10 rounded-3xl shadow-2xl w-full max-w-md border border-gray-100 text-center" data-aos="zoom-in">
-            <div class="mb-6">
-                <i class="fa-solid fa-crown text-5xl text-gold-500 mb-3 drop-shadow-md"></i>
-                <h2 class="text-3xl font-strong text-gray-900">ShopinVigia</h2>
-                <p class="text-sm font-light text-gray-500 mt-1">Painel Master SaaS Completo</p>
-            </div>
-            <form id="form-login" onsubmit="event.preventDefault(); fazerLogin();">
-                <div class="mb-5 text-left">
-                    <label class="block text-xs font-strong text-gray-400 uppercase tracking-widest mb-2">Senha Master / Super Admin</label>
-                    <input type="password" id="master-password" placeholder="Digite sua Senha Master" required
-                        class="w-full px-4 py-4 bg-light-50 border-0 rounded-xl focus:outline-none focus:ring-2 focus:ring-gold-400 shadow-inner font-light text-sm text-gray-900">
-                </div>
-                <button type="submit" id="btn-login" class="w-full bg-gray-900 text-gold-400 font-strong py-4 rounded-xl shadow-lg hover:bg-gray-800 transition text-lg tracking-wide">
-                    ENTRAR NO SISTEMA
-                </button>
-                <p id="login-error" class="text-red-500 text-xs font-strong mt-3 hidden-view uppercase tracking-wider">Senha incorreta ou erro na API.</p>
-            </form>
+  <!-- ================= TELA DE LOGIN MASTER (NATIVA & LIMPA) ================= -->
+<div id="login-screen" class="fixed inset-0 z-[100] flex items-center justify-center bg-gray-900 bg-cover bg-center" style="background-image: linear-gradient(to bottom, rgba(17,24,39,0.95), rgba(17,24,39,0.98)), url('https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?auto=format&fit=crop&w=1920&q=80');">
+    <div class="bg-white p-10 rounded-3xl shadow-2xl w-full max-w-md border border-gray-100 text-center relative z-10">
+        <div class="mb-6">
+            <i class="fa-solid fa-crown text-5xl text-gold-500 mb-3 drop-shadow-md"></i>
+            <h2 class="text-3xl font-strong text-gray-900">ShopinVigia</h2>
+            <p class="text-sm font-light text-gray-500 mt-1">Painel Master SaaS Completo</p>
         </div>
+        <form id="form-login" onsubmit="event.preventDefault(); fazerLogin();">
+            <div class="mb-5 text-left">
+                <label class="block text-xs font-strong text-gray-400 uppercase tracking-widest mb-2">Senha Master / Super Admin</label>
+                <input type="password" id="master-password" placeholder="Digite sua Senha Master" required
+                    class="w-full px-4 py-4 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-gold-400 font-light text-sm text-gray-900">
+            </div>
+            <button type="submit" id="btn-login" class="w-full bg-gray-900 text-gold-400 font-strong py-4 rounded-xl shadow-lg hover:bg-gray-800 transition text-lg tracking-wide">
+                ENTRAR NO SISTEMA
+            </button>
+            <p id="login-error" class="text-red-500 text-xs font-strong mt-3 hidden-view uppercase tracking-wider">Senha incorreta ou erro na API.</p>
+        </form>
     </div>
+</div>
 
     <!-- ================= PAINEL MASTER (DASHBOARD & GESTÃO) ================= -->
     <div id="dashboard-screen" class="hidden-view flex h-screen overflow-hidden w-full bg-light-50">
