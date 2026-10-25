@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ShopinVigia — Painel ADMIN / Gestor / Cliente</title>
+    <title>ShopinVigia — Painel ADMIN / CLIENTE / GESTOR</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -19,18 +19,17 @@
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.75); backdrop-filter: blur(5px); z-index: 9999; display: flex; justify-content: center; align-items: center; opacity: 0; visibility: hidden; transition: all 0.3s ease-in-out; }
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(5px); z-index: 9999; display: flex; justify-content: center; align-items: center; opacity: 0; visibility: hidden; transition: all 0.3s ease-in-out; }
         .modal-overlay.active { opacity: 1; visibility: visible; }
         html { scroll-behavior: smooth; }
         body { background-color: #f8fafc; color: #09090b; font-weight: 400; }
         .btn-effect { transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); }
         .btn-effect:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(212, 175, 55, 0.3); }
         .btn-effect:active:not(:disabled) { transform: scale(0.95); }
-
         #sidebar { transition: transform 0.3s ease-in-out; }
         @media(max-width: 1024px) { #sidebar { transform: translateX(-100%); } #sidebar.open { transform: translateX(0); } }
 
-        /* IMPRESSÃO / GERAÇÃO DE RELATÓRIOS PDF PROFISSIONAIS */
+        /* IMPRESSÃO PROFISSIONAL / PDF */
         @media print {
             body { background: white !important; }
             body * { visibility: hidden; }
@@ -48,9 +47,9 @@
     <!-- TOAST NOTIFICAÇÕES -->
     <div id="toast-container" class="fixed bottom-6 right-6 flex flex-col gap-4 max-w-sm w-full z-[10000] px-4 no-print pointer-events-none"></div>
 
-    <!-- ========================================== -->
-    <!-- TELA DE LOGIN & CADASTRO DO ADMINISTRADOR  -->
-    <!-- ========================================== -->
+    <!-- ================================================= -->
+    <!-- TELA DE LOGIN                                     -->
+    <!-- ================================================= -->
     <div id="login-screen" class="fixed inset-0 bg-blacktext z-[9000] flex items-center justify-center p-4">
         <div class="bg-cardbg rounded-3xl p-8 max-w-md w-full shadow-2xl relative overflow-hidden">
             <div class="absolute top-0 left-0 w-full h-1.5 bg-gold"></div>
@@ -73,17 +72,31 @@
         </div>
     </div>
 
-    <!-- MODAL: CADASTRAR NOVO CLIENTE/EMPRESA (FORMULÁRIO DO ESCOPO) -->
+    <!-- ================================================= -->
+    <!-- MODAL: CADASTRAR NOVO CLIENTE/EMPRESA             -->
+    <!-- ================================================= -->
     <div class="modal-overlay" id="modalCadastroConta">
         <div class="bg-cardbg rounded-3xl p-8 max-w-md w-full shadow-2xl relative max-h-[95vh] overflow-y-auto">
             <div class="absolute top-0 left-0 w-full h-1.5 bg-gold"></div>
             <h3 class="text-xl font-black text-blacktext text-center mb-6 uppercase tracking-wider">CADASTRAR NOVO CLIENTE/EMPRESA</h3>
             
             <form onsubmit="event.preventDefault(); AdminCore.register();" class="space-y-4">
-                <div><label class="block text-[10px] font-black uppercase text-mutedblack mb-1">NOME DA LOJA</label><input type="text" id="reg-nome" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-xs font-bold focus:border-gold"></div>
-                <div><label class="block text-[10px] font-black uppercase text-mutedblack mb-1">CNPJ</label><input type="text" id="reg-cnpj" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-xs font-bold focus:border-gold"></div>
-                <div><label class="block text-[10px] font-black uppercase text-mutedblack mb-1">WHATSAPP</label><input type="text" id="reg-wpp" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-xs font-bold focus:border-gold"></div>
-                <div><label class="block text-[10px] font-black uppercase text-mutedblack mb-1">EMAIL</label><input type="email" id="reg-email" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-xs font-bold focus:border-gold"></div>
+                <div>
+                    <label class="block text-[10px] font-black uppercase text-mutedblack mb-1">NOME DA LOJA</label>
+                    <input type="text" id="reg-nome" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-xs font-bold focus:border-gold">
+                </div>
+                <div>
+                    <label class="block text-[10px] font-black uppercase text-mutedblack mb-1">CNPJ</label>
+                    <input type="text" id="reg-cnpj" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-xs font-bold focus:border-gold">
+                </div>
+                <div>
+                    <label class="block text-[10px] font-black uppercase text-mutedblack mb-1">WHATSAPP</label>
+                    <input type="text" id="reg-wpp" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-xs font-bold focus:border-gold">
+                </div>
+                <div>
+                    <label class="block text-[10px] font-black uppercase text-mutedblack mb-1">EMAIL</label>
+                    <input type="email" id="reg-email" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-xs font-bold focus:border-gold">
+                </div>
                 
                 <div class="flex items-start gap-2 pt-2 bg-slate-50 p-3 rounded-xl border border-slate-200">
                     <input type="checkbox" required class="mt-1 accent-gold">
@@ -91,7 +104,7 @@
                 </div>
 
                 <div class="flex flex-col gap-3 mt-6">
-                    <button type="submit" class="w-full bg-gold text-white text-xs font-black py-3.5 rounded-xl uppercase tracking-widest shadow-lg shadow-gold/20 btn-effect">BT CRIAR ACESSO A CONTA</button>
+                    <button type="submit" class="w-full bg-gold text-white text-xs font-black py-3.5 rounded-xl uppercase tracking-widest shadow-lg shadow-gold/25 btn-effect">BT CRIAR ACESSO A CONTA</button>
                     <button type="button" onclick="closeModal('modalCadastroConta')" class="w-full bg-slate-100 text-blacktext text-xs font-black py-3.5 rounded-xl uppercase tracking-widest hover:bg-slate-200 transition">BT CANCELAR</button>
                     <div class="text-center mt-2">
                         <button type="button" onclick="closeModal('modalCadastroConta')" class="text-xs font-black text-mutedblack hover:text-gold uppercase tracking-widest underline">LINK: JA TENHO UMA CONTA</button>
@@ -101,19 +114,21 @@
         </div>
     </div>
 
-    <!-- MODAL BLOQUEIO: FOTO DO QRCODE E CHAVE PIX DO MASTER -->
+    <!-- ================================================= -->
+    <!-- MODAL: BLOQUEIO / QRCODE E CHAVE PIX DO MASTER    -->
+    <!-- ================================================= -->
     <div class="modal-overlay" id="modalPixMaster">
         <div class="bg-cardbg rounded-3xl p-8 max-w-sm w-full shadow-2xl relative text-center">
             <div class="absolute top-0 left-0 w-full h-2 bg-red-600"></div>
-            <h3 class="text-lg font-black text-blacktext flex justify-center items-center gap-2 mb-2 uppercase"><i class="ph-bold ph-lock-key text-red-600 text-2xl"></i> BLOQUEIO DE LICENÇA</h3>
-            <p class="text-[11px] font-bold text-mutedblack mb-6">Após o bloqueio, visualize o QR Code e a chave de pagamento inseridos pelo Dono SaaS para manter a conta ativada e normalizada.</p>
+            <h3 class="text-lg font-black text-blacktext flex justify-center items-center gap-2 mb-2 uppercase"><i class="ph-bold ph-lock-key text-red-600 text-2xl"></i> ACESSO BLOQUEADO</h3>
+            <p class="text-[11px] font-bold text-mutedblack mb-6">Sua conta encontra-se bloqueada/vencida. Visualize a foto do QR Code e a própria chave de pagamento fornecida pelo Master para se manter ativado.</p>
             
             <div class="w-48 h-48 bg-slate-100 border border-slate-300 mx-auto rounded-2xl flex items-center justify-center font-bold text-mutedblack text-[10px] mb-4 overflow-hidden relative shadow-inner">
                 <i class="ph-bold ph-qr-code text-6xl text-slate-300 absolute"></i>
             </div>
             
             <div class="mb-6">
-                <label class="block text-[10px] font-black uppercase text-mutedblack mb-1">Chave Pix de Pagamento</label>
+                <label class="block text-[10px] font-black uppercase text-mutedblack mb-1">Chave Pix (Copiar)</label>
                 <input type="text" value="00020126580014br.gov.bcb.pix..." readonly class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-xs font-mono font-bold text-center text-blacktext">
             </div>
             <button onclick="location.reload()" class="w-full bg-blacktext text-white text-xs font-black py-3 rounded-xl uppercase tracking-widest btn-effect">Voltar ao Login</button>
@@ -121,9 +136,9 @@
     </div>
 
 
-    <!-- ========================================== -->
-    <!-- ESTRUTURA DO APLICATIVO APÓS LOGIN         -->
-    <!-- ========================================== -->
+    <!-- ================================================= -->
+    <!-- ESTRUTURA PRINCIPAL DO APLICATIVO                 -->
+    <!-- ================================================= -->
     <div id="app-layout" class="flex-1 flex flex-col lg:flex-row hidden w-full">
         
         <!-- HEADER MOBILE -->
@@ -162,29 +177,29 @@
                 <div class="flex justify-between items-center flex-wrap gap-4 no-print">
                     <h1 class="text-2xl font-black tracking-wide flex items-center gap-2"><i class="ph-duotone ph-chart-line-up text-gold text-3xl"></i> Dashboard e Vendas</h1>
                     <button onclick="uiNavigate('pdv', document.querySelectorAll('#nav-menu a')[1])" class="bg-gold hover:bg-goldhover text-white text-xs font-black px-6 py-4 rounded-xl transition flex items-center gap-2 shadow-lg shadow-gold/25 btn-effect uppercase tracking-widest">
-                        <i class="ph-bold ph-plus-circle text-lg"></i> BT NOVO PEDIDO (MODAL / PDV)
+                        <i class="ph-bold ph-plus-circle text-lg"></i> BT NOVO PEDIDO
                     </button>
                 </div>
 
-                <!-- INDICADORES DISCRETOS SUPERIORES -->
+                <!-- INDICADORES DISCRETOS NA PARTE SUPERIOR -->
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
                     <div class="bg-cardbg border border-slate-200 p-5 rounded-2xl border-l-4 border-l-gold shadow-xs">
-                        <span class="text-[10px] uppercase font-black tracking-wider text-mutedblack">Hora de Maior Fluxo (X,Y)</span>
+                        <span class="text-[10px] uppercase font-black tracking-wider text-mutedblack">HORA DE MAIOR FLUXO: Gráfico X,Y</span>
                         <div class="mt-2 h-16 relative"><canvas id="chart-fluxo"></canvas></div>
                     </div>
 
                     <div onclick="uiNavigate('ouvidoria', document.querySelectorAll('#nav-menu a')[5])" class="bg-cardbg border border-slate-200 p-5 rounded-2xl border-l-4 border-l-red-500 shadow-xs cursor-pointer hover:bg-red-50/40 transition btn-effect">
                         <div class="flex justify-between items-center">
                             <div>
-                                <span class="text-[10px] uppercase font-black tracking-wider text-red-600">Ouvidoria (Gráfico Disco p/ Feeds)</span>
-                                <h3 class="text-base font-black text-red-700 mt-1">Alerta CRÍTICO (Péssimo)</h3>
+                                <span class="text-[10px] uppercase font-black tracking-wider text-red-600">OUVIDORIA: Gráfico de Disco P/ Feeds</span>
+                                <h3 class="text-base font-black text-red-700 mt-1">Alerta CRÍTICO (Ótimo, Bom, Regular, Ruim, Péssimo)</h3>
                             </div>
                             <div class="w-12 h-12 relative"><canvas id="chart-feeds"></canvas></div>
                         </div>
                     </div>
 
                     <div onclick="uiNavigate('pdv', document.querySelectorAll('#nav-menu a')[1])" class="bg-cardbg border border-slate-200 p-5 rounded-2xl border-l-4 border-l-amber-500 shadow-xs cursor-pointer hover:bg-amber-50/40 transition btn-effect">
-                        <span class="text-[10px] uppercase font-black tracking-wider text-amber-600">Alerta de Pedido</span>
+                        <span class="text-[10px] uppercase font-black tracking-wider text-amber-600">ALERTA DE PEDIDO</span>
                         <h3 class="text-base font-black text-amber-700 mt-1">novo pedido | pedido atrasado</h3>
                     </div>
                 </div>
@@ -192,14 +207,14 @@
 
 
             <!-- ========================================== -->
-            <!-- 2. GERENCIADOR DE VENDAS (EXTERNA E PDV)   -->
+            <!-- 2. GERENCIADOR DE VENDAS EXTERNA E INTERNA -->
             <!-- ========================================== -->
             <section id="sec-pdv" class="page-section space-y-6 hidden">
                 <h1 class="text-2xl font-black tracking-wide flex items-center gap-2"><i class="ph-duotone ph-storefront text-gold text-3xl"></i> Gerenciador de Vendas Externa e Interna</h1>
 
                 <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
                     
-                    <!-- LADO ESQUERDO: LISTAS (EXTERNO E PDV INTERNO) -->
+                    <!-- LADO ESQUERDO: LISTA EXTERNA / PDV INTERNO -->
                     <div class="lg:col-span-7 bg-cardbg border border-slate-200 rounded-2xl p-6 shadow-xs flex flex-col">
                         <div class="flex gap-2 mb-5 border-b border-slate-100 pb-3 no-print">
                             <button onclick="AdminCore.switchPDV('externo')" id="tab-ext" class="flex-1 bg-blacktext text-white text-xs font-black py-3 rounded-xl uppercase tracking-wider btn-effect shadow-md">Lista de Pedidos Externo</button>
@@ -211,7 +226,7 @@
                             <div class="flex gap-2 flex-wrap bg-slate-50 p-3 rounded-xl border border-slate-200">
                                 <input type="text" placeholder="Buscar pedidos..." class="flex-1 bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold focus:border-gold">
                                 <select class="bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold focus:border-gold">
-                                    <option value="">Status (Todos)</option><option value="novo">Novo</option><option value="preparo">Em Preparo</option><option value="pronto">Pronto</option><option value="despachado">Despachado</option><option value="entregue">Entregue</option>
+                                    <option value="">Status</option><option value="novo">Novo</option><option value="preparo">Em Preparo</option><option value="pronto">Pronto</option><option value="despachado">Despachado</option><option value="entregue">Entregue</option>
                                 </select>
                                 <input type="date" class="bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold">
                                 <button class="bg-blacktext text-white px-4 rounded-xl text-xs font-black uppercase"><i class="ph-bold ph-magnifying-glass"></i></button>
@@ -222,17 +237,19 @@
                                     <thead class="bg-slate-100 font-black text-blacktext uppercase text-[9px] border-b border-slate-200">
                                         <tr>
                                             <th class="p-3 border-r">id/hora</th>
-                                            <th class="p-3 border-r">nome_cliente / tel</th>
+                                            <th class="p-3 border-r">nome_cliente</th>
                                             <th class="p-3 border-r">endereço e referência</th>
-                                            <th class="p-3 border-r">pgto / valor</th>
+                                            <th class="p-3 border-r">telefone</th>
+                                            <th class="p-3 border-r">forma pgto / valor</th>
                                             <th class="p-3">status</th>
                                         </tr>
                                     </thead>
                                     <tbody class="divide-y divide-slate-100 font-medium">
-                                        <tr class="hover:bg-amber-50 cursor-pointer bg-amber-50/60" onclick="AdminCore.fillCupom('1042', 'Carlos Silva', '(11) 98888-7777', 'Av. Paulista, 1000 - Apto 42 (Perto do Metrô)', 'PIX', 'R$ 74,90')">
+                                        <tr class="hover:bg-amber-50 cursor-pointer bg-amber-50/60" onclick="AdminCore.fillCupom('1042', 'Carlos Silva', '(11) 98888-7777', 'Av. Paulista, 1000 - Apto 42 (Ref: Perto do Metrô)', 'PIX', 'R$ 74,90')">
                                             <td class="p-3 font-black border-r">#1042<br><span class="text-[9px] text-mutedblack">19:35</span></td>
-                                            <td class="p-3 font-black border-r">Carlos Silva<br><span class="text-[9px] text-mutedblack">(11) 98888-7777</span></td>
-                                            <td class="p-3 text-[10px] border-r max-w-[130px] truncate">Av. Paulista, 1000<br><span class="italic text-slate-500">Ref: Perto do Metrô</span></td>
+                                            <td class="p-3 font-black border-r">Carlos Silva</td>
+                                            <td class="p-3 text-[10px] border-r max-w-[110px] truncate">Av. Paulista, 1000<br><span class="italic text-slate-500">Ref: Perto do Metrô</span></td>
+                                            <td class="p-3 text-[10px] border-r">(11) 98888-7777</td>
                                             <td class="p-3 font-black border-r text-gold">PIX<br>R$ 74,90</td>
                                             <td class="p-3"><span class="px-2 py-0.5 rounded-full text-[9px] font-black bg-amber-100 text-amber-800">NOVO</span></td>
                                         </tr>
@@ -241,29 +258,29 @@
                             </div>
                         </div>
 
-                        <!-- PDV - VENDA INTERNA (BALCÃO) -->
+                        <!-- PDV - VENDA INTERNA -->
                         <div id="box-pdv-int" class="hidden space-y-4">
                             <div class="grid grid-cols-12 gap-3 bg-slate-50 p-4 rounded-xl border border-slate-200">
-                                <div class="col-span-8"><label class="block text-[10px] font-black uppercase text-mutedblack mb-1">Buscar Produto (Cód, Descrição)</label><input type="text" class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs font-bold focus:border-gold"></div>
-                                <div class="col-span-4"><label class="block text-[10px] font-black uppercase text-mutedblack mb-1">Quant.</label><input type="number" value="1" class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs font-bold text-center focus:border-gold"></div>
+                                <div class="col-span-8"><label class="block text-[10px] font-black uppercase text-mutedblack mb-1">BUSCAR PRODUTO: cód, descrição</label><input type="text" class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs font-bold focus:border-gold"></div>
+                                <div class="col-span-4"><label class="block text-[10px] font-black uppercase text-mutedblack mb-1">QUANT.</label><input type="number" value="1" class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs font-bold text-center focus:border-gold"></div>
                             </div>
 
                             <div class="p-4 bg-emerald-50 rounded-xl border border-emerald-200 flex justify-between items-center shadow-inner">
-                                <span class="text-xs font-black uppercase text-emerald-800">Valor (Somado Automático):</span>
+                                <span class="text-xs font-black uppercase text-emerald-800">VALOR (Somado automaticamente):</span>
                                 <span class="text-2xl font-black text-emerald-900">R$ 45,00</span>
                             </div>
 
                             <div class="grid grid-cols-2 gap-3">
-                                <div><label class="block text-[10px] font-black uppercase text-mutedblack mb-1">Nome/Cliente</label><input type="text" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold"></div>
+                                <div><label class="block text-[10px] font-black uppercase text-mutedblack mb-1">NOME/CLIENTE</label><input type="text" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold"></div>
                                 <div>
-                                    <label class="block text-[10px] font-black uppercase text-mutedblack mb-1">Forma de Pagamento</label>
+                                    <label class="block text-[10px] font-black uppercase text-mutedblack mb-1">FORMA DE PAGAMENTO</label>
                                     <select class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold" onchange="document.getElementById('div-troco').classList.toggle('hidden', this.value !== 'dinheiro')">
                                         <option value="pix">PIX</option><option value="cartao">CARTÃO</option><option value="dinheiro">DINHEIRO</option>
                                     </select>
                                 </div>
                             </div>
-                            <div id="div-troco" class="hidden"><label class="block text-[10px] font-black uppercase text-mutedblack mb-1">Troco para quanto?</label><input type="text" placeholder="Ex: R$ 100,00" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold"></div>
-                            <button onclick="AdminCore.fillCupom('BALCÃO-99', 'Cliente Balcão', '-', 'Venda Interna Caixa', 'PIX', 'R$ 45,00')" class="w-full bg-blacktext text-white text-xs font-black py-3.5 rounded-xl uppercase tracking-wider btn-effect">Lançar Venda no Cupom</button>
+                            <div id="div-troco" class="hidden"><label class="block text-[10px] font-black uppercase text-mutedblack mb-1">TROCO PARA</label><input type="text" placeholder="Ex: R$ 100,00" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold"></div>
+                            <button onclick="AdminCore.fillCupom('BALCÃO-99', 'Cliente Balcão', '-', 'Venda Interna Caixa', 'PIX', 'R$ 45,00')" class="w-full bg-blacktext text-white text-xs font-black py-3.5 rounded-xl uppercase tracking-wider btn-effect">Lançar no Cupom</button>
                         </div>
                     </div>
 
@@ -276,12 +293,12 @@
                             </div>
                             
                             <div id="cupom-box" class="bg-[#ffffe0] border border-slate-200 rounded-xl p-4 font-mono text-[11px] text-blacktext space-y-2 leading-relaxed min-h-[250px] shadow-inner">
-                                <p class="text-center text-mutedblack font-bold italic mt-16">O cliente da vez ou dados do PDV aparecerão aqui automaticamente por ordem de chegada.</p>
+                                <p class="text-center text-mutedblack font-bold italic mt-16">O cliente da vez ou dados do PDV aparecerão aqui automaticamente.</p>
                             </div>
                         </div>
 
                         <div class="space-y-3 pt-4 border-t border-slate-100 mt-4 no-print">
-                            <div><label class="block text-[10px] font-black uppercase text-mutedblack mb-1">Informe o E-mail</label><input type="email" id="email-envio" placeholder="cliente@email.com" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-xs font-bold focus:border-gold"></div>
+                            <div><label class="block text-[10px] font-black uppercase text-mutedblack mb-1">ENVIAR POR EMAIL</label><input type="email" id="email-envio" placeholder="informe o email" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-xs font-bold focus:border-gold"></div>
                             <div class="grid grid-cols-2 gap-2">
                                 <button onclick="window.print()" class="bg-blacktext text-white text-xs font-black py-3 rounded-xl btn-effect flex items-center justify-center gap-1"><i class="ph-bold ph-printer text-gold"></i> BT IMPRIMIR AGORA</button>
                                 <button onclick="uiShowToast('Enviado', 'Cupom enviado por e-mail com sucesso!')" class="bg-gold text-white text-xs font-black py-3 rounded-xl btn-effect">BT ENVIAR</button>
@@ -293,7 +310,7 @@
 
 
             <!-- ========================================== -->
-            <!-- 3. PRODUTOS E ESTOQUE                      -->
+            <!-- 3. PRODUTOS                                -->
             <!-- ========================================== -->
             <section id="sec-produtos" class="page-section space-y-6 hidden">
                 <div class="flex justify-between items-center flex-wrap gap-4 no-print">
@@ -303,7 +320,7 @@
                 
                 <div class="bg-cardbg border border-slate-200 rounded-2xl p-5 shadow-xs no-print flex gap-3 flex-wrap">
                     <input type="text" placeholder="BUSCAR PRODUTO (categoria, valor, nome)" class="flex-1 bg-slate-50 border border-slate-200 text-xs font-bold rounded-xl px-4 py-2.5 focus:border-gold">
-                    <button class="bg-slate-200 px-4 rounded-xl text-xs font-bold"><i class="ph-bold ph-magnifying-glass"></i> Buscar</button>
+                    <button class="bg-slate-200 px-4 rounded-xl text-xs font-bold"><i class="ph-bold ph-magnifying-glass"></i></button>
                     <button onclick="window.print()" class="bg-blacktext text-white text-xs font-bold px-5 rounded-xl btn-effect"><i class="ph-bold ph-printer text-gold"></i> BT IMPRIMIR BUSCA</button>
                 </div>
 
@@ -314,7 +331,7 @@
                                 <th class="p-4 border-r">foto</th>
                                 <th class="p-4 border-r">nome do produto</th>
                                 <th class="p-4 border-r">preço final (venda)</th>
-                                <th class="p-4 border-r">lucro (preço final menos preço inicial)</th>
+                                <th class="p-4 border-r">lucro (preço final menos o preço inicial)</th>
                                 <th class="p-4 border-r">em estoque</th>
                                 <th class="p-4 text-center no-print">ações</th>
                             </tr>
@@ -324,7 +341,7 @@
                                 <td class="p-4 border-r"><div class="w-10 h-10 bg-slate-200 rounded-lg flex items-center justify-center text-lg">🍔</div></td>
                                 <td class="p-4 font-black border-r">X-Burger Special</td>
                                 <td class="p-4 font-black border-r">R$ 35,00</td>
-                                <td class="p-4 font-black text-emerald-700 border-r">R$ 15,00 <span class="text-[9px] text-mutedblack">(Custo R$ 20)</span></td>
+                                <td class="p-4 font-black text-emerald-700 border-r">R$ 15,00</td>
                                 <td class="p-4 font-black border-r">42 un</td>
                                 <td class="p-4 text-center no-print space-x-1">
                                     <button class="px-3 py-1.5 bg-amber-50 text-amber-700 rounded-lg text-xs font-bold">BT ALTERAR</button>
@@ -365,9 +382,9 @@
                 <div class="bg-cardbg border border-slate-200 rounded-3xl p-6 shadow-xs border-l-4 border-l-gold space-y-3">
                     <span class="text-[10px] font-black uppercase tracking-wider text-mutedblack">DESTAQUE: MÊS ATUAL</span>
                     <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                        <div class="bg-slate-50 p-3 rounded-xl border"><span class="text-[9px] font-bold text-mutedblack block">Status Atual</span><strong class="text-sm uppercase text-emerald-700">Ativo</strong></div>
-                        <div class="bg-slate-50 p-3 rounded-xl border"><span class="text-[9px] font-bold text-mutedblack block">Mês Referente</span><strong class="text-sm text-blacktext">Outubro/2026</strong></div>
-                        <div class="bg-slate-50 p-3 rounded-xl border"><span class="text-[9px] font-bold text-mutedblack block">Valor da Mensalidade</span><strong class="text-sm text-gold">R$ 59,90</strong></div>
+                        <div class="bg-slate-50 p-3 rounded-xl border"><span class="text-[9px] font-bold text-mutedblack block">status atual</span><strong class="text-sm uppercase text-emerald-700">a vencer / vencido / bloqueado</strong></div>
+                        <div class="bg-slate-50 p-3 rounded-xl border"><span class="text-[9px] font-bold text-mutedblack block">mês referente</span><strong class="text-sm text-blacktext">Outubro/2026</strong></div>
+                        <div class="bg-slate-50 p-3 rounded-xl border"><span class="text-[9px] font-bold text-mutedblack block">Valor da mensalidade</span><strong class="text-sm text-gold">R$ 59,90</strong></div>
                     </div>
                     <div class="flex justify-end pt-3 no-print">
                         <button onclick="openModal('modalPixMaster')" class="bg-gold hover:bg-goldhover text-white text-xs font-black px-6 py-3.5 rounded-xl btn-effect uppercase tracking-widest flex items-center gap-2"><i class="ph-bold ph-qr-code text-lg"></i> BT PAGAR COM PIX AGORA</button>
@@ -375,10 +392,10 @@
                 </div>
 
                 <div class="bg-cardbg border border-slate-200 rounded-2xl overflow-hidden shadow-xs">
-                    <div class="p-4 bg-slate-50 border-b border-slate-200 font-bold text-xs uppercase text-mutedblack">LISTA DE ATIVOS (Pagamentos apurados manualmente pelo Dono SaaS)</div>
+                    <div class="p-4 bg-slate-50 border-b border-slate-200 font-bold text-xs uppercase text-mutedblack">LISTA DE ATIVOS: este registro surge na lista após o dono saas apurar manualmente os pagamentos efetuados</div>
                     <table class="w-full text-left border-collapse text-sm">
                         <thead class="bg-white text-[10px] uppercase font-bold text-mutedblack border-b border-slate-200">
-                            <tr><th class="p-4 border-r">id empresa</th><th class="p-4 border-r">mês referente</th><th class="p-4 border-r">valor pago</th><th class="p-4 text-center no-print">comprovante</th></tr>
+                            <tr><th class="p-4 border-r">id empresa</th><th class="p-4 border-r">mês referente</th><th class="p-4 border-r">valor pago</th><th class="p-4 text-center no-print">BT BAIXAR COMPROVANTE</th></tr>
                         </thead>
                         <tbody class="divide-y divide-slate-100 font-medium">
                             <tr class="hover:bg-slate-50">
@@ -410,7 +427,7 @@
                 </div>
 
                 <div class="bg-cardbg border border-slate-200 rounded-2xl p-4 shadow-xs no-print flex gap-3 flex-wrap items-center">
-                    <span class="text-[10px] font-black uppercase text-mutedblack">FILTRO DE BUSCA:</span>
+                    <span class="text-[10px] font-black uppercase text-mutedblack">FILTRO DE BUSCA (por data/hora):</span>
                     <input type="datetime-local" class="bg-slate-50 border border-slate-200 text-xs font-bold rounded-xl px-3 py-2">
                     <button class="bg-blacktext text-white px-4 rounded-xl text-xs font-black uppercase">BT BUSCAR</button>
                     <button onclick="window.print()" class="bg-slate-100 border border-slate-200 text-blacktext px-4 rounded-xl text-xs font-black uppercase ml-auto"><i class="ph-bold ph-printer text-gold"></i> BT IMPRIMIR</button>
@@ -422,7 +439,7 @@
                             <tr>
                                 <th class="p-4 border-r">nome cliente</th>
                                 <th class="p-4 border-r">data/hora do feed</th>
-                                <th class="p-4 border-r">feed</th>
+                                <th class="p-4 border-r">feed (ótimo, bom, regular, ruim, péssimo)</th>
                                 <th class="p-4 border-r">relato do cliente</th>
                                 <th class="p-4 text-center no-print">bt ação</th>
                             </tr>
@@ -435,7 +452,7 @@
                                 <td class="p-4 text-xs font-bold text-mutedblack border-r max-w-[180px] truncate">Demorou muito e veio frio.</td>
                                 <td class="p-4 text-center space-x-1 no-print">
                                     <button class="px-3 py-1.5 bg-slate-100 text-blacktext rounded-lg text-[10px] font-black uppercase">bt visualizar feed completo</button>
-                                    <button onclick="uiShowToast('Equipe Informada', 'Feed verificado. E-mail de confirmação enviado ao cliente.', 'success')" class="px-3 py-1.5 bg-emerald-100 text-emerald-800 rounded-lg text-[10px] font-black uppercase">bt ok</button>
+                                    <button onclick="uiShowToast('Equipe Informada', 'Feed verificado. E-mail enviado ao cliente confirmando análise.', 'success')" class="px-3 py-1.5 bg-emerald-100 text-emerald-800 rounded-lg text-[10px] font-black uppercase">bt ok</button>
                                 </td>
                             </tr>
                         </tbody>
@@ -506,7 +523,7 @@
         <div class="bg-cardbg rounded-3xl p-6 max-w-lg w-full shadow-2xl relative">
             <h3 class="text-base font-black text-blacktext mb-4 border-b border-slate-100 pb-2">Cadastrar Novo Produto</h3>
             <div class="space-y-3">
-                <p class="text-[10px] font-black text-mutedblack">id_produto: <span class="text-blacktext font-normal">Automático</span></p>
+                <p class="text-[10px] font-black text-mutedblack">id_produto (automático)</p>
                 <div><label class="block text-[10px] font-black uppercase text-mutedblack mb-1">foto</label><input type="file" class="w-full text-xs"></div>
                 <div><label class="block text-[10px] font-black uppercase text-mutedblack mb-1">nome do produto</label><input type="text" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold"></div>
                 <div><label class="block text-[10px] font-black uppercase text-mutedblack mb-1">descrição</label><textarea class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold"></textarea></div>
@@ -534,7 +551,7 @@
                 <i class="ph-fill ph-bell-ringing text-gold text-2xl animate-pulse"></i>
                 <div>
                     <h4 class="text-xs font-black text-white uppercase tracking-wider">Alertas do Sistema</h4>
-                    <p class="text-[10px] font-bold text-slate-300">Novo pedido | Alerta crítico | Status da licença</p>
+                    <p class="text-[10px] font-bold text-slate-300">novo pedido | alerta crítico do feed | status da licença</p>
                 </div>
             </div>
             <button onclick="document.getElementById('floating-alert').style.display='none'" class="text-slate-400 hover:text-white"><i class="ph-bold ph-x"></i></button>
@@ -544,28 +561,73 @@
 
 
     <!-- ========================================== -->
-    <!-- CONTROLADOR JAVASCRIPT                     -->
+    <!-- CONTROLADOR JAVASCRIPT CONECTADO À API     -->
     <!-- ========================================== -->
     <script>
+        const API_URL = window.location.origin.includes('vercel.app') ? '' : 'https://shopinvigia.vercel.app';
+
         const AdminCore = {
-            login() {
+            async login() {
                 const cnpj = document.getElementById('login-cnpj').value.trim();
-                if(cnpj === '000') {
-                    // Simulação de CNPJ Bloqueado abrindo modal Pix Master
-                    document.getElementById('login-screen').style.display = 'none';
-                    openModal('modalPixMaster');
-                    return;
+                try {
+                    const res = await fetch(`${API_URL}/api/admin/login`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ cnpj })
+                    });
+                    const data = await res.json();
+                    
+                    if (!res.ok) {
+                        alert(data.detail || "CNPJ não encontrado ou erro na autenticação.");
+                        return;
+                    }
+
+                    if (data.sucesso === false && (data.status === 'bloqueado' || data.status === 'vencido')) {
+                        document.getElementById('login-screen').style.display = 'none';
+                        openModal('modalPixMaster');
+                        return;
+                    }
+
+                    if (data.sucesso === true) {
+                        uiShowToast('Acesso Liberado', 'Autenticado com sucesso na API.', 'success');
+                        document.getElementById('login-screen').style.display = 'none';
+                        document.getElementById('app-layout').classList.remove('hidden');
+                        setTimeout(() => { document.getElementById('floating-alert').style.display = 'block'; }, 2000);
+                        this.initCharts();
+                    }
+                } catch (err) {
+                    console.error(err);
+                    alert("Falha de conexão com a API do servidor.");
                 }
-                uiShowToast('Acesso Liberado', 'Autenticado com sucesso na API.', 'success');
-                document.getElementById('login-screen').style.display = 'none';
-                document.getElementById('app-layout').classList.remove('hidden');
-                setTimeout(() => { document.getElementById('floating-alert').style.display = 'block'; }, 2000);
-                this.initCharts();
             },
-            register() {
-                uiShowToast('Conta Criada!', 'Novo usuário cadastrado. Ganhou 1 semana de uso gratuito.', 'success');
-                closeModal('modalCadastroConta');
+
+            async register() {
+                const nome_loja = document.getElementById('reg-nome').value.trim();
+                const cnpj = document.getElementById('reg-cnpj').value.trim();
+                const whatsapp = document.getElementById('reg-wpp').value.trim();
+                const email = document.getElementById('reg-email').value.trim();
+
+                try {
+                    const res = await fetch(`${API_URL}/api/admin/register`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ nome_loja, cnpj, whatsapp, email })
+                    });
+                    const data = await res.json();
+
+                    if (!res.ok) {
+                        alert(data.detail || "Erro ao cadastrar empresa.");
+                        return;
+                    }
+
+                    uiShowToast('Conta Criada!', 'Novo usuário cadastrado no banco. Ganhou 1 semana gratuita.', 'success');
+                    closeModal('modalCadastroConta');
+                } catch (err) {
+                    console.error(err);
+                    alert("Erro ao conectar com o banco de dados.");
+                }
             },
+
             switchPDV(tipo) {
                 if(tipo === 'externo') {
                     document.getElementById('box-pdv-ext').classList.remove('hidden');
@@ -579,17 +641,19 @@
                     document.getElementById('tab-ext').className = 'flex-1 bg-slate-100 text-mutedblack text-xs font-black py-3 rounded-xl uppercase tracking-wider transition hover:bg-slate-200';
                 }
             },
+
             fillCupom(id, cli, tel, end, pgto, val) {
                 document.getElementById('cupom-box').innerHTML = `
                     <p class="text-center font-black uppercase tracking-wider">==== CUPOM SHOPINVIGIA ====</p>
-                    <p class="mt-1"><strong>Dados Empresa:</strong> Loja Matriz</p>
-                    <p><strong>Dados Cliente:</strong> ${cli} (${tel})</p>
-                    <p><strong>Endereço/Ref:</strong> ${end}</p>
-                    <p><strong>Forma Pgto:</strong> ${pgto}</p>
+                    <p class="mt-1"><strong>Dados da EMPRESA/CLIENTE:</strong> Loja Matriz</p>
+                    <p><strong>Dados CLIENTE FINAL:</strong> ${cli} (${tel})</p>
+                    <p><strong>Endereço e Referência:</strong> ${end}</p>
+                    <p><strong>Forma de Pagamento:</strong> ${pgto}</p>
                     <p class="border-t border-slate-300 border-dashed my-2 pt-1"></p>
                     <p class="flex justify-between font-black text-sm"><span>VALOR A PAGAR:</span> <span class="text-gold">${val}</span></p>
                 `;
             },
+
             initCharts() {
                 new Chart(document.getElementById('chart-fluxo').getContext('2d'), {
                     type: 'line',
