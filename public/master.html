@@ -3,740 +3,556 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ShopinVigia - Master Admin Premium</title>
-    
-    <!-- Tailwind CSS -->
+    <title>SHOPINVIGIA — Módulo Master (SaaS)</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Chart.js para os gráficos -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- Google Fonts: Poppins -->
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800&display=swap" rel="stylesheet">
-    <!-- FontAwesome para ícones -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Supabase JS Nativo -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
     <script>
         tailwind.config = {
             theme: {
                 extend: {
                     colors: {
-                        gold: { 300: '#fde047', 400: '#facc15', 500: '#eab308', 600: '#d4af37', 700: '#a16207' },
-                        light: { 50: '#fbfbfb', 100: '#f5f5f5' }
-                    },
-                    fontFamily: { sans: ['Poppins', 'sans-serif'] }
+                        lightbg: '#f8fafc',
+                        cardbg: '#ffffff',
+                        gold: '#d4af37',
+                        goldhover: '#c5a028',
+                        blacktext: '#09090b',
+                        mutedblack: '#27272a'
+                    }
                 }
             }
         }
     </script>
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        body { font-family: 'Poppins', sans-serif; font-weight: 300; background-color: #fbfbfb; color: #333; overflow-x: hidden; }
-        .font-strong { font-weight: 800; letter-spacing: -0.5px; }
-        .hidden-view { display: none !important; }
-        
-        /* Menu Lateral Off-Canvas para Responsividade Nativa */
-        #sidebar { transform: translateX(-100%); transition: transform 0.3s ease-in-out; }
-        #sidebar.open { transform: translateX(0); }
-        #overlay { opacity: 0; pointer-events: none; transition: opacity 0.3s ease; }
-        #overlay.open { opacity: 1; pointer-events: auto; }
-        @media (min-width: 1024px) {
-            #sidebar { transform: translateX(0); position: relative; }
-            #btn-hamburger { display: none; }
-            #overlay { display: none; }
-        }
-
-        .no-scrollbar::-webkit-scrollbar { display: none; }
-        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); z-index: 5000; display: flex; justify-content: center; align-items: center; opacity: 0; visibility: hidden; transition: all 0.3s ease-in-out; }
+        .modal-overlay.active { opacity: 1; visibility: visible; }
+        html { scroll-behavior: smooth; }
+        body { background-color: #f8fafc; color: #09090b; font-weight: 400; }
+        .btn-effect { transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); }
+        .btn-effect:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(212, 175, 55, 0.25); }
+        .btn-effect:active:not(:disabled) { transform: scale(0.95); }
 
         @media print {
             body * { visibility: hidden; }
             #printable-area, #printable-area * { visibility: visible; }
-            #printable-area { position: absolute; left: 0; top: 0; width: 100%; background: white; }
+            #printable-area { position: absolute; left: 0; top: 0; width: 100%; margin: 0; padding: 0; }
+            .no-print { display: none !important; }
+            table { width: 100% !important; border-collapse: collapse !important; }
+            th, td { border: 1px solid #e2e8f0 !important; padding: 8px !important; font-size: 10px !important; }
         }
     </style>
 </head>
-<body class="bg-light-50 text-gray-800 antialiased h-screen flex overflow-hidden">
+<body class="bg-lightbg text-blacktext font-sans antialiased min-h-screen flex hidden" id="app-body">
 
-    <!-- ================= TELA DE LOGIN MASTER (NATIVA E LIMPA) ================= -->
-    <div id="login-screen" class="fixed inset-0 z-[100] flex items-center justify-center bg-gray-900 bg-cover bg-center" style="background-image: linear-gradient(to bottom, rgba(17,24,39,0.95), rgba(17,24,39,0.98)), url('https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?auto=format&fit=crop&w=1920&q=80');">
-        <div class="bg-white p-10 rounded-3xl shadow-2xl w-full max-w-md border border-gray-100 text-center relative z-10">
-            <div class="mb-6">
-                <i class="fa-solid fa-crown text-5xl text-gold-500 mb-3 drop-shadow-md"></i>
-                <h2 class="text-3xl font-strong text-gray-900">ShopinVigia</h2>
-                <p class="text-sm font-light text-gray-500 mt-1">Painel Master SaaS Completo</p>
-            </div>
-            <form id="form-login" onsubmit="event.preventDefault(); fazerLogin();">
-                <div class="mb-5 text-left">
-                    <label class="block text-xs font-strong text-gray-400 uppercase tracking-widest mb-2">Senha Master / Super Admin</label>
-                    <input type="password" id="master-password" placeholder="Digite sua Senha Master" required
-                        class="w-full px-4 py-4 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-gold-400 font-light text-sm text-gray-900">
-                </div>
-                <button type="submit" id="btn-login" class="w-full bg-gray-900 text-gold-400 font-strong py-4 rounded-xl shadow-lg hover:bg-gray-800 transition text-lg tracking-wide">
-                    ENTRAR NO SISTEMA
-                </button>
-                <p id="login-error" class="text-red-500 text-xs font-strong mt-3 hidden-view uppercase tracking-wider">Senha incorreta ou erro na API.</p>
-            </form>
+    <div id="toast-container" class="fixed bottom-6 right-6 flex flex-col gap-4 max-w-sm w-full z-[6000] px-4 no-print pointer-events-none"></div>
+
+    <aside class="w-64 bg-blacktext border-r border-slate-800 flex flex-col fixed inset-y-0 z-40 shadow-xl no-print">
+        <div class="h-24 flex flex-col items-center justify-center border-b border-slate-800 bg-blacktext">
+            <span class="text-2xl font-black tracking-widest text-white">SHOP<span class="text-gold font-bold">INVIGIA</span></span>
+            <span class="text-[9px] bg-red-600/20 text-red-500 font-bold tracking-wider uppercase px-2.5 py-0.5 rounded-full mt-1 border border-red-500/20">Área Restrita Master</span>
         </div>
-    </div>
+        <ul class="flex-1 p-4 space-y-2 overflow-y-auto" id="nav-menu">
+            <li><a class="nav-link flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold text-blacktext bg-gold shadow-sm cursor-pointer transition btn-effect" onclick="uiNavigate('clientes', this)"><i class="ph ph-buildings text-xl"></i> Clientes / Empresas</a></li>
+            <li><a class="nav-link flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-slate-300 hover:bg-slate-800 hover:text-white cursor-pointer transition btn-effect" onclick="uiNavigate('financeiro', this)"><i class="ph ph-currency-circle-dollar text-xl"></i> Financeiro SaaS</a></li>
+        </ul>
+        <div class="p-4 border-t border-slate-800">
+            <button onclick="location.reload()" class="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium text-red-400 hover:bg-red-500/10 transition btn-effect"><i class="ph ph-lock-key text-xl"></i> Bloquear Painel</button>
+        </div>
+    </aside>
 
-    <!-- ================= PAINEL MASTER (DASHBOARD & GESTÃO) ================= -->
-    <div id="dashboard-screen" class="hidden-view flex h-screen overflow-hidden w-full bg-light-50">
-        
-        <!-- Overlay para mobile -->
-        <div id="overlay" onclick="toggleSidebar()" class="fixed inset-0 bg-black/40 z-40 backdrop-blur-sm"></div>
+    <main class="flex-1 ml-64 flex flex-col h-screen overflow-y-auto p-10 space-y-8" id="printable-area">
 
-        <!-- Sidebar -->
-        <aside id="sidebar" class="fixed lg:static top-0 left-0 h-full w-72 bg-gray-900 text-white flex flex-col shadow-2xl lg:shadow-none border-r border-gray-800 z-50">
-            <div class="p-8 border-b border-gray-800 flex justify-between items-center bg-gray-950">
-                <div>
-                    <h1 class="text-xl font-strong tracking-wider text-gold-400">Shopin<span class="text-white">Vigia</span></h1>
-                    <p class="text-[10px] text-gray-400 uppercase tracking-widest mt-1">Super Admin Master</p>
-                </div>
-                <button onclick="toggleSidebar()" class="lg:hidden text-gray-400 hover:text-white text-xl"><i class="fa-solid fa-xmark"></i></button>
+        <section id="sec-clientes" class="page-section space-y-6">
+            <div class="flex justify-between items-center flex-wrap gap-4 no-print">
+                <h1 class="text-2xl font-black tracking-wide flex items-center gap-2"><i class="ph-duotone ph-buildings text-gold text-3xl"></i> Gestão de Clientes (SaaS)</h1>
             </div>
-            <nav class="flex-1 px-4 py-6 space-y-2 overflow-y-auto no-scrollbar">
-                <a href="#" onclick="navegar('view-dashboard', this)" class="nav-link flex items-center gap-4 px-5 py-4 bg-gold-500/10 text-gold-400 rounded-xl font-strong transition shadow-sm">
-                    <i class="fa-solid fa-chart-pie w-5"></i> Dashboard
-                </a>
-                <a href="#" onclick="navegar('view-clientes', this)" class="nav-link flex items-center gap-4 px-5 py-4 rounded-xl text-gray-400 font-light hover:bg-gray-800 hover:text-white transition">
-                    <i class="fa-solid fa-building w-5"></i> Clientes / Empresas
-                </a>
-                <a href="#" onclick="navegar('view-financeiro', this)" class="nav-link flex items-center gap-4 px-5 py-4 rounded-xl text-gray-400 font-light hover:bg-gray-800 hover:text-white transition">
-                    <i class="fa-solid fa-wallet w-5"></i> Financeiro & PIX
-                </a>
-            </nav>
-            <div class="p-6 border-t border-gray-800 bg-gray-950">
-                <button onclick="sair()" class="w-full flex items-center justify-center gap-2 px-4 py-3 bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 rounded-xl font-strong text-xs uppercase tracking-wider transition">
-                    <i class="fa-solid fa-power-off"></i> Encerrar Sessão
-                </button>
+
+            <div class="bg-cardbg border border-slate-200 p-6 rounded-2xl shadow-xs flex flex-col gap-2">
+                <div class="flex justify-between items-center">
+                    <h3 class="text-sm font-black tracking-wide flex items-center gap-2"><i class="ph ph-database text-gold text-lg"></i> Gráfico de Total Usado no DB</h3>
+                    <span class="text-xs font-bold text-mutedblack" id="db-usage-text">Carregando métricas da API...</span>
+                </div>
+                <div class="w-full bg-slate-100 rounded-full h-4 mt-2 overflow-hidden border border-slate-200 relative">
+                    <div id="db-usage-bar" class="bg-gold h-4 rounded-full transition-all duration-1000" style="width: 0%"></div>
+                </div>
             </div>
-        </aside>
 
-        <!-- Conteúdo Principal -->
-        <main class="flex-1 flex flex-col h-screen overflow-y-auto relative no-scrollbar">
-            <header class="bg-white/80 backdrop-blur-md border-b border-gray-100 px-6 py-5 flex justify-between items-center shadow-sm z-30">
-                <div class="flex items-center gap-4">
-                    <button id="btn-hamburger" onclick="toggleSidebar()" class="text-gray-900 text-2xl hover:text-gold-500 transition"><i class="fa-solid fa-bars-staggered"></i></button>
-                    <h2 id="page-title" class="text-xl md:text-2xl font-strong text-gray-900 tracking-tight">Visão Geral</h2>
+            <div class="bg-cardbg border border-slate-200 p-5 rounded-2xl shadow-xs no-print flex justify-between items-center flex-wrap gap-3">
+                <div class="flex gap-2 flex-wrap flex-1">
+                    <input type="text" id="busca-cliente" placeholder="Buscar por nome, id, data..." class="bg-slate-50 border border-slate-200 text-xs font-bold rounded-xl px-4 py-2.5 focus:outline-none focus:border-gold w-64">
+                    <select id="filtro-status" class="bg-slate-50 border border-slate-200 text-xs font-bold rounded-xl px-3 py-2.5 outline-none focus:border-gold">
+                        <option value="">Status (Todos)</option>
+                        <option value="ativo">Ativos</option>
+                        <option value="vencido">Vencidos</option>
+                        <option value="bloqueado">Bloqueados</option>
+                    </select>
+                    <button onclick="MasterAPI.loadClientes()" class="bg-slate-100 hover:bg-slate-200 text-blacktext px-4 rounded-xl text-xs font-bold transition btn-effect"><i class="ph-bold ph-magnifying-glass"></i> Buscar</button>
                 </div>
-                <div class="flex items-center gap-4">
-                    <div class="h-10 w-10 rounded-xl bg-gold-500 text-gray-900 font-strong flex items-center justify-center shadow-md">M</div>
-                </div>
-            </header>
-
-            <div class="p-4 md:p-8 space-y-8" id="printable-area">
-                
-                <!-- 1. VIEW: DASHBOARD -->
-                <div id="view-dashboard" class="view-section space-y-8">
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <div class="bg-white p-6 rounded-3xl shadow-sm border border-gray-50 flex items-center justify-between">
-                            <div><p class="text-[10px] uppercase tracking-widest font-strong text-gray-400 mb-1">Total de Clientes</p><h3 id="dash-clientes" class="text-3xl font-strong text-gray-900">0</h3></div>
-                            <div class="bg-gold-50 text-gold-600 p-4 rounded-2xl"><i class="fa-solid fa-users text-2xl"></i></div>
-                        </div>
-                        <div class="bg-white p-6 rounded-3xl shadow-sm border border-gray-50 flex items-center justify-between">
-                            <div><p class="text-[10px] uppercase tracking-widest font-strong text-gray-400 mb-1">MRR (Receita Recorrente)</p><h3 id="dash-mrr" class="text-3xl font-strong text-gold-500">R$ 0,00</h3></div>
-                            <div class="bg-gold-50 text-gold-600 p-4 rounded-2xl"><i class="fa-solid fa-money-bill-trend-up text-2xl"></i></div>
-                        </div>
-                        <div class="bg-white p-6 rounded-3xl shadow-sm border border-gray-50 flex items-center justify-between">
-                            <div><p class="text-[10px] uppercase tracking-widest font-strong text-gray-400 mb-1">Uso de Banco de Dados</p><h3 id="dash-db" class="text-3xl font-strong text-gray-900">0 MB</h3></div>
-                            <div class="bg-gold-50 text-gold-600 p-4 rounded-2xl"><i class="fa-solid fa-database text-2xl"></i></div>
-                        </div>
-                    </div>
-                    <div class="bg-white p-8 rounded-3xl shadow-sm border border-gray-50">
-                        <h3 class="font-strong text-gray-900 uppercase tracking-widest text-sm border-l-4 border-gold-500 pl-3 mb-6">Evolução de Assinaturas (MRR)</h3>
-                        <canvas id="mrrChart" height="90"></canvas>
-                    </div>
-                </div>
-
-                <!-- 2. VIEW: CLIENTES / EMPRESAS -->
-                <div id="view-clientes" class="view-section hidden-view space-y-6">
-                    <div class="flex justify-between items-center gap-4 flex-wrap bg-white p-6 rounded-3xl shadow-sm border border-gray-50">
-                        <div class="flex gap-3 flex-1 flex-wrap">
-                            <input type="text" id="filtro-busca-clientes" onkeyup="filtrarClientesTabela()" placeholder="Buscar por nome, ID ou status..." class="flex-1 min-w-[240px] px-4 py-3 bg-light-50 border-0 rounded-xl text-sm shadow-inner focus:ring-2 focus:ring-gold-400 outline-none font-light">
-                            <select id="filtro-status-clientes" onchange="filtrarClientesTabela()" class="px-4 py-3 bg-light-50 border-0 rounded-xl text-sm shadow-inner focus:ring-2 focus:ring-gold-400 outline-none font-strong text-gray-700">
-                                <option value="">Todos os Status</option>
-                                <option value="ativo">Ativo</option>
-                                <option value="vencido">Vencido</option>
-                                <option value="bloqueado">Bloqueado</option>
-                            </select>
-                            <input type="date" id="filtro-data-clientes" onchange="filtrarClientesTabela()" class="px-4 py-3 bg-light-50 border-0 rounded-xl text-sm shadow-inner focus:ring-2 focus:ring-gold-400 outline-none text-gray-700">
-                        </div>
-                        <button class="bg-gray-900 text-white hover:bg-gold-500 hover:text-gray-900 px-6 py-3 rounded-xl shadow font-strong transition text-sm uppercase tracking-widest" onclick="window.print()"><i class="fa-solid fa-print mr-2"></i> Imprimir Busca</button>
-                    </div>
-                    <div class="bg-white rounded-3xl shadow-sm border border-gray-50 overflow-hidden">
-                        <div class="overflow-x-auto no-scrollbar">
-                            <table class="w-full text-left border-collapse">
-                                <thead>
-                                    <tr class="bg-white uppercase text-[10px] tracking-widest text-gray-400 font-strong border-b border-gray-50">
-                                        <th class="py-4 px-6">ID / Empresa</th>
-                                        <th class="py-4 px-6">Plano</th>
-                                        <th class="py-4 px-6">Vencimento</th>
-                                        <th class="py-4 px-6">Status</th>
-                                        <th class="py-4 px-6 text-right">Ações</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="tabela-clientes" class="text-sm font-light">
-                                    <tr><td colspan="5" class="text-center py-12"><div class="inline-block w-8 h-8 border-4 border-gold-500 border-t-transparent rounded-full animate-spin"></div></td></tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 3. VIEW: FINANCEIRO & PIX -->
-                <div id="view-financeiro" class="view-section hidden-view space-y-8">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                        <div class="bg-white p-8 rounded-3xl shadow-sm border border-gray-50">
-                            <h3 class="font-strong text-gray-900 uppercase tracking-widest text-sm border-l-4 border-gold-500 pl-3 mb-6">Faturamento (Gráfico X, Y)</h3>
-                            <canvas id="faturamentoChart" height="130"></canvas>
-                        </div>
-                        <div class="bg-white p-8 rounded-3xl shadow-sm border border-gray-50">
-                            <h3 class="font-strong text-gray-900 uppercase tracking-widest text-sm border-l-4 border-gold-500 pl-3 mb-6">Alertas (Vencer / Vencidos / Bloqueados)</h3>
-                            <canvas id="notificacoesChart" height="130"></canvas>
-                        </div>
-                    </div>
-
-                    <!-- Configuração Global PIX -->
-                    <div class="bg-white p-8 rounded-3xl shadow-sm border border-gray-50 max-w-2xl">
-                        <h3 class="font-strong text-gray-900 uppercase tracking-widest text-sm border-l-4 border-gold-500 pl-3 mb-6">Configuração Global de Pagamento PIX</h3>
-                        <div class="mb-5">
-                            <label class="block text-[10px] font-strong text-gray-400 uppercase tracking-widest mb-2">Upload / Link da Foto (QR Code PIX)</label>
-                            <input type="text" id="pix-qr" placeholder="https://link-da-imagem.com/qr.png" class="w-full px-4 py-3 bg-light-50 border-0 rounded-xl text-sm shadow-inner focus:ring-2 focus:ring-gold-400 outline-none font-light">
-                        </div>
-                        <div class="mb-6">
-                            <label class="block text-[10px] font-strong text-gray-400 uppercase tracking-widest mb-2">Chave PIX (Copia e Cola)</label>
-                            <input type="text" id="pix-chave" placeholder="Sua chave aleatória, CPF ou CNPJ" class="w-full px-4 py-3 bg-light-50 border-0 rounded-xl text-sm shadow-inner focus:ring-2 focus:ring-gold-400 outline-none font-light font-mono">
-                        </div>
-                        <button onclick="salvarConfigPix()" class="w-full bg-gray-900 text-gold-400 font-strong py-4 rounded-xl shadow-lg hover:bg-gray-800 transition tracking-widest uppercase text-sm">
-                            Salvar Configuração PIX
-                        </button>
-                    </div>
-
-                    <!-- Carimbo e PDF -->
-                    <div class="bg-white p-8 rounded-3xl shadow-sm border border-gray-50 space-y-6">
-                        <div class="flex justify-between items-center flex-wrap gap-4">
-                            <h3 class="font-strong text-gray-900 uppercase tracking-widest text-sm border-l-4 border-gold-500 pl-3">Carimbo de Pagamentos e Comprovantes</h3>
-                            <input type="text" id="busca-avancada-fin" onkeyup="filtrarFinanceiroClientes()" placeholder="Busca avançada..." class="px-4 py-3 bg-light-50 border-0 rounded-xl text-sm shadow-inner focus:ring-2 focus:ring-gold-400 outline-none font-light w-full md:w-72">
-                        </div>
-                        <div class="overflow-x-auto no-scrollbar">
-                            <table class="w-full text-left border-collapse">
-                                <thead>
-                                    <tr class="bg-white uppercase text-[10px] tracking-widest text-gray-400 font-strong border-b border-gray-50">
-                                        <th class="py-4 px-4">Cliente / Empresa</th>
-                                        <th class="py-4 px-4">Vencimento</th>
-                                        <th class="py-4 px-4">Status Atual</th>
-                                        <th class="py-4 px-4 text-right">Ações (PDF / Carimbo)</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="tabela-financeiro-empresas" class="text-sm font-light">
-                                    <tr><td colspan="4" class="text-center py-6 font-light">Aguardando dados reais do servidor...</td></tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-
+                <button onclick="window.print()" class="bg-blacktext hover:bg-slate-800 text-white text-xs font-bold px-5 py-2.5 rounded-xl transition flex items-center gap-2 btn-effect"><i class="ph ph-printer text-gold"></i> Imprimir Busca</button>
             </div>
-        </main>
-    </div>
 
-    <!-- ================= MODAL DE GERAÇÃO DE PDF DE COMPROVANTE ================= -->
-    <div id="modal-comprovante-pdf" class="hidden-view fixed inset-0 bg-gray-900/90 backdrop-blur-md flex items-center justify-center z-50 p-4">
-        <div class="bg-white rounded-3xl shadow-2xl max-w-2xl w-full p-8 max-h-[90vh] overflow-y-auto no-scrollbar">
-            <div class="flex justify-between items-center border-b border-gray-100 pb-4 mb-6">
-                <h3 class="font-strong text-xl text-gray-900 uppercase"><i class="fa-solid fa-file-pdf text-red-500 mr-2"></i> Gerar Comprovante / Recibo PDF</h3>
-                <button onclick="fecharModalPdf()" class="text-gray-400 hover:text-gray-900 text-xl font-bold"><i class="fa-solid fa-xmark"></i></button>
+            <div class="bg-cardbg border border-slate-200 rounded-2xl overflow-hidden shadow-xs">
+                <table class="w-full text-left border-collapse text-sm">
+                    <thead>
+                        <tr class="bg-slate-50 text-mutedblack uppercase text-[10px] tracking-widest border-b border-slate-200 font-bold">
+                            <th class="p-4">ID / Data</th>
+                            <th class="p-4">Nome da Empresa</th>
+                            <th class="p-4">Status</th>
+                            <th class="p-4 text-right no-print">Ações do Master</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tbody-clientes" class="divide-y divide-slate-100 font-medium">
+                    </tbody>
+                </table>
             </div>
-            <form id="form-pdf-comprovante" onsubmit="event.preventDefault(); emitirPdfComprovante();" class="space-y-4">
-                <input type="hidden" id="pdf-empresa-id">
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-[10px] font-strong text-gray-400 uppercase tracking-widest mb-1">Nome da Empresa SaaS</label>
-                        <input type="text" id="pdf-info-nome" value="ShopinVigia Tech" class="w-full px-4 py-3 bg-light-50 border-0 rounded-xl text-sm shadow-inner outline-none" required>
+        </section>
+
+        <section id="sec-financeiro" class="page-section space-y-6 hidden">
+            <h1 class="text-2xl font-black tracking-wide flex items-center gap-2 text-blacktext"><i class="ph-duotone ph-currency-circle-dollar text-gold text-3xl"></i> Financeiro SaaS</h1>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 no-print">
+                <div class="bg-cardbg border border-slate-200 p-6 rounded-2xl shadow-xs">
+                    <h3 class="text-sm font-black tracking-wide flex items-center gap-2 mb-4"><i class="ph ph-chart-line-up text-gold text-lg"></i> Faturamento</h3>
+                    <div class="flex gap-2 mb-4 border-b border-slate-100 pb-2">
+                        <button onclick="MasterAPI.loadFaturamento('dia')" class="text-xs font-bold text-blacktext bg-slate-100 hover:bg-slate-200 px-3 py-1 rounded-md transition">Dia</button>
+                        <button onclick="MasterAPI.loadFaturamento('semana')" class="text-xs font-bold text-mutedblack hover:bg-slate-50 px-3 py-1 rounded-md transition">Semana</button>
+                        <button onclick="MasterAPI.loadFaturamento('mes')" class="text-xs font-bold text-mutedblack hover:bg-slate-50 px-3 py-1 rounded-md transition">Mês</button>
                     </div>
-                    <div>
-                        <label class="block text-[10px] font-strong text-gray-400 uppercase tracking-widest mb-1">CNPJ / CPF do SaaS</label>
-                        <input type="text" id="pdf-info-cnpj" value="00.000.000/0001-00" class="w-full px-4 py-3 bg-light-50 border-0 rounded-xl text-sm shadow-inner outline-none" required>
-                    </div>
-                </div>
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-[10px] font-strong text-gray-400 uppercase tracking-widest mb-1">Telefone de Contato</label>
-                        <input type="text" id="pdf-info-tel" value="(11) 99999-9999" class="w-full px-4 py-3 bg-light-50 border-0 rounded-xl text-sm shadow-inner outline-none">
-                    </div>
-                    <div>
-                        <label class="block text-[10px] font-strong text-gray-400 uppercase tracking-widest mb-1">Endereço</label>
-                        <input type="text" id="pdf-info-end" value="Av. Central, 1000" class="w-full px-4 py-3 bg-light-50 border-0 rounded-xl text-sm shadow-inner outline-none">
+                    <div class="relative h-48 w-full">
+                        <canvas id="chart-faturamento"></canvas>
                     </div>
                 </div>
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+
+                <div class="bg-cardbg border border-slate-200 p-6 rounded-2xl shadow-xs">
+                    <h3 class="text-sm font-black tracking-wide flex items-center gap-2 mb-4"><i class="ph ph-bell-ringing text-gold text-lg"></i> Notificações Inadimplência</h3>
+                    <div class="grid grid-cols-3 gap-2 mb-4">
+                        <div class="p-2 bg-amber-50 rounded-lg text-center"><span class="block text-[10px] uppercase font-bold text-amber-800">A Vencer</span><strong id="ind-vencer" class="text-lg text-amber-900">-</strong></div>
+                        <div class="p-2 bg-orange-50 rounded-lg text-center"><span class="block text-[10px] uppercase font-bold text-orange-800">Vencidos</span><strong id="ind-vencidos" class="text-lg text-orange-900">-</strong></div>
+                        <div class="p-2 bg-red-50 rounded-lg text-center"><span class="block text-[10px] uppercase font-bold text-red-800">Bloqueados</span><strong id="ind-bloqueados" class="text-lg text-red-900">-</strong></div>
+                    </div>
+                    <div class="relative h-32 w-full">
+                        <canvas id="chart-notificacoes"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <form id="form-pix" onsubmit="event.preventDefault(); MasterAPI.savePixConfig();" class="bg-cardbg border border-slate-200 p-6 rounded-2xl shadow-xs no-print border-l-4 border-l-blacktext">
+                <h3 class="text-sm font-black tracking-wide flex items-center gap-2 mb-4 border-b border-slate-100 pb-2"><i class="ph ph-qr-code text-gold text-lg"></i> Configuração de Pagamento</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                        <label class="block text-[10px] font-strong text-gray-400 uppercase tracking-widest mb-1">ID do Cliente</label>
-                        <input type="text" id="pdf-cli-id" readonly class="w-full px-4 py-3 bg-gray-100 border-0 rounded-xl text-sm">
-                    </div>
-                    <div class="sm:col-span-2">
-                        <label class="block text-[10px] font-strong text-gray-400 uppercase tracking-widest mb-1">Nome do Cliente / Lojista</label>
-                        <input type="text" id="pdf-cli-nome" readonly class="w-full px-4 py-3 bg-gray-100 border-0 rounded-xl text-sm font-strong">
-                    </div>
-                </div>
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-[10px] font-strong text-gray-400 uppercase tracking-widest mb-1">CNPJ/CPF do Cliente</label>
-                        <input type="text" id="pdf-cli-doc" placeholder="000.000.000-00" class="w-full px-4 py-3 bg-light-50 border-0 rounded-xl text-sm shadow-inner outline-none">
+                        <label class="block text-xs font-bold text-mutedblack mb-1">Buscar Foto (Upload QR Code)</label>
+                        <input type="file" id="pix-foto" accept="image/*" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold focus:outline-none focus:border-gold">
                     </div>
                     <div>
-                        <label class="block text-[10px] font-strong text-gray-400 uppercase tracking-widest mb-1">Competência (Mês/Ano Ref)</label>
-                        <input type="text" id="pdf-competencia" placeholder="Outubro/2026" class="w-full px-4 py-3 bg-light-50 border-0 rounded-xl text-sm shadow-inner outline-none" required>
+                        <label class="block text-xs font-bold text-mutedblack mb-1">Informar Chave de Pagamento</label>
+                        <input type="text" id="pix-chave" required placeholder="Sua Chave Pix..." class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs font-bold focus:outline-none focus:border-gold">
                     </div>
                 </div>
-                <div>
-                    <label class="block text-[10px] font-strong text-gray-400 uppercase tracking-widest mb-1">Informações Gerais</label>
-                    <textarea id="pdf-info-gerais" rows="2" class="w-full px-4 py-3 bg-light-50 border-0 rounded-xl text-sm shadow-inner outline-none">Plano SaaS ERP Varejo - Acesso Total ao Módulo Lojista e Entregas.</textarea>
-                </div>
-                <div class="bg-gold-50 p-4 rounded-2xl text-xs text-gray-700 font-light">
-                    <p class="font-strong mb-1 uppercase tracking-wider text-gold-700">Termos de Responsabilidade:</p>
-                    <p>Declaro para os devidos fins que o pagamento referente à competência informada foi validado e carimbado pelo sistema, estando o serviço apto e ativo conforme os termos de uso vigentes.</p>
-                </div>
-                <div class="flex justify-end gap-3 pt-4">
-                    <button type="button" onclick="fecharModalPdf()" class="px-6 py-3 border-0 bg-gray-100 rounded-xl text-gray-600 font-strong uppercase text-xs hover:bg-gray-200 transition">Cancelar</button>
-                    <button type="submit" class="px-8 py-3 bg-gray-900 hover:bg-gold-500 text-white hover:text-gray-900 font-strong rounded-xl shadow-lg transition tracking-widest uppercase text-xs"><i class="fa-solid fa-file-pdf mr-2"></i> Gerar Recibo PDF</button>
+                <div class="flex justify-end mt-4">
+                    <button type="submit" class="bg-gold hover:bg-goldhover text-white text-xs font-black px-6 py-2.5 rounded-xl transition shadow-sm btn-effect">SALVAR CONFIGURAÇÃO</button>
                 </div>
             </form>
-        </div>
+
+            <div class="bg-cardbg border border-slate-200 rounded-2xl overflow-hidden shadow-xs">
+                <div class="p-5 border-b border-slate-200 flex justify-between items-center flex-wrap gap-3 bg-slate-50 no-print">
+                    <div class="flex gap-2 flex-wrap flex-1">
+                        <input type="text" id="busca-financeiro" placeholder="Busca avançada: ID, Nome, Letras, Data..." class="bg-white border border-slate-200 text-xs font-bold rounded-xl px-4 py-2.5 focus:outline-none focus:border-gold w-72">
+                        <button onclick="MasterAPI.loadFinanceiroRecibos()" class="bg-slate-200 hover:bg-slate-300 text-blacktext px-4 rounded-xl text-xs font-bold transition btn-effect"><i class="ph-bold ph-magnifying-glass"></i> Buscar</button>
+                    </div>
+                    <button onclick="window.print()" class="bg-blacktext hover:bg-slate-800 text-white text-xs font-bold px-5 py-2.5 rounded-xl transition flex items-center gap-2 btn-effect"><i class="ph ph-printer text-gold"></i> Imprimir Relatório PDF</button>
+                </div>
+                <table class="w-full text-left border-collapse text-sm">
+                    <thead>
+                        <tr class="bg-white text-mutedblack uppercase text-[10px] tracking-widest border-b border-slate-200 font-bold">
+                            <th class="p-4">Cliente / Empresa</th>
+                            <th class="p-4">Data de Vencimento</th>
+                            <th class="p-4">Status Master</th>
+                            <th class="p-4 text-right no-print">Ação (Comprovante)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tbody-recibos" class="divide-y divide-slate-100 font-medium bg-white">
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+    </main>
+
+    <div class="modal-overlay" id="modalGerarPDF">
+        <form onsubmit="event.preventDefault(); MasterAPI.generateReceipt();" class="bg-cardbg border border-slate-200 rounded-2xl p-6 max-w-2xl w-full shadow-2xl mx-4 max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-4 border-b border-slate-100 pb-3">
+                <h3 class="text-base font-black text-blacktext flex items-center gap-2"><i class="ph ph-file-pdf text-gold text-xl"></i> Gerar Comprovante PDF</h3>
+                <button type="button" onclick="closeModal('modalGerarPDF')" class="text-mutedblack hover:text-blacktext"><i class="ph ph-x text-xl"></i></button>
+            </div>
+
+            <div class="space-y-4 font-bold text-xs text-mutedblack">
+                <input type="hidden" id="pdf-id-cliente">
+
+                <div class="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-3">
+                    <h4 class="text-[10px] uppercase font-black text-blacktext">Info Empresa</h4>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div><label class="block mb-1">Nome</label><input type="text" id="pdf-master-nome" required class="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 outline-none"></div>
+                        <div><label class="block mb-1">CNPJ/CPF</label><input type="text" id="pdf-master-cnpj" required class="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 outline-none"></div>
+                        <div><label class="block mb-1">Telefone</label><input type="text" id="pdf-master-tel" required class="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 outline-none"></div>
+                        <div><label class="block mb-1">Endereço</label><input type="text" id="pdf-master-end" required class="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 outline-none"></div>
+                    </div>
+                </div>
+
+                <div class="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-3">
+                    <h4 class="text-[10px] uppercase font-black text-blacktext">Info Cliente / Empresa</h4>
+                    <div class="grid grid-cols-3 gap-3">
+                        <div class="col-span-2"><label class="block mb-1">Nome do Cliente</label><input type="text" id="pdf-cliente-nome" required class="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 outline-none focus:border-gold"></div>
+                        <div class="col-span-1"><label class="block mb-1">CNPJ/CPF</label><input type="text" id="pdf-cliente-cnpj" required class="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 outline-none focus:border-gold"></div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block mb-1 uppercase text-[10px] text-blacktext">Competência (Data)</label>
+                        <input type="month" id="pdf-competencia" required class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 outline-none focus:border-gold">
+                    </div>
+                    <div>
+                        <label class="block mb-1 uppercase text-[10px] text-blacktext">Informações Gerais</label>
+                        <input type="text" id="pdf-info" required class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 outline-none focus:border-gold">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block mb-1 uppercase text-[10px] text-blacktext">OBS</label>
+                    <textarea id="pdf-obs" rows="2" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 outline-none resize-none focus:border-gold"></textarea>
+                </div>
+            </div>
+
+            <div class="flex justify-end gap-2 mt-6 pt-4 border-t border-slate-100">
+                <button type="button" onclick="closeModal('modalGerarPDF')" class="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-blacktext rounded-xl text-xs font-bold btn-effect">Cancelar</button>
+                <button type="submit" class="px-6 py-2.5 bg-blacktext hover:bg-slate-800 text-white rounded-xl text-xs font-black btn-effect flex items-center gap-2"><i class="ph-bold ph-paper-plane-tilt"></i> ENVIAR RECIBO</button>
+            </div>
+        </form>
     </div>
 
-    <!-- ================= MODAL DE ALERTAS FLUTUANTE ================= -->
-    <div id="toast-alertas-flutuante" class="fixed bottom-6 right-6 z-50 bg-gray-900 border border-gray-800 shadow-2xl rounded-2xl p-5 w-80 hidden-view transition-all duration-300">
+    <div id="master-alert" class="fixed bottom-6 right-6 z-50 bg-blacktext border border-slate-800 rounded-2xl p-4 shadow-2xl max-w-sm space-y-3 animate-bounce hidden no-print">
         <div class="flex items-start justify-between gap-4">
             <div class="flex items-center gap-3">
-                <div class="bg-gold-500/10 text-gold-400 p-3 rounded-xl"><i class="fa-solid fa-bell"></i></div>
+                <i class="ph-fill ph-warning-circle text-gold text-2xl"></i>
                 <div>
-                    <h4 class="font-strong text-[10px] uppercase text-gold-400 tracking-widest mb-1">Alerta do Sistema SaaS</h4>
-                    <p id="toast-mensagem-texto" class="text-xs font-light text-white">Mensagem do sistema.</p>
+                    <h4 class="text-xs font-black text-white">Alerta do Sistema</h4>
+                    <ul id="alert-list" class="text-[10px] font-bold text-slate-300 mt-1 list-disc pl-3">
+                    </ul>
                 </div>
             </div>
-            <button onclick="fecharToastAlerta()" class="text-gray-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+            <button onclick="document.getElementById('master-alert').style.display='none'" class="text-slate-400 hover:text-white"><i class="ph-bold ph-x"></i></button>
         </div>
     </div>
 
-   <!-- ================= SCRIPT DE INTEGRAÇÃO EXCLUSIVA COM A API ================= -->
     <script>
-        const API_BASE_URL = "https://shopinvigia.vercel.app";
-        let tokenMaster = localStorage.getItem("tokenMaster");
-        let cacheEmpresasGlobal = [];
+        // GARANTIA: API fixada no servidor da Vercel para sincronia total
+        const API_URL = 'https://shopinvigia.vercel.app';
 
-        window.onload = () => {
-            if (tokenMaster) {
-                mostrarPainel();
-            }
-        };
+        let globalToken = null;
+        let chartFat = null;
+        let chartNot = null;
 
-        function toggleSidebar() {
-            document.getElementById('sidebar').classList.toggle('open');
-            document.getElementById('overlay').classList.toggle('open');
-        }
-
-        // 1. AUTENTICAÇÃO ESTrita NA API PYTHON (Zero Fallback)
-        async function fazerLogin() {
-            const senhaInput = document.getElementById('master-password').value;
-            const errorElement = document.getElementById('login-error');
-            const btnLogin = document.getElementById('btn-login');
-
-            btnLogin.innerText = "Entrando...";
-            btnLogin.disabled = true;
-            errorElement.classList.add("hidden-view");
-
-            try {
-                const res = await fetch(`${API_BASE_URL}/api/master/auth`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ senha: senhaInput })
-                });
-                const dados = await res.json();
-
-                if (res.ok && dados.autorizado) {
-                    tokenMaster = dados.token || "token_master_shopinvigia_super_admin";
-                    localStorage.setItem("tokenMaster", tokenMaster);
-                    mostrarPainel();
-                } else {
-                    errorElement.innerText = dados.detail || "Senha master incorreta no banco de dados.";
-                    errorElement.classList.remove("hidden-view");
-                }
-            } catch (err) {
-                console.error("Erro na comunicação com a API:", err);
-                errorElement.innerText = "Falha de comunicação com o servidor Python. Verifique se a API está online.";
-                errorElement.classList.remove("hidden-view");
-            } finally {
-                btnLogin.innerText = "ENTRAR NO SISTEMA";
-                btnLogin.disabled = false;
-            }
-        }
-
-        function sair() {
-            localStorage.removeItem("tokenMaster");
-            location.reload();
-        }
-
-        function mostrarPainel() {
-            document.getElementById("login-screen").classList.add("hidden-view");
-            document.getElementById("dashboard-screen").classList.remove("hidden-view");
-            carregarDashboard();
-            carregarEmpresas();
-            
-            setTimeout(() => {
-                dispararAlertaFlutuante("Painel Master conectado diretamente à API Python.");
-            }, 1000);
-        }
-
-        function navegar(viewId, element) {
-            document.querySelectorAll('.view-section').forEach(el => el.classList.add('hidden-view'));
-            document.getElementById(viewId).classList.remove('hidden-view');
-            
-            document.querySelectorAll('.nav-link').forEach(el => {
-                el.classList.remove('bg-gold-500/10', 'text-gold-400', 'font-strong');
-                el.classList.add('text-gray-400', 'font-light');
-            });
-            if(element) {
-                element.classList.add('bg-gold-500/10', 'text-gold-400', 'font-strong');
-                element.classList.remove('text-gray-400', 'font-light');
-            }
-
-            const titles = {
-                'view-dashboard': 'Visão Geral',
-                'view-clientes': 'Gestão de Empresas SaaS & Busca Avançada',
-                'view-financeiro': 'Financeiro, PIX & Comprovantes'
-            };
-            document.getElementById('page-title').innerText = titles[viewId];
-
-            if(viewId === 'view-dashboard') carregarDashboard();
-            if(viewId === 'view-clientes') carregarEmpresas();
-            if(viewId === 'view-financeiro') carregarFinanceiroTabela();
-        }
-
-        // 2. MÉTRICAS DA API PYTHON (Zero Fallback)
-        async function carregarDashboard() {
-            try {
-                const response = await fetch(`${API_BASE_URL}/api/master/metrics`, {
-                    headers: { 'Authorization': `Bearer ${tokenMaster}` }
-                });
-                if (!response.ok) throw new Error("Erro na API");
-                const data = await response.json();
-                
-                document.getElementById("dash-clientes").innerText = data.total_clientes || 0;
-                document.getElementById("dash-db").innerText = data.db_disk_usage || "0 MB";
-                document.getElementById("dash-mrr").innerText = data.mrr || "R$ 0,00";
-                
-                renderizarGraficosMaster();
-            } catch (e) {
-                console.error("Erro real na API Metrics", e);
-                document.getElementById("dash-clientes").innerText = "ERRO API";
-                document.getElementById("dash-db").innerText = "ERRO API";
-                document.getElementById("dash-mrr").innerText = "ERRO API";
-            }
-        }
-
-        // 3. LISTA DE EMPRESAS DA API PYTHON (Zero Fallback / Fictício removido)
-        async function carregarEmpresas() {
-            const tbodyClientes = document.getElementById("tabela-clientes");
-            tbodyClientes.innerHTML = '<tr><td colspan="5" class="text-center py-12"><div class="inline-block w-8 h-8 border-4 border-gold-500 border-t-transparent rounded-full animate-spin"></div><p class="mt-4 text-xs font-strong tracking-widest text-gray-400 uppercase">Consultando Banco de Dados Real...</p></td></tr>';
-            
-            try {
-                const response = await fetch(`${API_BASE_URL}/api/master/empresas`, {
-                    headers: { 'Authorization': `Bearer ${tokenMaster}` }
-                });
-                
-                if (response.ok) {
-                    const empresas = await response.json();
-                    if (Array.isArray(empresas)) {
-                        cacheEmpresasGlobal = empresas;
-                        renderizarTabelaClientes(cacheEmpresasGlobal);
-                        // Atualiza a tabela financeira em background com os mesmos dados da API
-                        renderizarFinanceiroTabela(cacheEmpresasGlobal);
-                    }
-                } else {
-                    const erroData = await response.json();
-                    tbodyClientes.innerHTML = `<tr><td colspan="5" class="text-center py-8 text-red-500 font-strong">Erro da API: ${erroData.detail || 'Falha ao buscar empresas'}</td></tr>`;
-                    document.getElementById("tabela-financeiro-empresas").innerHTML = tbodyClientes.innerHTML;
-                }
-            } catch (e) {
-                console.error("Erro fatal na listagem de empresas:", e);
-                tbodyClientes.innerHTML = `<tr><td colspan="5" class="text-center py-8 text-red-600 font-strong">O Servidor Vercel (API Python) está offline ou inacessível.</td></tr>`;
-                document.getElementById("tabela-financeiro-empresas").innerHTML = tbodyClientes.innerHTML;
-            }
-        }
-
-        function renderizarTabelaClientes(lista) {
-            const tbody = document.getElementById("tabela-clientes");
-            tbody.innerHTML = "";
-            if (!lista || lista.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="5" class="text-center py-12 text-gray-400 font-light">Seu banco de dados real está vazio no momento.</td></tr>';
+        window.onload = async function() {
+            const senha = prompt("SENHA_MASTER");
+            if(senha === null || senha.trim() === "") {
+                bloquearTela();
                 return;
             }
 
-            lista.forEach(emp => {
-                let statusVal = emp.status || 'ativo';
-                let statusColor = "bg-green-50 text-green-700 border border-green-100";
-                if(statusVal === "bloqueado") statusColor = "bg-red-50 text-red-600 border border-red-100";
-                if(statusVal === "vencido") statusColor = "bg-gold-50 text-gold-700 border border-gold-100";
-
-                const row = `
-                    <tr class="border-b border-gray-50 hover:bg-gold-50/20 transition">
-                        <td class="py-4 px-6 font-strong text-gray-900">
-                            #${emp.id} - ${emp.nome_fantasia || emp.razao_social || 'N/A'}<br>
-                            <span class="text-[10px] text-gray-400 font-light">CNPJ: ${emp.cnpj || 'N/A'} | Tel: ${emp.telefone || 'N/A'}</span>
-                        </td>
-                        <td class="py-4 px-6 font-light">${emp.plano || 'Mensal'}</td>
-                        <td class="py-4 px-6 font-light">${emp.vencimento ? new Date(emp.vencimento).toLocaleDateString() : 'N/A'}</td>
-                        <td class="py-4 px-6">
-                            <span class="px-3 py-1 rounded-full text-[10px] font-strong uppercase tracking-widest ${statusColor}">${statusVal}</span>
-                        </td>
-                        <td class="py-4 px-6 text-right space-x-2">
-                            <button class="text-gray-900 bg-light-50 hover:bg-gold-100 px-3 py-2 rounded-xl text-[10px] font-strong uppercase tracking-widest transition" onclick="alternarStatusEmpresa(${emp.id}, '${statusVal}')">Ativar/Bloq</button>
-                            <button class="text-gold-700 bg-gold-50 hover:bg-gold-100 px-3 py-2 rounded-xl text-[10px] font-strong uppercase tracking-widest transition" onclick="alert('Contrato PDF será ativado nesta área.')">Contrato</button>
-                            <button class="text-red-500 hover:text-red-700 p-2 transition" onclick="excluirEmpresa(${emp.id})"><i class="fa-solid fa-trash"></i></button>
-                        </td>
-                    </tr>
-                `;
-                tbody.innerHTML += row;
-            });
-        }
-
-        function filtrarClientesTabela() {
-            const termo = document.getElementById("filtro-busca-clientes").value.toLowerCase();
-            const statusFiltro = document.getElementById("filtro-status-clientes").value.toLowerCase();
-            const dataFiltro = document.getElementById("filtro-data-clientes").value;
-
-            const filtrado = cacheEmpresasGlobal.filter(emp => {
-                const nome = (emp.nome_fantasia || emp.razao_social || '').toLowerCase();
-                const idStr = String(emp.id);
-                const statusEmp = (emp.status || 'ativo').toLowerCase();
-
-                const matchTermo = nome.includes(termo) || idStr.includes(termo) || (emp.cnpj || '').includes(termo);
-                const matchStatus = statusFiltro === "" || statusEmp === statusFiltro;
-                const matchData = !dataFiltro || (emp.created_at && emp.created_at.includes(dataFiltro));
-
-                return matchTermo && matchStatus && matchData;
-            });
-
-            renderizarTabelaClientes(filtrado);
-        }
-
-        // 4. ATUALIZAR STATUS VIA API PYTHON
-        async function alternarStatusEmpresa(id, statusAtual) {
-            let novoStatus = statusAtual === 'ativo' ? 'bloqueado' : 'ativo';
-            if(confirm(`Alterar status no Banco de Dados para [${novoStatus.toUpperCase()}]?`)) {
-                try {
-                    const res = await fetch(`${API_BASE_URL}/api/master/empresas/${id}`, {
-                        method: 'PUT',
-                        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${tokenMaster}` },
-                        body: JSON.stringify({ status: novoStatus })
-                    });
-                    if(res.ok) {
-                        dispararAlertaFlutuante("Status atualizado com sucesso no Supabase.");
-                        carregarEmpresas(); // recarrega a tabela real
-                    } else {
-                        const err = await res.json();
-                        alert("Erro na API: " + err.detail);
-                    }
-                } catch(e) {
-                    alert("Falha ao comunicar com a API.");
-                }
-            }
-        }
-
-        async function excluirEmpresa(id) {
-            if(confirm(`ATENÇÃO: Excluir permanentemente do banco de dados a empresa #${id}?`)) {
-                try {
-                    const res = await fetch(`${API_BASE_URL}/api/master/empresas/${id}`, {
-                        method: 'DELETE',
-                        headers: { 'Authorization': `Bearer ${tokenMaster}` }
-                    });
-                    if(res.ok) {
-                        dispararAlertaFlutuante("Empresa removida do banco de dados.");
-                        carregarEmpresas();
-                    } else {
-                        alert("Não foi possível excluir via API.");
-                    }
-                } catch(e) {
-                    alert("Falha de conexão.");
-                }
-            }
-        }
-
-        // 5. FINANCEIRO E CARIMBO DE PAGAMENTO (Renderização baseada na API)
-        function carregarFinanceiroTabela() {
-            // Se já temos as empresas no cache (buscadas pela carregarEmpresas), nós usamos.
-            // Se não, busca de novo.
-            if(cacheEmpresasGlobal.length > 0) {
-                renderizarFinanceiroTabela(cacheEmpresasGlobal);
-            } else {
-                carregarEmpresas(); // Essa função também atualizará o financeiro
-            }
-        }
-
-        function renderizarFinanceiroTabela(lista) {
-            const tbody = document.getElementById("tabela-financeiro-empresas");
-            tbody.innerHTML = "";
-            
-            if(!lista || lista.length === 0) {
-                 tbody.innerHTML = '<tr><td colspan="4" class="text-center py-6 font-light">Nenhum dado financeiro encontrado.</td></tr>';
-                 return;
-            }
-
-            lista.forEach(emp => {
-                let statusVal = emp.status || 'ativo';
-                tbody.innerHTML += `
-                    <tr class="border-b border-gray-50 hover:bg-gold-50/20">
-                        <td class="py-4 px-4 font-strong text-gray-900">#${emp.id} - ${emp.nome_fantasia || emp.razao_social}</td>
-                        <td class="py-4 px-4 font-light">${emp.vencimento ? new Date(emp.vencimento).toLocaleDateString() : 'N/A'}</td>
-                        <td class="py-4 px-4">
-                            <select onchange="mudarStatusManual(${emp.id}, this.value)" class="px-3 py-1 bg-light-50 border rounded-xl text-xs font-strong uppercase">
-                                <option value="ativo" ${statusVal === 'ativo' ? 'selected' : ''}>Ativo</option>
-                                <option value="vencido" ${statusVal === 'vencido' ? 'selected' : ''}>Vencido</option>
-                                <option value="bloqueado" ${statusVal === 'bloqueado' ? 'selected' : ''}>Bloqueado</option>
-                            </select>
-                        </td>
-                        <td class="py-4 px-4 text-right">
-                            <button onclick="abrirModalPdf(${emp.id}, '${emp.nome_fantasia || emp.razao_social}', '${emp.cnpj || ''}')" class="bg-gray-900 hover:bg-gold-500 text-white hover:text-gray-900 px-4 py-2 rounded-xl text-[10px] font-strong uppercase tracking-widest transition"><i class="fa-solid fa-file-pdf mr-1"></i> Gerar Recibo PDF</button>
-                        </td>
-                    </tr>
-                `;
-            });
-        }
-
-        async function mudarStatusManual(id, novoStatus) {
-            // Este select financeiro chama a mesma rota de PUT da listagem de clientes
             try {
-                const res = await fetch(`${API_BASE_URL}/api/master/empresas/${id}`, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${tokenMaster}` },
-                    body: JSON.stringify({ status: novoStatus })
+                const response = await fetch(`${API_URL}/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ senha_master: senha })
                 });
-                if(res.ok) {
-                    dispararAlertaFlutuante(`O carimbo financeiro (${novoStatus}) foi registrado no Banco de Dados!`);
-                    carregarEmpresas(); // Sincroniza tabelas
-                } else {
-                    alert("Falha ao salvar o carimbo financeiro na API.");
+
+                if(!response.ok) throw new Error("Senha inválida ou API offline");
+
+                const data = await response.json();
+                globalToken = data.token;
+
+                document.getElementById('app-body').classList.remove('hidden');
+                MasterAPI.loadDashboardMetrics();
+                MasterAPI.loadClientes();
+
+            } catch (error) {
+                alert("Acesso Negado. Conexão com a API falhou ou senha incorreta.");
+                bloquearTela();
+            }
+        };
+
+        function bloquearTela() {
+            document.body.innerHTML = "<div class='h-screen flex items-center justify-center bg-blacktext text-white font-black text-2xl uppercase tracking-widest'>Acesso Negado</div>";
+        }
+
+        const MasterAPI = {
+            async fetch(endpoint, options = {}) {
+                try {
+                    const res = await fetch(`${API_URL}${endpoint}`, {
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${globalToken}`
+                        },
+                        ...options
+                    });
+                    if(!res.ok) throw new Error(`HTTP ${res.status}`);
+                    return await res.json();
+                } catch (error) {
+                    console.error("API Error:", error);
+                    throw error;
                 }
-            } catch(e) {
-                alert("Erro ao conectar à API.");
-            }
-        }
+            },
 
-        async function salvarConfigPix() {
-            const qr = document.getElementById("pix-qr").value;
-            const chave = document.getElementById("pix-chave").value;
+            async loadDashboardMetrics() {
+                try {
+                    const data = await this.fetch('/dashboard');
+                    document.getElementById('db-usage-text').innerText = `${data.db_usado} MB / 500 MB`;
+                    const percent = (data.db_usado / 500) * 100;
+                    document.getElementById('db-usage-bar').style.width = `${percent}%`;
 
-            try {
-                const res = await fetch(`${API_BASE_URL}/api/master/config-pix`, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${tokenMaster}` },
-                    body: JSON.stringify({ qrcode_imagens: qr, copia_e_cola: chave })
-                });
-                if(res.ok) {
-                    dispararAlertaFlutuante("As configurações do PIX foram injetadas no Banco de Dados.");
-                } else {
-                    alert("Erro ao enviar PIX via API.");
+                    const alertList = document.getElementById('alert-list');
+                    alertList.innerHTML = '';
+                    if(data.novos_clientes && data.novos_clientes > 0) alertList.innerHTML += `<li class="text-emerald-400">Novo cliente cadastrado!</li>`;
+                    if(percent > 80) alertList.innerHTML += `<li class="text-red-400">Alerta limite DB.</li>`;
+                    if(data.vencidos && data.vencidos > 0) alertList.innerHTML += `<li class="text-amber-400">Status: ${data.vencidos} empresas vencidas.</li>`;
+
+                    if(alertList.innerHTML !== '') {
+                        setTimeout(() => document.getElementById('master-alert').style.display = 'block', 1000);
+                    }
+                } catch (e) {
+                    document.getElementById('db-usage-text').innerText = "Falha ao carregar métricas da API.";
                 }
-            } catch(e) {
-                alert("Servidor inatingível.");
-            }
-        }
+            },
 
-        function filtrarFinanceiroClientes() {
-            const termo = document.getElementById("busca-avancada-fin").value.toLowerCase();
-            const linhas = document.querySelectorAll("#tabela-financeiro-empresas tr");
-            linhas.forEach(linha => {
-                const texto = linha.innerText.toLowerCase();
-                linha.style.display = texto.includes(termo) ? "" : "none";
-            });
-        }
+            async loadClientes() {
+                const tbody = document.getElementById('tbody-clientes');
+                const busca = document.getElementById('busca-cliente').value;
+                const status = document.getElementById('filtro-status').value;
 
-        function abrirModalPdf(id, nome, cnpj) {
-            document.getElementById("pdf-empresa-id").value = id;
-            document.getElementById("pdf-cli-id").value = id;
-            document.getElementById("pdf-cli-nome").value = nome;
-            document.getElementById("pdf-cli-doc").value = cnpj;
-            document.getElementById("modal-comprovante-pdf").classList.remove("hidden-view");
-        }
+                tbody.innerHTML = `<tr><td colspan="4" class="text-center p-6 text-mutedblack"><i class="ph-bold ph-spinner animate-spin text-xl"></i> Conectando à API...</td></tr>`;
 
-        function fecharModalPdf() {
-            document.getElementById("modal-comprovante-pdf").classList.add("hidden-view");
-        }
+                try {
+                    const query = new URLSearchParams({ busca, status }).toString();
+                    const clientes = await this.fetch(`/clientes?${query}`);
 
-        async function emitirPdfComprovante() {
-            fecharModalPdf();
-            window.print();
-        }
+                    if(!clientes || clientes.length === 0) {
+                        tbody.innerHTML = `<tr><td colspan="4" class="text-center p-6 text-mutedblack">Nenhum cliente retornado do banco.</td></tr>`;
+                        return;
+                    }
 
-        function renderizarGraficosMaster() {
-            const ctxMRR = document.getElementById('mrrChart').getContext('2d');
-            if (window.chartMRR) window.chartMRR.destroy();
-            window.chartMRR = new Chart(ctxMRR, {
-                type: 'line',
-                data: {
-                    labels: ['Sem 1', 'Sem 2', 'Sem 3', 'Sem 4', 'Atual'],
-                    datasets: [{
-                        label: 'Evolução MRR (R$)',
-                        data: [0, 0, 0, 0, 150], // Idealmente esses dados viriam da api metrics no futuro
-                        borderColor: '#eab308',
-                        backgroundColor: 'rgba(234, 179, 8, 0.1)',
-                        borderWidth: 3,
-                        fill: true,
-                        tension: 0.4
-                    }]
-                },
-                options: { responsive: true, plugins: { legend: { display: false } } }
-            });
+                    tbody.innerHTML = clientes.map(c => `
+                        <tr class="hover:bg-slate-50 transition ${c.status === 'bloqueado' ? 'bg-red-50/30' : ''}">
+                            <td class="p-4 text-xs font-bold text-mutedblack">#${c.id}<br><span class="text-[9px] font-normal">${c.data_cadastro}</span></td>
+                            <td class="p-4 font-black text-blacktext">${c.nome}</td>
+                            <td class="p-4"><span class="px-2.5 py-1 rounded-full text-[10px] font-black uppercase ${this.getStatusColor(c.status)}">${c.status}</span></td>
+                            <td class="p-4 text-right space-x-1 no-print">
+                                <button onclick="MasterAPI.toggleStatus(${c.id}, '${c.nome}')" class="p-2 bg-slate-100 hover:bg-slate-200 rounded-xl transition text-blacktext" title="Ativar/Bloquear"><i class="ph ph-power"></i></button>
+                                <button onclick="MasterAPI.emitirContrato(${c.id})" class="p-2 bg-slate-100 hover:bg-slate-200 rounded-xl transition text-blue-600" title="Emitir Contrato"><i class="ph ph-file-text"></i></button>
+                                <button onclick="MasterAPI.alterarCliente(${c.id})" class="p-2 bg-slate-100 hover:bg-slate-200 rounded-xl transition text-amber-600" title="Alterar"><i class="ph ph-pencil"></i></button>
+                                <button onclick="MasterAPI.excluirCliente(${c.id})" class="p-2 bg-red-50 hover:bg-red-100 rounded-xl transition text-red-600" title="Excluir"><i class="ph ph-trash"></i></button>
+                            </td>
+                        </tr>
+                    `).join('');
+                } catch (error) {
+                    tbody.innerHTML = `<tr><td colspan="4" class="text-center p-6 text-red-500 font-bold">Erro ao conectar com a API.</td></tr>`;
+                }
+            },
 
-            const ctxFat = document.getElementById('faturamentoChart');
-            if(ctxFat) {
-                if (window.chartFat) window.chartFat.destroy();
-                window.chartFat = new Chart(ctxFat.getContext('2d'), {
-                    type: 'bar',
-                    data: {
-                        labels: ['Dia 1', 'Dia 5', 'Dia 10', 'Dia 15', 'Dia 20', 'Dia 25', 'Dia 30'],
-                        datasets: [{
-                            label: 'Faturamento',
-                            data: [30, 80, 150, 60, 90, 110, 140],
-                            backgroundColor: '#111827',
-                            borderRadius: 8
-                        }]
+            async toggleStatus(id, nome) {
+                try {
+                    await this.fetch(`/clientes/${id}/toggle`, { method: 'PUT' });
+                    uiShowToast('Status Alterado', `Notificação enviada para ${nome}.`);
+                    this.loadClientes();
+                } catch (e) {
+                    uiShowToast('Erro', 'Falha ao processar na API.', 'error');
+                }
+            },
+
+            async emitirContrato(id) { uiShowToast('Info', `Chamada API para emitir contrato do ID ${id}`); },
+            async alterarCliente(id) { uiShowToast('Info', `Abrindo edição para o ID ${id}`); },
+            async excluirCliente(id) {
+                if(confirm('Tem certeza que deseja excluir?')) {
+                    try {
+                        await this.fetch(`/clientes/${id}`, { method: 'DELETE' });
+                        uiShowToast('Sucesso', `Cliente excluído.`);
+                        this.loadClientes();
+                    } catch (e) {
+                        uiShowToast('Erro', 'Falha ao excluir no banco.', 'error');
+                    }
+                }
+            },
+
+            getStatusColor(status) {
+                if(status === 'ativo') return 'bg-emerald-100 text-emerald-800';
+                if(status === 'bloqueado') return 'bg-red-100 text-red-800';
+                return 'bg-amber-100 text-amber-800';
+            },
+
+            async loadFaturamento(periodo = 'mes') {
+                try {
+                    const data = await this.fetch(`/financeiro/graficos?periodo=${periodo}`);
+                    if(chartFat) chartFat.destroy();
+                    const ctx = document.getElementById('chart-faturamento').getContext('2d');
+                    chartFat = new Chart(ctx, {
+                        type: 'line',
+                        data: { labels: data.labels, datasets: [{ label: 'Faturamento', data: data.valores, borderColor: '#d4af37', tension: 0.4 }] },
+                        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+                    });
+                } catch (e) {}
+            },
+
+            async loadNotificacoes() {
+                try {
+                    const data = await this.fetch(`/financeiro/notificacoes`);
+                    document.getElementById('ind-vencer').innerText = data.a_vencer || '-';
+                    document.getElementById('ind-vencidos').innerText = data.vencidos || '-';
+                    document.getElementById('ind-bloqueados').innerText = data.bloqueados || '-';
+
+                    if(chartNot) chartNot.destroy();
+                    const ctx = document.getElementById('chart-notificacoes').getContext('2d');
+                    chartNot = new Chart(ctx, {
+                        type: 'bar',
+                        data: { labels: ['A Vencer', 'Vencidos', 'Bloqueados'], datasets: [{ data: [data.a_vencer, data.vencidos, data.bloqueados], backgroundColor: ['#fef3c7', '#ffedd5', '#fee2e2'] }] },
+                        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+                    });
+                } catch (e) {}
+            },
+
+            async loadFinanceiroRecibos() {
+                const tbody = document.getElementById('tbody-recibos');
+                const busca = document.getElementById('busca-financeiro').value;
+                tbody.innerHTML = `<tr><td colspan="4" class="text-center p-6 text-mutedblack"><i class="ph-bold ph-spinner animate-spin text-xl"></i> Conectando...</td></tr>`;
+
+                try {
+                    const lista = await this.fetch(`/financeiro/lista?busca=${busca}`);
+                    if(!lista || lista.length === 0) {
+                        tbody.innerHTML = `<tr><td colspan="4" class="text-center p-6 text-mutedblack">Nenhum registro encontrado no banco.</td></tr>`;
+                        return;
+                    }
+                    tbody.innerHTML = lista.map(c => `
+                        <tr class="hover:bg-slate-50 transition">
+                            <td class="p-4 font-black text-blacktext">${c.nome}</td>
+                            <td class="p-4 text-xs font-bold text-mutedblack">${c.data_vencimento}</td>
+                            <td class="p-4">
+                                <select class="bg-slate-50 border border-slate-200 rounded-lg px-2 py-1 text-[10px] font-black uppercase outline-none" onchange="MasterAPI.updateClientStatus(${c.id}, this.value)">
+                                    <option value="ativo" ${c.status === 'ativo' ? 'selected' : ''}>Ativo</option>
+                                    <option value="vencido" ${c.status === 'vencido' ? 'selected' : ''}>Vencido</option>
+                                    <option value="bloqueado" ${c.status === 'bloqueado' ? 'selected' : ''}>Bloqueado</option>
+                                </select>
+                            </td>
+                            <td class="p-4 text-right no-print">
+                                <button onclick="prepararPDF(${c.id}, '${c.nome}', '${c.cnpj}')" class="bg-gold hover:bg-goldhover text-white text-xs font-bold px-4 py-2 rounded-xl transition flex items-center gap-1 ml-auto"><i class="ph-bold ph-file-pdf"></i> GERAR PDF</button>
+                            </td>
+                        </tr>
+                    `).join('');
+                } catch (e) {
+                    tbody.innerHTML = `<tr><td colspan="4" class="text-center p-6 text-red-500 font-bold">Erro ao conectar com a API.</td></tr>`;
+                }
+            },
+
+            async updateClientStatus(id, novoStatus) {
+                try {
+                    await this.fetch(`/financeiro/status`, { method: 'PUT', body: JSON.stringify({ id, status: novoStatus }) });
+                    uiShowToast('Sucesso', 'Status atualizado no sistema banco de dados.');
+                } catch (e) {
+                    uiShowToast('Erro', 'Falha ao atualizar DB.', 'error');
+                }
+            },
+
+            async savePixConfig() {
+                const fotoInput = document.getElementById('pix-foto');
+                const chave = document.getElementById('pix-chave').value;
+                if (!fotoInput.files[0] || !chave) return;
+
+                const formData = new FormData();
+                formData.append('qr_code', fotoInput.files[0]);
+                formData.append('chave_pix', chave);
+
+                try {
+                    const res = await fetch(`${API_URL}/config/pix`, {
+                        method: 'POST',
+                        headers: { 'Authorization': `Bearer ${globalToken}` },
+                        body: formData
+                    });
+                    if(!res.ok) throw new Error();
+                    uiShowToast('Sucesso', 'Configuração PIX salva no banco e pronta para o app cliente.');
+                } catch (e) {
+                    uiShowToast('Erro', 'Falha na comunicação com a API (multipart/form-data).', 'error');
+                }
+            },
+
+            async generateReceipt() {
+                const payload = {
+                    id_cliente: document.getElementById('pdf-id-cliente').value,
+                    info_empresa: {
+                        nome: document.getElementById('pdf-master-nome').value,
+                        cnpj: document.getElementById('pdf-master-cnpj').value,
+                        telefone: document.getElementById('pdf-master-tel').value,
+                        endereco: document.getElementById('pdf-master-end').value
                     },
-                    options: { responsive: true, plugins: { legend: { display: false } } }
-                });
-            }
-
-            const ctxNotif = document.getElementById('notificacoesChart');
-            if(ctxNotif) {
-                if (window.chartNotif) window.chartNotif.destroy();
-                window.chartNotif = new Chart(ctxNotif.getContext('2d'), {
-                    type: 'doughnut',
-                    data: {
-                        labels: ['A Vencer', 'Vencidos', 'Bloqueados'],
-                        datasets: [{
-                            data: [1, 0, 0],
-                            backgroundColor: ['#111827', '#eab308', '#ef4444'],
-                            borderWidth: 0
-                        }]
+                    info_cliente: {
+                        nome: document.getElementById('pdf-cliente-nome').value,
+                        cnpj: document.getElementById('pdf-cliente-cnpj').value
                     },
-                    options: { responsive: true, plugins: { legend: { position: 'right' } } }
-                });
+                    competencia: document.getElementById('pdf-competencia').value,
+                    informacoes: document.getElementById('pdf-info').value,
+                    obs: document.getElementById('pdf-obs').value
+                };
+
+                try {
+                    await this.fetch('/recibos', { method: 'POST', body: JSON.stringify(payload) });
+                    closeModal('modalGerarPDF');
+                    uiShowToast('PDF Gerado', 'Registro carimbado e enviado para o cliente via API.');
+                } catch (e) {
+                    uiShowToast('Falha', 'Não foi possível registrar o recibo.', 'error');
+                }
+            }
+        };
+
+        function uiNavigate(secId, element) {
+            document.querySelectorAll('.page-section').forEach(s => s.classList.add('hidden'));
+            document.getElementById(`sec-${secId}`).classList.remove('hidden');
+
+            document.querySelectorAll('#nav-menu a').forEach(a => {
+                a.classList.remove('bg-gold', 'text-blacktext');
+                a.classList.add('text-slate-300', 'hover:bg-slate-800');
+            });
+            if (element) {
+                element.classList.add('bg-gold', 'text-blacktext');
+                element.classList.remove('text-slate-300', 'hover:bg-slate-800');
+            }
+
+            if(secId === 'clientes') MasterAPI.loadClientes();
+            if(secId === 'financeiro') {
+                MasterAPI.loadFaturamento();
+                MasterAPI.loadNotificacoes();
+                MasterAPI.loadFinanceiroRecibos();
             }
         }
 
-        function dispararAlertaFlutuante(msg) {
-            const toast = document.getElementById("toast-alertas-flutuante");
-            const txt = document.getElementById("toast-mensagem-texto");
-            txt.innerText = msg;
-            toast.classList.remove("hidden-view");
-            setTimeout(() => {
-                toast.classList.add("hidden-view");
-            }, 6000);
+        function prepararPDF(id, nome, cnpj) {
+            document.getElementById('pdf-id-cliente').value = id;
+            document.getElementById('pdf-cliente-nome').value = nome;
+            document.getElementById('pdf-cliente-cnpj').value = cnpj || '';
+            openModal('modalGerarPDF');
         }
 
-        function fecharToastAlerta() {
-            document.getElementById("toast-alertas-flutuante").classList.add("hidden-view");
+        function openModal(id) { document.getElementById(id).classList.add('active'); }
+        function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+
+        function uiShowToast(titulo, mensagem, tipo = 'success') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            const color = tipo === 'success' ? 'emerald' : 'red';
+            toast.className = `w-full bg-white/95 backdrop-blur-xl border border-slate-100 shadow-xl rounded-2xl p-4 flex gap-4 animate-slide-in-right pointer-events-auto`;
+            toast.innerHTML = `
+                <div class="absolute left-0 top-0 bottom-0 w-1 bg-${color}-500"></div>
+                <div class="w-10 h-10 rounded-full bg-${color}-500/10 flex items-center justify-center flex-shrink-0"><i class="ph-fill ph-check-circle text-${color}-500 text-xl"></i></div>
+                <div class="flex-1 pt-0.5"><h4 class="text-[13px] font-black text-blacktext">${titulo}</h4><p class="text-[11px] font-bold text-mutedblack mt-1">${mensagem}</p></div>
+                <button onclick="this.parentElement.remove()" class="text-slate-400 hover:text-blacktext"><i class="ph-bold ph-x"></i></button>
+            `;
+            container.appendChild(toast);
+            setTimeout(() => { if(toast.parentElement) toast.remove(); }, 3000);
         }
     </script>
 </body>
