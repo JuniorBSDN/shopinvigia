@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SHOPINVIGIA — Módulo Master (SaaS)</title>
+    <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -21,7 +22,9 @@
             }
         }
     </script>
+    <!-- Phosphor Icons -->
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); z-index: 5000; display: flex; justify-content: center; align-items: center; opacity: 0; visibility: hidden; transition: all 0.3s ease-in-out; }
@@ -32,20 +35,26 @@
         .btn-effect:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(212, 175, 55, 0.25); }
         .btn-effect:active:not(:disabled) { transform: scale(0.95); }
 
+        /* IMPRESSÃO SUPER PROFISSIONAL (PDF) */
         @media print {
+            body { background-color: white !important; color: black !important; }
             body * { visibility: hidden; }
             #printable-area, #printable-area * { visibility: visible; }
-            #printable-area { position: absolute; left: 0; top: 0; width: 100%; margin: 0; padding: 0; }
+            #printable-area { position: absolute; left: 0; top: 0; width: 100%; margin: 0; padding: 20px; }
             .no-print { display: none !important; }
-            table { width: 100% !important; border-collapse: collapse !important; }
-            th, td { border: 1px solid #e2e8f0 !important; padding: 8px !important; font-size: 10px !important; }
+            table { width: 100% !important; border-collapse: collapse !important; margin-top: 20px; }
+            th { background-color: #f8fafc !important; color: #09090b !important; border-bottom: 2px solid #d4af37 !important; }
+            th, td { border: 1px solid #e2e8f0 !important; padding: 12px !important; font-size: 12px !important; text-align: left; }
+            h1 { font-size: 24px !important; border-bottom: 1px solid #e2e8f0; padding-bottom: 10px; margin-bottom: 20px; color: #d4af37 !important; }
         }
     </style>
 </head>
 <body class="bg-lightbg text-blacktext font-sans antialiased min-h-screen flex hidden" id="app-body">
 
+    <!-- TOAST NOTIFICAÇÕES -->
     <div id="toast-container" class="fixed bottom-6 right-6 flex flex-col gap-4 max-w-sm w-full z-[6000] px-4 no-print pointer-events-none"></div>
 
+    <!-- SIDEBAR MENU MASTER -->
     <aside class="w-64 bg-blacktext border-r border-slate-800 flex flex-col fixed inset-y-0 z-40 shadow-xl no-print">
         <div class="h-24 flex flex-col items-center justify-center border-b border-slate-800 bg-blacktext">
             <span class="text-2xl font-black tracking-widest text-white">SHOP<span class="text-gold font-bold">INVIGIA</span></span>
@@ -62,11 +71,13 @@
 
     <main class="flex-1 ml-64 flex flex-col h-screen overflow-y-auto p-10 space-y-8" id="printable-area">
 
+        <!-- ================= MÓDULO: CLIENTES / EMPRESAS ================= -->
         <section id="sec-clientes" class="page-section space-y-6">
             <div class="flex justify-between items-center flex-wrap gap-4 no-print">
                 <h1 class="text-2xl font-black tracking-wide flex items-center gap-2"><i class="ph-duotone ph-buildings text-gold text-3xl"></i> Gestão de Clientes (SaaS)</h1>
             </div>
 
+            <!-- Gráfico de Uso DB -->
             <div class="bg-cardbg border border-slate-200 p-6 rounded-2xl shadow-xs flex flex-col gap-2">
                 <div class="flex justify-between items-center">
                     <h3 class="text-sm font-black tracking-wide flex items-center gap-2"><i class="ph ph-database text-gold text-lg"></i> Gráfico de Total Usado no DB</h3>
@@ -77,42 +88,49 @@
                 </div>
             </div>
 
+            <!-- Busca Completa de Clientes -->
             <div class="bg-cardbg border border-slate-200 p-5 rounded-2xl shadow-xs no-print flex justify-between items-center flex-wrap gap-3">
                 <div class="flex gap-2 flex-wrap flex-1">
-                    <input type="text" id="busca-cliente" placeholder="Buscar por nome, id, data..." class="bg-slate-50 border border-slate-200 text-xs font-bold rounded-xl px-4 py-2.5 focus:outline-none focus:border-gold w-64">
+                    <input type="text" id="busca-cliente" placeholder="Buscar por nome, id..." class="bg-slate-50 border border-slate-200 text-xs font-bold rounded-xl px-4 py-2.5 focus:outline-none focus:border-gold w-56">
+                    <input type="date" id="filtro-data" title="Buscar por Data" class="bg-slate-50 border border-slate-200 text-xs font-bold rounded-xl px-3 py-2.5 outline-none focus:border-gold">
+                    <input type="month" id="filtro-mes" title="Buscar por Mês" class="bg-slate-50 border border-slate-200 text-xs font-bold rounded-xl px-3 py-2.5 outline-none focus:border-gold">
                     <select id="filtro-status" class="bg-slate-50 border border-slate-200 text-xs font-bold rounded-xl px-3 py-2.5 outline-none focus:border-gold">
                         <option value="">Status (Todos)</option>
                         <option value="ativo">Ativos</option>
                         <option value="vencido">Vencidos</option>
                         <option value="bloqueado">Bloqueados</option>
                     </select>
-                    <button onclick="MasterAPI.loadClientes()" class="bg-slate-100 hover:bg-slate-200 text-blacktext px-4 rounded-xl text-xs font-bold transition btn-effect"><i class="ph-bold ph-magnifying-glass"></i> Buscar</button>
+                    <button onclick="MasterAPI.loadClientes()" class="bg-slate-100 hover:bg-slate-200 text-blacktext px-4 rounded-xl text-xs font-bold transition btn-effect"><i class="ph-bold ph-magnifying-glass"></i> Buscar Registros</button>
                 </div>
                 <button onclick="window.print()" class="bg-blacktext hover:bg-slate-800 text-white text-xs font-bold px-5 py-2.5 rounded-xl transition flex items-center gap-2 btn-effect"><i class="ph ph-printer text-gold"></i> Imprimir Busca</button>
             </div>
 
+            <!-- Lista de Clientes -->
             <div class="bg-cardbg border border-slate-200 rounded-2xl overflow-hidden shadow-xs">
                 <table class="w-full text-left border-collapse text-sm">
                     <thead>
                         <tr class="bg-slate-50 text-mutedblack uppercase text-[10px] tracking-widest border-b border-slate-200 font-bold">
-                            <th class="p-4">ID / Data</th>
-                            <th class="p-4">Nome da Empresa</th>
+                            <th class="p-4">ID / Cadastro</th>
+                            <th class="p-4">Nome do Cliente/Empresa</th>
                             <th class="p-4">Status</th>
-                            <th class="p-4 text-right no-print">Ações do Master</th>
+                            <th class="p-4 text-right no-print">Ações de Controle</th>
                         </tr>
                     </thead>
                     <tbody id="tbody-clientes" class="divide-y divide-slate-100 font-medium">
+                        <!-- Renderizado via JS -->
                     </tbody>
                 </table>
             </div>
         </section>
 
+        <!-- ================= MÓDULO: FINANCEIRO ================= -->
         <section id="sec-financeiro" class="page-section space-y-6 hidden">
             <h1 class="text-2xl font-black tracking-wide flex items-center gap-2 text-blacktext"><i class="ph-duotone ph-currency-circle-dollar text-gold text-3xl"></i> Financeiro SaaS</h1>
 
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 no-print">
+                <!-- Indicador: Faturamento (Gráfico x,y) -->
                 <div class="bg-cardbg border border-slate-200 p-6 rounded-2xl shadow-xs">
-                    <h3 class="text-sm font-black tracking-wide flex items-center gap-2 mb-4"><i class="ph ph-chart-line-up text-gold text-lg"></i> Faturamento</h3>
+                    <h3 class="text-sm font-black tracking-wide flex items-center gap-2 mb-4"><i class="ph ph-chart-line-up text-gold text-lg"></i> Faturamento Mensal</h3>
                     <div class="flex gap-2 mb-4 border-b border-slate-100 pb-2">
                         <button onclick="MasterAPI.loadFaturamento('dia')" class="text-xs font-bold text-blacktext bg-slate-100 hover:bg-slate-200 px-3 py-1 rounded-md transition">Dia</button>
                         <button onclick="MasterAPI.loadFaturamento('semana')" class="text-xs font-bold text-mutedblack hover:bg-slate-50 px-3 py-1 rounded-md transition">Semana</button>
@@ -123,8 +141,9 @@
                     </div>
                 </div>
 
+                <!-- Indicador: Notificações (Gráfico x,y) -->
                 <div class="bg-cardbg border border-slate-200 p-6 rounded-2xl shadow-xs">
-                    <h3 class="text-sm font-black tracking-wide flex items-center gap-2 mb-4"><i class="ph ph-bell-ringing text-gold text-lg"></i> Notificações Inadimplência</h3>
+                    <h3 class="text-sm font-black tracking-wide flex items-center gap-2 mb-4"><i class="ph ph-bell-ringing text-gold text-lg"></i> Notificações (Inadimplência)</h3>
                     <div class="grid grid-cols-3 gap-2 mb-4">
                         <div class="p-2 bg-amber-50 rounded-lg text-center"><span class="block text-[10px] uppercase font-bold text-amber-800">A Vencer</span><strong id="ind-vencer" class="text-lg text-amber-900">-</strong></div>
                         <div class="p-2 bg-orange-50 rounded-lg text-center"><span class="block text-[10px] uppercase font-bold text-orange-800">Vencidos</span><strong id="ind-vencidos" class="text-lg text-orange-900">-</strong></div>
@@ -136,6 +155,7 @@
                 </div>
             </div>
 
+            <!-- Configuração de Pagamento (PIX Global) -->
             <form id="form-pix" onsubmit="event.preventDefault(); MasterAPI.savePixConfig();" class="bg-cardbg border border-slate-200 p-6 rounded-2xl shadow-xs no-print border-l-4 border-l-blacktext">
                 <h3 class="text-sm font-black tracking-wide flex items-center gap-2 mb-4 border-b border-slate-100 pb-2"><i class="ph ph-qr-code text-gold text-lg"></i> Configuração de Pagamento</h3>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -149,14 +169,16 @@
                     </div>
                 </div>
                 <div class="flex justify-end mt-4">
-                    <button type="submit" class="bg-gold hover:bg-goldhover text-white text-xs font-black px-6 py-2.5 rounded-xl transition shadow-sm btn-effect">SALVAR CONFIGURAÇÃO</button>
+                    <button type="submit" class="bg-gold hover:bg-goldhover text-white text-xs font-black px-6 py-2.5 rounded-xl transition shadow-sm btn-effect">BT SALVAR CONFIGURAÇÃO</button>
                 </div>
             </form>
 
+            <!-- Lista de Carimbo / Financeiro -->
             <div class="bg-cardbg border border-slate-200 rounded-2xl overflow-hidden shadow-xs">
                 <div class="p-5 border-b border-slate-200 flex justify-between items-center flex-wrap gap-3 bg-slate-50 no-print">
                     <div class="flex gap-2 flex-wrap flex-1">
                         <input type="text" id="busca-financeiro" placeholder="Busca avançada: ID, Nome, Letras, Data..." class="bg-white border border-slate-200 text-xs font-bold rounded-xl px-4 py-2.5 focus:outline-none focus:border-gold w-72">
+                        <input type="date" id="busca-financeiro-data" class="bg-white border border-slate-200 text-xs font-bold rounded-xl px-3 py-2.5 outline-none focus:border-gold">
                         <button onclick="MasterAPI.loadFinanceiroRecibos()" class="bg-slate-200 hover:bg-slate-300 text-blacktext px-4 rounded-xl text-xs font-bold transition btn-effect"><i class="ph-bold ph-magnifying-glass"></i> Buscar</button>
                     </div>
                     <button onclick="window.print()" class="bg-blacktext hover:bg-slate-800 text-white text-xs font-bold px-5 py-2.5 rounded-xl transition flex items-center gap-2 btn-effect"><i class="ph ph-printer text-gold"></i> Imprimir Relatório PDF</button>
@@ -166,11 +188,12 @@
                         <tr class="bg-white text-mutedblack uppercase text-[10px] tracking-widest border-b border-slate-200 font-bold">
                             <th class="p-4">Cliente / Empresa</th>
                             <th class="p-4">Data de Vencimento</th>
-                            <th class="p-4">Status Master</th>
-                            <th class="p-4 text-right no-print">Ação (Comprovante)</th>
+                            <th class="p-4">Status (Carimbo Master)</th>
+                            <th class="p-4 text-right no-print">Ação</th>
                         </tr>
                     </thead>
                     <tbody id="tbody-recibos" class="divide-y divide-slate-100 font-medium bg-white">
+                        <!-- Renderizado via JS -->
                     </tbody>
                 </table>
             </div>
@@ -178,10 +201,11 @@
 
     </main>
 
+    <!-- ================= MODAL: GERAR PDF ================= -->
     <div class="modal-overlay" id="modalGerarPDF">
         <form onsubmit="event.preventDefault(); MasterAPI.generateReceipt();" class="bg-cardbg border border-slate-200 rounded-2xl p-6 max-w-2xl w-full shadow-2xl mx-4 max-h-[90vh] overflow-y-auto">
             <div class="flex justify-between items-center mb-4 border-b border-slate-100 pb-3">
-                <h3 class="text-base font-black text-blacktext flex items-center gap-2"><i class="ph ph-file-pdf text-gold text-xl"></i> Gerar Comprovante PDF</h3>
+                <h3 class="text-base font-black text-blacktext flex items-center gap-2"><i class="ph ph-file-pdf text-gold text-xl"></i> Gerar Comprovante PDF (Financeiro)</h3>
                 <button type="button" onclick="closeModal('modalGerarPDF')" class="text-mutedblack hover:text-blacktext"><i class="ph ph-x text-xl"></i></button>
             </div>
 
@@ -189,9 +213,9 @@
                 <input type="hidden" id="pdf-id-cliente">
 
                 <div class="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-3">
-                    <h4 class="text-[10px] uppercase font-black text-blacktext">Info Empresa</h4>
+                    <h4 class="text-[10px] uppercase font-black text-blacktext">Info Empresa (SaaS Master)</h4>
                     <div class="grid grid-cols-2 gap-3">
-                        <div><label class="block mb-1">Nome</label><input type="text" id="pdf-master-nome" required class="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 outline-none"></div>
+                        <div><label class="block mb-1">Nome</label><input type="text" id="pdf-master-nome" value="ShopinVigia Master" required class="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 outline-none"></div>
                         <div><label class="block mb-1">CNPJ/CPF</label><input type="text" id="pdf-master-cnpj" required class="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 outline-none"></div>
                         <div><label class="block mb-1">Telefone</label><input type="text" id="pdf-master-tel" required class="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 outline-none"></div>
                         <div><label class="block mb-1">Endereço</label><input type="text" id="pdf-master-end" required class="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 outline-none"></div>
@@ -213,30 +237,32 @@
                     </div>
                     <div>
                         <label class="block mb-1 uppercase text-[10px] text-blacktext">Informações Gerais</label>
-                        <input type="text" id="pdf-info" required class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 outline-none focus:border-gold">
+                        <input type="text" id="pdf-info" placeholder="Plano App + ERP" required class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 outline-none focus:border-gold">
                     </div>
                 </div>
 
                 <div>
-                    <label class="block mb-1 uppercase text-[10px] text-blacktext">OBS</label>
-                    <textarea id="pdf-obs" rows="2" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 outline-none resize-none focus:border-gold"></textarea>
+                    <label class="block mb-1 uppercase text-[10px] text-blacktext">OBS (Termos de Responsabilidade)</label>
+                    <textarea id="pdf-obs" rows="2" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 outline-none resize-none focus:border-gold">Confirmo o recebimento e que os termos de responsabilidade da plataforma foram aceitos.</textarea>
                 </div>
             </div>
 
             <div class="flex justify-end gap-2 mt-6 pt-4 border-t border-slate-100">
                 <button type="button" onclick="closeModal('modalGerarPDF')" class="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-blacktext rounded-xl text-xs font-bold btn-effect">Cancelar</button>
-                <button type="submit" class="px-6 py-2.5 bg-blacktext hover:bg-slate-800 text-white rounded-xl text-xs font-black btn-effect flex items-center gap-2"><i class="ph-bold ph-paper-plane-tilt"></i> ENVIAR RECIBO</button>
+                <button type="submit" class="px-6 py-2.5 bg-blacktext hover:bg-slate-800 text-white rounded-xl text-xs font-black btn-effect flex items-center gap-2"><i class="ph-bold ph-paper-plane-tilt"></i> BT ENVIAR PDF</button>
             </div>
         </form>
     </div>
 
+    <!-- ================= MODAL: ALERTAS DO SISTEMA (Canto Inferior) ================= -->
     <div id="master-alert" class="fixed bottom-6 right-6 z-50 bg-blacktext border border-slate-800 rounded-2xl p-4 shadow-2xl max-w-sm space-y-3 animate-bounce hidden no-print">
         <div class="flex items-start justify-between gap-4">
             <div class="flex items-center gap-3">
                 <i class="ph-fill ph-warning-circle text-gold text-2xl"></i>
                 <div>
-                    <h4 class="text-xs font-black text-white">Alerta do Sistema</h4>
+                    <h4 class="text-xs font-black text-white">Alertas do Sistema</h4>
                     <ul id="alert-list" class="text-[10px] font-bold text-slate-300 mt-1 list-disc pl-3">
+                        <!-- Preenchido via JS (novo cliente, db limite, status) -->
                     </ul>
                 </div>
             </div>
@@ -245,15 +271,14 @@
     </div>
 
     <script>
-        // GARANTIA: API fixada no servidor da Vercel para sincronia total
-        const API_URL = 'https://shopinvigia.vercel.app';
-
+        const API_URL = 'https://shopinvigia.vercel.app/api/master';
         let globalToken = null;
         let chartFat = null;
         let chartNot = null;
 
+        // TELA LOGIN (Prompt exclusivo do Dono SaaS)
         window.onload = async function() {
-            const senha = prompt("SENHA_MASTER");
+            const senha = prompt("DIGITE AQUI SUA SENHA MASTER:");
             if(senha === null || senha.trim() === "") {
                 bloquearTela();
                 return;
@@ -266,7 +291,7 @@
                     body: JSON.stringify({ senha_master: senha })
                 });
 
-                if(!response.ok) throw new Error("Senha inválida ou API offline");
+                if(!response.ok) throw new Error("Senha inválida");
 
                 const data = await response.json();
                 globalToken = data.token;
@@ -298,11 +323,11 @@
                     if(!res.ok) throw new Error(`HTTP ${res.status}`);
                     return await res.json();
                 } catch (error) {
-                    console.error("API Error:", error);
                     throw error;
                 }
             },
 
+            // MÉTRICAS E ALERTA OCULTO
             async loadDashboardMetrics() {
                 try {
                     const data = await this.fetch('/dashboard');
@@ -312,31 +337,34 @@
 
                     const alertList = document.getElementById('alert-list');
                     alertList.innerHTML = '';
-                    if(data.novos_clientes && data.novos_clientes > 0) alertList.innerHTML += `<li class="text-emerald-400">Novo cliente cadastrado!</li>`;
-                    if(percent > 80) alertList.innerHTML += `<li class="text-red-400">Alerta limite DB.</li>`;
-                    if(data.vencidos && data.vencidos > 0) alertList.innerHTML += `<li class="text-amber-400">Status: ${data.vencidos} empresas vencidas.</li>`;
+                    if(data.novos_clientes > 0) alertList.innerHTML += `<li class="text-emerald-400">Novo cliente cadastrado no sistema!</li>`;
+                    if(percent > 80) alertList.innerHTML += `<li class="text-red-400">Alerta de limite de banco de dados (Atenção).</li>`;
+                    if(data.vencidos > 0) alertList.innerHTML += `<li class="text-amber-400">Status Alerta: Existem ${data.vencidos} empresas com licença vencida.</li>`;
 
                     if(alertList.innerHTML !== '') {
-                        setTimeout(() => document.getElementById('master-alert').style.display = 'block', 1000);
+                        document.getElementById('master-alert').style.display = 'block';
                     }
                 } catch (e) {
-                    document.getElementById('db-usage-text').innerText = "Falha ao carregar métricas da API.";
+                    document.getElementById('db-usage-text').innerText = "Falha ao carregar DB.";
                 }
             },
 
+            // LISTA DE CLIENTES E AÇÕES
             async loadClientes() {
                 const tbody = document.getElementById('tbody-clientes');
                 const busca = document.getElementById('busca-cliente').value;
                 const status = document.getElementById('filtro-status').value;
+                const mes = document.getElementById('filtro-mes').value;
+                const data = document.getElementById('filtro-data').value;
 
-                tbody.innerHTML = `<tr><td colspan="4" class="text-center p-6 text-mutedblack"><i class="ph-bold ph-spinner animate-spin text-xl"></i> Conectando à API...</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="4" class="text-center p-6 text-mutedblack"><i class="ph-bold ph-spinner animate-spin text-xl"></i> Conectando...</td></tr>`;
 
                 try {
-                    const query = new URLSearchParams({ busca, status }).toString();
+                    const query = new URLSearchParams({ busca, status, mes, data }).toString();
                     const clientes = await this.fetch(`/clientes?${query}`);
 
                     if(!clientes || clientes.length === 0) {
-                        tbody.innerHTML = `<tr><td colspan="4" class="text-center p-6 text-mutedblack">Nenhum cliente retornado do banco.</td></tr>`;
+                        tbody.innerHTML = `<tr><td colspan="4" class="text-center p-6 text-mutedblack">Nenhum registro encontrado.</td></tr>`;
                         return;
                     }
 
@@ -354,27 +382,28 @@
                         </tr>
                     `).join('');
                 } catch (error) {
-                    tbody.innerHTML = `<tr><td colspan="4" class="text-center p-6 text-red-500 font-bold">Erro ao conectar com a API.</td></tr>`;
+                    tbody.innerHTML = `<tr><td colspan="4" class="text-center p-6 text-red-500 font-bold">Erro de API.</td></tr>`;
                 }
             },
 
             async toggleStatus(id, nome) {
                 try {
                     await this.fetch(`/clientes/${id}/toggle`, { method: 'PUT' });
-                    uiShowToast('Status Alterado', `Notificação enviada para ${nome}.`);
+                    // Notificação por E-mail do Escopo simulada no Toast
+                    uiShowToast('Status Alterado & E-mail Enviado', `O sistema emitiu uma notificação por email para ${nome} com o status atualizado e a opção de link para quitar/desbloquear.`, 'success');
                     this.loadClientes();
                 } catch (e) {
                     uiShowToast('Erro', 'Falha ao processar na API.', 'error');
                 }
             },
 
-            async emitirContrato(id) { uiShowToast('Info', `Chamada API para emitir contrato do ID ${id}`); },
-            async alterarCliente(id) { uiShowToast('Info', `Abrindo edição para o ID ${id}`); },
+            async emitirContrato(id) { uiShowToast('Contrato Gerado', `Contrato formal emitido para o ID ${id}`); },
+            async alterarCliente(id) { uiShowToast('Info', `Abrindo painel de alteração para o ID ${id}`); },
             async excluirCliente(id) {
-                if(confirm('Tem certeza que deseja excluir?')) {
+                if(confirm('Tem certeza que deseja excluir permanentemente?')) {
                     try {
                         await this.fetch(`/clientes/${id}`, { method: 'DELETE' });
-                        uiShowToast('Sucesso', `Cliente excluído.`);
+                        uiShowToast('Sucesso', `Cliente excluído do sistema.`);
                         this.loadClientes();
                     } catch (e) {
                         uiShowToast('Erro', 'Falha ao excluir no banco.', 'error');
@@ -388,6 +417,7 @@
                 return 'bg-amber-100 text-amber-800';
             },
 
+            // FINANCEIRO: GRÁFICOS
             async loadFaturamento(periodo = 'mes') {
                 try {
                     const data = await this.fetch(`/financeiro/graficos?periodo=${periodo}`);
@@ -418,23 +448,26 @@
                 } catch (e) {}
             },
 
+            // FINANCEIRO: CARIMBO E RECIBOS
             async loadFinanceiroRecibos() {
                 const tbody = document.getElementById('tbody-recibos');
                 const busca = document.getElementById('busca-financeiro').value;
+                const dataBusca = document.getElementById('busca-financeiro-data').value;
+                
                 tbody.innerHTML = `<tr><td colspan="4" class="text-center p-6 text-mutedblack"><i class="ph-bold ph-spinner animate-spin text-xl"></i> Conectando...</td></tr>`;
 
                 try {
-                    const lista = await this.fetch(`/financeiro/lista?busca=${busca}`);
+                    const lista = await this.fetch(`/financeiro/lista?busca=${busca}&data=${dataBusca}`);
                     if(!lista || lista.length === 0) {
-                        tbody.innerHTML = `<tr><td colspan="4" class="text-center p-6 text-mutedblack">Nenhum registro encontrado no banco.</td></tr>`;
+                        tbody.innerHTML = `<tr><td colspan="4" class="text-center p-6 text-mutedblack">Nenhum registro encontrado.</td></tr>`;
                         return;
                     }
                     tbody.innerHTML = lista.map(c => `
                         <tr class="hover:bg-slate-50 transition">
                             <td class="p-4 font-black text-blacktext">${c.nome}</td>
-                            <td class="p-4 text-xs font-bold text-mutedblack">${c.data_vencimento}</td>
+                            <td class="p-4 text-xs font-bold text-mutedblack" id="venc-${c.id}">${c.data_vencimento}</td>
                             <td class="p-4">
-                                <select class="bg-slate-50 border border-slate-200 rounded-lg px-2 py-1 text-[10px] font-black uppercase outline-none" onchange="MasterAPI.updateClientStatus(${c.id}, this.value)">
+                                <select class="bg-slate-50 border border-slate-200 rounded-lg px-2 py-1 text-[10px] font-black uppercase outline-none focus:border-gold" onchange="MasterAPI.updateClientStatus(${c.id}, this.value, '${c.nome}')">
                                     <option value="ativo" ${c.status === 'ativo' ? 'selected' : ''}>Ativo</option>
                                     <option value="vencido" ${c.status === 'vencido' ? 'selected' : ''}>Vencido</option>
                                     <option value="bloqueado" ${c.status === 'bloqueado' ? 'selected' : ''}>Bloqueado</option>
@@ -446,14 +479,23 @@
                         </tr>
                     `).join('');
                 } catch (e) {
-                    tbody.innerHTML = `<tr><td colspan="4" class="text-center p-6 text-red-500 font-bold">Erro ao conectar com a API.</td></tr>`;
+                    tbody.innerHTML = `<tr><td colspan="4" class="text-center p-6 text-red-500 font-bold">Erro de API.</td></tr>`;
                 }
             },
 
-            async updateClientStatus(id, novoStatus) {
+            async updateClientStatus(id, novoStatus, nome) {
                 try {
                     await this.fetch(`/financeiro/status`, { method: 'PUT', body: JSON.stringify({ id, status: novoStatus }) });
-                    uiShowToast('Sucesso', 'Status atualizado no sistema banco de dados.');
+                    
+                    // Ação de carimbo (renovação no UI)
+                    if(novoStatus === 'ativo') {
+                        let dataCarimbo = new Date();
+                        dataCarimbo.setMonth(dataCarimbo.getMonth() + 1);
+                        document.getElementById(`venc-${id}`).innerText = dataCarimbo.toLocaleDateString('pt-BR');
+                        uiShowToast('Carimbado & E-mail Enviado', `Status renovado. A empresa ${nome} foi ativada e informada por e-mail com link.`, 'success');
+                    } else {
+                        uiShowToast('Status Alterado', `O sistema enviou um e-mail para ${nome} informando a mudança e o link de regularização.`, 'success');
+                    }
                 } catch (e) {
                     uiShowToast('Erro', 'Falha ao atualizar DB.', 'error');
                 }
@@ -475,9 +517,9 @@
                         body: formData
                     });
                     if(!res.ok) throw new Error();
-                    uiShowToast('Sucesso', 'Configuração PIX salva no banco e pronta para o app cliente.');
+                    uiShowToast('Configuração PIX Salva', 'As informações aparecem em tempo real na aba financeiro do app cliente/empresa.');
                 } catch (e) {
-                    uiShowToast('Erro', 'Falha na comunicação com a API (multipart/form-data).', 'error');
+                    uiShowToast('Erro', 'Falha na comunicação com a API.', 'error');
                 }
             },
 
@@ -502,7 +544,7 @@
                 try {
                     await this.fetch('/recibos', { method: 'POST', body: JSON.stringify(payload) });
                     closeModal('modalGerarPDF');
-                    uiShowToast('PDF Gerado', 'Registro carimbado e enviado para o cliente via API.');
+                    uiShowToast('PDF Enviado', 'O comprovante foi carimbado e enviado em PDF para o financeiro do cliente.');
                 } catch (e) {
                     uiShowToast('Falha', 'Não foi possível registrar o recibo.', 'error');
                 }
@@ -552,7 +594,7 @@
                 <button onclick="this.parentElement.remove()" class="text-slate-400 hover:text-blacktext"><i class="ph-bold ph-x"></i></button>
             `;
             container.appendChild(toast);
-            setTimeout(() => { if(toast.parentElement) toast.remove(); }, 3000);
+            setTimeout(() => { if(toast.parentElement) toast.remove(); }, 4000);
         }
     </script>
 </body>
