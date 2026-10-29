@@ -10,7 +10,7 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 
 # ================= VARIÁVEIS DE AMBIENTE VERCEL =================
 SENHA_MASTER = os.getenv("SENHA_MASTER", "admin123")
-DATABASE_URL = os.getenv("DATASHOP_URL")
+DATABASE_URL = os.getenv("DB_SHOP")
 
 app = FastAPI(title="ShopinVigia - API Integrada (Master & Admin)")
 
