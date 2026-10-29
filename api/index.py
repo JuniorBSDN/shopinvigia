@@ -89,10 +89,10 @@ def cadastrar_empresa(dados: AdminRegister, db=Depends(get_db)):
         vencimento = datetime.now() + timedelta(days=7)
 
         query = """
-            INSERT INTO empresas (nome_fantasia, cnpj, whatsapp, email, status, vencimento) 
-            VALUES (%s, %s, %s, %s, 'ativo', %s) RETURNING id
+            INSERT INTO empresas (nome_fantasia, razao_social, cnpj, whatsapp, email, status, vencimento) 
+            VALUES (%s, %s, %s, %s, %s, 'ativo', %s) RETURNING id
         """
-        cursor.execute(query, (dados.nome_loja, dados.cnpj, dados.whatsapp, dados.email, vencimento))
+        cursor.execute(query, (dados.nome_loja, dados.nome_loja, dados.cnpj, dados.whatsapp, dados.email, vencimento))
         db.commit()
         return {"sucesso": True, "mensagem": "Conta criada com 1 semana gratuita."}
     except Exception as e:
@@ -100,7 +100,6 @@ def cadastrar_empresa(dados: AdminRegister, db=Depends(get_db)):
         raise HTTPException(status_code=500, detail=str(e))
     finally:
         cursor.close()
-
 
 @app.post("/api/admin/login")
 def login_admin(dados: AdminLogin, db=Depends(get_db)):
