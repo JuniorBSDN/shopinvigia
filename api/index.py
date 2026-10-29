@@ -22,7 +22,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# ================= CONEXÃO BLINDADA SUPABASE =================
+# ================= CONEXÃO BLINDADA SUPABASE ================
 db_pool = None
 
 
