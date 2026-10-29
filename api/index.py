@@ -8,7 +8,7 @@ from psycopg2.extras import RealDictConnection
 from psycopg2 import pool
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 
-# ================= VARIÁVEIS DE AMBIENTE VERCEL =================
+# ================= VARIÁVEIS DE AMBIENTE VERCEL ================
 SENHA_MASTER = os.getenv("SENHA_MASTER", "admin123")
 DATABASE_URL = os.getenv("DB_SHOP")
 
