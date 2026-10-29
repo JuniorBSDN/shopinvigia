@@ -4,196 +4,210 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SHOPINVIGIA — Módulo Master (SaaS)</title>
-    <!-- Tailwind CSS CDN -->
+    
+    <!-- Tipografia Elegante e Fina -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;700&display=swap" rel="stylesheet">
+    
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
             theme: {
                 extend: {
-                    colors: {
-                        lightbg: '#f8fafc',
-                        cardbg: '#ffffff',
-                        gold: '#d4af37',
-                        goldhover: '#c5a028',
-                        blacktext: '#09090b',
-                        mutedblack: '#27272a'
+                    fontFamily: { sans: ['Outfit', 'sans-serif'] },
+                    colors: { 
+                        bglight: '#fafafa', 
+                        cardwhite: '#ffffff', 
+                        gold: '#d4af37', 
+                        goldhover: '#b5952f', 
+                        darktext: '#1c1c1c', 
+                        muted: '#737373',
+                        borderlight: '#eaeaea'
                     }
                 }
             }
         }
     </script>
-    <!-- Phosphor Icons -->
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
-    <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); z-index: 5000; display: flex; justify-content: center; align-items: center; opacity: 0; visibility: hidden; transition: all 0.3s ease-in-out; }
+        body { background-color: #fafafa; color: #1c1c1c; -webkit-font-smoothing: antialiased; }
+        
+        /* Modais */
+        .modal-overlay { position: fixed; inset: 0; background: rgba(255,255,255,0.9); backdrop-filter: blur(8px); z-index: 9999; display: flex; justify-content: center; align-items: center; opacity: 0; visibility: hidden; transition: all 0.4s ease; }
         .modal-overlay.active { opacity: 1; visibility: visible; }
-        html { scroll-behavior: smooth; }
-        body { background-color: #f8fafc; color: #09090b; font-weight: 400; }
-        .btn-effect { transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); }
-        .btn-effect:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(212, 175, 55, 0.25); }
-        .btn-effect:active:not(:disabled) { transform: scale(0.95); }
+        
+        /* Efeitos de Botão Elegantes */
+        .btn-elegant { position: relative; overflow: hidden; transition: all 0.3s ease; }
+        .btn-elegant:hover { transform: translateY(-2px); box-shadow: 0 10px 25px -5px rgba(212, 175, 55, 0.4); }
+        .btn-elegant:active { transform: translateY(0); }
 
-        /* IMPRESSÃO SUPER PROFISSIONAL (PDF) */
+        /* Inputs Finos e Minimalistas */
+        .input-minimal { border: 1px solid #eaeaea; background: transparent; transition: all 0.3s ease; }
+        .input-minimal:focus { border-color: #d4af37; box-shadow: 0 0 0 1px #d4af37; outline: none; }
+
+        /* Efeitos de Scroll (Revelação) */
+        .scroll-reveal { opacity: 0; transform: translateY(30px); transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1); }
+        .scroll-reveal.visible { opacity: 1; transform: translateY(0); }
+
+        /* Animação do Logo CSS/JS */
+        .logo-container { position: relative; display: inline-block; }
+        .logo-text { font-size: 1.5rem; font-weight: 300; letter-spacing: 0.2em; color: #1c1c1c; position: relative; z-index: 2; }
+        .logo-text strong { font-weight: 700; color: #d4af37; }
+        .logo-sheen { position: absolute; top: 0; left: -100%; width: 50%; height: 100%; background: linear-gradient(to right, transparent, rgba(212,175,55,0.4), transparent); transform: skewX(-20deg); z-index: 1; }
+        .logo-animating .logo-sheen { animation: sheen-slide 2s cubic-bezier(0.4, 0, 0.2, 1) forwards; }
+        @keyframes sheen-slide { 100% { left: 200%; } }
+
+        /* Tabela Minimalista */
+        table th { border-bottom: 1px solid #d4af37; text-transform: uppercase; font-size: 0.65rem; letter-spacing: 0.1em; color: #737373; font-weight: 500; }
+        table td { border-bottom: 1px solid #eaeaea; font-weight: 300; }
+
         @media print {
-            body { background-color: white !important; color: black !important; }
+            body { background: white !important; }
             body * { visibility: hidden; }
             #printable-area, #printable-area * { visibility: visible; }
             #printable-area { position: absolute; left: 0; top: 0; width: 100%; margin: 0; padding: 20px; }
             .no-print { display: none !important; }
-            table { width: 100% !important; border-collapse: collapse !important; margin-top: 20px; }
-            th { background-color: #f8fafc !important; color: #09090b !important; border-bottom: 2px solid #d4af37 !important; }
-            th, td { border: 1px solid #e2e8f0 !important; padding: 12px !important; font-size: 12px !important; text-align: left; }
-            h1 { font-size: 24px !important; border-bottom: 1px solid #e2e8f0; padding-bottom: 10px; margin-bottom: 20px; color: #d4af37 !important; }
+            table { width: 100% !important; border-collapse: collapse !important; }
+            th, td { border: 1px solid #eaeaea !important; padding: 10px !important; font-size: 11px !important; }
         }
     </style>
 </head>
-<body class="bg-lightbg text-blacktext font-sans antialiased min-h-screen flex hidden" id="app-body">
+<body class="bg-bglight text-darktext font-sans antialiased min-h-screen flex hidden" id="app-body">
 
-    <!-- TOAST NOTIFICAÇÕES -->
-    <div id="toast-container" class="fixed bottom-6 right-6 flex flex-col gap-4 max-w-sm w-full z-[6000] px-4 no-print pointer-events-none"></div>
+    <div id="toast-container" class="fixed bottom-8 left-1/2 transform -translate-x-1/2 flex flex-col gap-4 w-full max-w-sm z-[10000] px-4 no-print pointer-events-none text-center"></div>
 
-    <!-- SIDEBAR MENU MASTER -->
-    <aside class="w-64 bg-blacktext border-r border-slate-800 flex flex-col fixed inset-y-0 z-40 shadow-xl no-print">
-        <div class="h-24 flex flex-col items-center justify-center border-b border-slate-800 bg-blacktext">
-            <span class="text-2xl font-black tracking-widest text-white">SHOP<span class="text-gold font-bold">INVIGIA</span></span>
-            <span class="text-[9px] bg-red-600/20 text-red-500 font-bold tracking-wider uppercase px-2.5 py-0.5 rounded-full mt-1 border border-red-500/20">Área Restrita Master</span>
+    <aside class="w-72 bg-cardwhite border-r border-borderlight flex flex-col fixed inset-y-0 z-40 shadow-sm no-print">
+        <div class="h-32 flex flex-col items-center justify-center border-b border-borderlight">
+            <div class="logo-container" id="sidebar-logo">
+                <span class="logo-text">SHOP<strong>INVIGIA</strong></span>
+                <div class="logo-sheen"></div>
+            </div>
+            <span class="text-[0.6rem] text-red-500 tracking-[0.2em] uppercase mt-2 font-medium">Área Restrita Master</span>
         </div>
-        <ul class="flex-1 p-4 space-y-2 overflow-y-auto" id="nav-menu">
-            <li><a class="nav-link flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold text-blacktext bg-gold shadow-sm cursor-pointer transition btn-effect" onclick="uiNavigate('clientes', this)"><i class="ph ph-buildings text-xl"></i> Clientes / Empresas</a></li>
-            <li><a class="nav-link flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-slate-300 hover:bg-slate-800 hover:text-white cursor-pointer transition btn-effect" onclick="uiNavigate('financeiro', this)"><i class="ph ph-currency-circle-dollar text-xl"></i> Financeiro SaaS</a></li>
+        <ul class="flex-1 p-6 space-y-2 overflow-y-auto" id="nav-menu">
+            <li><a class="nav-link flex items-center gap-4 px-4 py-3.5 rounded-lg text-[0.75rem] font-medium text-white bg-gold shadow-md btn-elegant cursor-pointer uppercase tracking-widest" onclick="uiNavigate('clientes', this)"><i class="ph-light ph-buildings text-lg"></i> Clientes SaaS</a></li>
+            <li><a class="nav-link flex items-center gap-4 px-4 py-3.5 rounded-lg text-[0.75rem] font-light text-muted hover:bg-bglight hover:text-darktext cursor-pointer transition uppercase tracking-widest" onclick="uiNavigate('financeiro', this)"><i class="ph-light ph-currency-circle-dollar text-lg"></i> Financeiro SaaS</a></li>
         </ul>
-        <div class="p-4 border-t border-slate-800">
-            <button onclick="location.reload()" class="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium text-red-400 hover:bg-red-500/10 transition btn-effect"><i class="ph ph-lock-key text-xl"></i> Bloquear Painel</button>
+        <div class="p-6 border-t border-borderlight">
+            <button onclick="location.reload()" class="w-full flex items-center justify-center gap-3 px-4 py-3 rounded-lg text-[0.7rem] font-medium text-red-500 border border-borderlight hover:bg-bglight transition uppercase tracking-widest"><i class="ph-light ph-lock-key text-lg"></i> Bloquear Painel</button>
         </div>
     </aside>
 
-    <main class="flex-1 ml-64 flex flex-col h-screen overflow-y-auto p-10 space-y-8" id="printable-area">
+    <main class="flex-1 ml-72 flex flex-col h-screen overflow-y-auto p-8 lg:p-12 space-y-10" id="printable-area">
 
-        <!-- ================= MÓDULO: CLIENTES / EMPRESAS ================= -->
-        <section id="sec-clientes" class="page-section space-y-6">
-            <div class="flex justify-between items-center flex-wrap gap-4 no-print">
-                <h1 class="text-2xl font-black tracking-wide flex items-center gap-2"><i class="ph-duotone ph-buildings text-gold text-3xl"></i> Gestão de Clientes (SaaS)</h1>
+        <!-- SESSÃO CLIENTES -->
+        <section id="sec-clientes" class="page-section space-y-8 scroll-reveal">
+            <div class="border-b border-borderlight pb-6 flex items-center gap-3 text-darktext no-print">
+                <i class="ph-light ph-buildings text-gold text-3xl"></i>
+                <h1 class="text-2xl font-light tracking-wide">Gestão de Clientes</h1>
             </div>
 
-            <!-- Gráfico de Uso DB -->
-            <div class="bg-cardbg border border-slate-200 p-6 rounded-2xl shadow-xs flex flex-col gap-2">
+            <div class="bg-cardwhite border border-borderlight p-8 rounded-2xl shadow-sm flex flex-col gap-4">
                 <div class="flex justify-between items-center">
-                    <h3 class="text-sm font-black tracking-wide flex items-center gap-2"><i class="ph ph-database text-gold text-lg"></i> Gráfico de Total Usado no DB</h3>
-                    <span class="text-xs font-bold text-mutedblack" id="db-usage-text">Carregando métricas da API...</span>
+                    <h3 class="text-[0.7rem] font-medium uppercase text-muted tracking-widest flex items-center gap-2"><i class="ph-light ph-database text-gold text-lg"></i> Uso do Banco de Dados</h3>
+                    <span class="text-xs font-light text-darktext" id="db-usage-text">Carregando métricas...</span>
                 </div>
-                <div class="w-full bg-slate-100 rounded-full h-4 mt-2 overflow-hidden border border-slate-200 relative">
-                    <div id="db-usage-bar" class="bg-gold h-4 rounded-full transition-all duration-1000" style="width: 0%"></div>
+                <div class="w-full bg-bglight rounded-full h-2 mt-2 overflow-hidden border border-borderlight relative">
+                    <div id="db-usage-bar" class="bg-gold h-2 rounded-full transition-all duration-1000" style="width: 0%"></div>
                 </div>
             </div>
 
-            <!-- Busca Completa de Clientes -->
-            <div class="bg-cardbg border border-slate-200 p-5 rounded-2xl shadow-xs no-print flex justify-between items-center flex-wrap gap-3">
-                <div class="flex gap-2 flex-wrap flex-1">
-                    <input type="text" id="busca-cliente" placeholder="Buscar por nome, id..." class="bg-slate-50 border border-slate-200 text-xs font-bold rounded-xl px-4 py-2.5 focus:outline-none focus:border-gold w-56">
-                    <input type="date" id="filtro-data" title="Buscar por Data" class="bg-slate-50 border border-slate-200 text-xs font-bold rounded-xl px-3 py-2.5 outline-none focus:border-gold">
-                    <input type="month" id="filtro-mes" title="Buscar por Mês" class="bg-slate-50 border border-slate-200 text-xs font-bold rounded-xl px-3 py-2.5 outline-none focus:border-gold">
-                    <select id="filtro-status" class="bg-slate-50 border border-slate-200 text-xs font-bold rounded-xl px-3 py-2.5 outline-none focus:border-gold">
+            <div class="bg-cardwhite border border-borderlight p-6 rounded-2xl shadow-sm no-print flex justify-between items-center flex-wrap gap-4">
+                <div class="flex gap-4 flex-wrap flex-1">
+                    <input type="text" id="busca-cliente" placeholder="Buscar empresa..." class="input-minimal rounded-lg px-4 py-3.5 text-sm font-light w-72">
+                    <select id="filtro-status" class="input-minimal rounded-lg px-4 py-3 text-sm font-light bg-transparent">
                         <option value="">Status (Todos)</option>
                         <option value="ativo">Ativos</option>
                         <option value="vencido">Vencidos</option>
                         <option value="bloqueado">Bloqueados</option>
                     </select>
-                    <button onclick="MasterAPI.loadClientes()" class="bg-slate-100 hover:bg-slate-200 text-blacktext px-4 rounded-xl text-xs font-bold transition btn-effect"><i class="ph-bold ph-magnifying-glass"></i> Buscar Registros</button>
+                    <button onclick="MasterAPI.loadClientes()" class="bg-darktext text-white px-8 rounded-lg text-[0.7rem] font-medium uppercase tracking-widest btn-elegant">Buscar</button>
                 </div>
-                <button onclick="window.print()" class="bg-blacktext hover:bg-slate-800 text-white text-xs font-bold px-5 py-2.5 rounded-xl transition flex items-center gap-2 btn-effect"><i class="ph ph-printer text-gold"></i> Imprimir Busca</button>
+                <button onclick="window.print()" class="bg-transparent border border-borderlight text-darktext px-6 py-3.5 rounded-lg text-[0.7rem] font-medium uppercase tracking-widest hover:bg-bglight transition flex items-center gap-2"><i class="ph-light ph-printer text-gold text-lg"></i> Imprimir</button>
             </div>
 
-            <!-- Lista de Clientes -->
-            <div class="bg-cardbg border border-slate-200 rounded-2xl overflow-hidden shadow-xs">
+            <div class="bg-cardwhite border border-borderlight rounded-2xl overflow-hidden shadow-sm">
                 <table class="w-full text-left border-collapse text-sm">
-                    <thead>
-                        <tr class="bg-slate-50 text-mutedblack uppercase text-[10px] tracking-widest border-b border-slate-200 font-bold">
-                            <th class="p-4">ID / Cadastro</th>
-                            <th class="p-4">Nome do Cliente/Empresa</th>
-                            <th class="p-4">Status</th>
-                            <th class="p-4 text-right no-print">Ações de Controle</th>
+                    <thead class="bg-bglight">
+                        <tr>
+                            <th class="p-5">ID / Data</th>
+                            <th class="p-5">Nome da Empresa</th>
+                            <th class="p-5">Status</th>
+                            <th class="p-5 text-right no-print">Ações do Master</th>
                         </tr>
                     </thead>
-                    <tbody id="tbody-clientes" class="divide-y divide-slate-100 font-medium">
-                        <!-- Renderizado via JS -->
+                    <tbody id="tbody-clientes" class="font-light">
                     </tbody>
                 </table>
             </div>
         </section>
 
-        <!-- ================= MÓDULO: FINANCEIRO ================= -->
-        <section id="sec-financeiro" class="page-section space-y-6 hidden">
-            <h1 class="text-2xl font-black tracking-wide flex items-center gap-2 text-blacktext"><i class="ph-duotone ph-currency-circle-dollar text-gold text-3xl"></i> Financeiro SaaS</h1>
+        <!-- SESSÃO FINANCEIRO -->
+        <section id="sec-financeiro" class="page-section space-y-8 hidden scroll-reveal">
+            <div class="border-b border-borderlight pb-6 flex items-center gap-3 text-darktext no-print">
+                <i class="ph-light ph-currency-circle-dollar text-gold text-3xl"></i>
+                <h1 class="text-2xl font-light tracking-wide">Financeiro SaaS</h1>
+            </div>
 
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 no-print">
-                <!-- Indicador: Faturamento (Gráfico x,y) -->
-                <div class="bg-cardbg border border-slate-200 p-6 rounded-2xl shadow-xs">
-                    <h3 class="text-sm font-black tracking-wide flex items-center gap-2 mb-4"><i class="ph ph-chart-line-up text-gold text-lg"></i> Faturamento Mensal</h3>
-                    <div class="flex gap-2 mb-4 border-b border-slate-100 pb-2">
-                        <button onclick="MasterAPI.loadFaturamento('dia')" class="text-xs font-bold text-blacktext bg-slate-100 hover:bg-slate-200 px-3 py-1 rounded-md transition">Dia</button>
-                        <button onclick="MasterAPI.loadFaturamento('semana')" class="text-xs font-bold text-mutedblack hover:bg-slate-50 px-3 py-1 rounded-md transition">Semana</button>
-                        <button onclick="MasterAPI.loadFaturamento('mes')" class="text-xs font-bold text-mutedblack hover:bg-slate-50 px-3 py-1 rounded-md transition">Mês</button>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 no-print">
+                <div class="bg-cardwhite border border-borderlight p-8 rounded-2xl shadow-sm">
+                    <h3 class="text-[0.7rem] font-medium uppercase text-muted tracking-widest flex items-center gap-2 mb-6"><i class="ph-light ph-chart-line-up text-gold text-lg"></i> Faturamento</h3>
+                    <div class="flex gap-2 mb-6 border-b border-borderlight pb-4">
+                        <button onclick="MasterAPI.loadFaturamento('dia')" class="text-[0.65rem] font-medium uppercase tracking-widest text-darktext bg-bglight px-4 py-2 rounded-lg transition">Dia</button>
+                        <button onclick="MasterAPI.loadFaturamento('semana')" class="text-[0.65rem] font-medium uppercase tracking-widest text-muted hover:bg-bglight px-4 py-2 rounded-lg transition">Semana</button>
+                        <button onclick="MasterAPI.loadFaturamento('mes')" class="text-[0.65rem] font-medium uppercase tracking-widest text-muted hover:bg-bglight px-4 py-2 rounded-lg transition">Mês</button>
                     </div>
-                    <div class="relative h-48 w-full">
-                        <canvas id="chart-faturamento"></canvas>
-                    </div>
+                    <div class="relative h-48 w-full"><canvas id="chart-faturamento"></canvas></div>
                 </div>
 
-                <!-- Indicador: Notificações (Gráfico x,y) -->
-                <div class="bg-cardbg border border-slate-200 p-6 rounded-2xl shadow-xs">
-                    <h3 class="text-sm font-black tracking-wide flex items-center gap-2 mb-4"><i class="ph ph-bell-ringing text-gold text-lg"></i> Notificações (Inadimplência)</h3>
-                    <div class="grid grid-cols-3 gap-2 mb-4">
-                        <div class="p-2 bg-amber-50 rounded-lg text-center"><span class="block text-[10px] uppercase font-bold text-amber-800">A Vencer</span><strong id="ind-vencer" class="text-lg text-amber-900">-</strong></div>
-                        <div class="p-2 bg-orange-50 rounded-lg text-center"><span class="block text-[10px] uppercase font-bold text-orange-800">Vencidos</span><strong id="ind-vencidos" class="text-lg text-orange-900">-</strong></div>
-                        <div class="p-2 bg-red-50 rounded-lg text-center"><span class="block text-[10px] uppercase font-bold text-red-800">Bloqueados</span><strong id="ind-bloqueados" class="text-lg text-red-900">-</strong></div>
+                <div class="bg-cardwhite border border-borderlight p-8 rounded-2xl shadow-sm">
+                    <h3 class="text-[0.7rem] font-medium uppercase text-muted tracking-widest flex items-center gap-2 mb-6"><i class="ph-light ph-bell-ringing text-gold text-lg"></i> Notificações</h3>
+                    <div class="grid grid-cols-3 gap-4 mb-6">
+                        <div class="p-4 bg-bglight border border-borderlight rounded-xl text-center"><span class="block text-[0.65rem] uppercase tracking-widest text-muted">A Vencer</span><strong id="ind-vencer" class="text-2xl font-light text-darktext mt-1 block">-</strong></div>
+                        <div class="p-4 bg-orange-50 border border-orange-100 rounded-xl text-center"><span class="block text-[0.65rem] uppercase tracking-widest text-orange-600">Vencidos</span><strong id="ind-vencidos" class="text-2xl font-light text-orange-700 mt-1 block">-</strong></div>
+                        <div class="p-4 bg-red-50 border border-red-100 rounded-xl text-center"><span class="block text-[0.65rem] uppercase tracking-widest text-red-600">Bloqueados</span><strong id="ind-bloqueados" class="text-2xl font-light text-red-700 mt-1 block">-</strong></div>
                     </div>
-                    <div class="relative h-32 w-full">
-                        <canvas id="chart-notificacoes"></canvas>
-                    </div>
+                    <div class="relative h-32 w-full"><canvas id="chart-notificacoes"></canvas></div>
                 </div>
             </div>
 
-            <!-- Configuração de Pagamento (PIX Global) -->
-            <form id="form-pix" onsubmit="event.preventDefault(); MasterAPI.savePixConfig();" class="bg-cardbg border border-slate-200 p-6 rounded-2xl shadow-xs no-print border-l-4 border-l-blacktext">
-                <h3 class="text-sm font-black tracking-wide flex items-center gap-2 mb-4 border-b border-slate-100 pb-2"><i class="ph ph-qr-code text-gold text-lg"></i> Configuração de Pagamento</h3>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <form id="form-pix" onsubmit="event.preventDefault(); MasterAPI.savePixConfig();" class="bg-cardwhite border border-borderlight p-8 rounded-2xl shadow-sm no-print border-l-2 border-l-gold">
+                <h3 class="text-[0.7rem] font-medium uppercase text-muted tracking-widest flex items-center gap-2 mb-6 border-b border-borderlight pb-3"><i class="ph-light ph-qr-code text-gold text-lg"></i> Configuração de Pagamento (Bloqueio)</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                        <label class="block text-xs font-bold text-mutedblack mb-1">Buscar Foto (Upload QR Code)</label>
-                        <input type="file" id="pix-foto" accept="image/*" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold focus:outline-none focus:border-gold">
+                        <label class="block text-[0.65rem] font-medium uppercase text-muted mb-2 tracking-widest">Upload QR Code</label>
+                        <input type="file" id="pix-foto" accept="image/*" required class="w-full input-minimal rounded-lg p-2 text-sm font-light">
                     </div>
                     <div>
-                        <label class="block text-xs font-bold text-mutedblack mb-1">Informar Chave de Pagamento</label>
-                        <input type="text" id="pix-chave" required placeholder="Sua Chave Pix..." class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs font-bold focus:outline-none focus:border-gold">
+                        <label class="block text-[0.65rem] font-medium uppercase text-muted mb-2 tracking-widest">Chave de Pagamento (Copia e Cola)</label>
+                        <input type="text" id="pix-chave" required placeholder="Sua Chave Pix..." class="w-full input-minimal rounded-lg px-4 py-3 text-sm font-light">
                     </div>
                 </div>
-                <div class="flex justify-end mt-4">
-                    <button type="submit" class="bg-gold hover:bg-goldhover text-white text-xs font-black px-6 py-2.5 rounded-xl transition shadow-sm btn-effect">BT SALVAR CONFIGURAÇÃO</button>
+                <div class="flex justify-end mt-8">
+                    <button type="submit" class="bg-gold text-white text-[0.7rem] font-medium px-8 py-3.5 rounded-full btn-elegant uppercase tracking-widest">Salvar Configuração</button>
                 </div>
             </form>
 
-            <!-- Lista de Carimbo / Financeiro -->
-            <div class="bg-cardbg border border-slate-200 rounded-2xl overflow-hidden shadow-xs">
-                <div class="p-5 border-b border-slate-200 flex justify-between items-center flex-wrap gap-3 bg-slate-50 no-print">
-                    <div class="flex gap-2 flex-wrap flex-1">
-                        <input type="text" id="busca-financeiro" placeholder="Busca avançada: ID, Nome, Letras, Data..." class="bg-white border border-slate-200 text-xs font-bold rounded-xl px-4 py-2.5 focus:outline-none focus:border-gold w-72">
-                        <input type="date" id="busca-financeiro-data" class="bg-white border border-slate-200 text-xs font-bold rounded-xl px-3 py-2.5 outline-none focus:border-gold">
-                        <button onclick="MasterAPI.loadFinanceiroRecibos()" class="bg-slate-200 hover:bg-slate-300 text-blacktext px-4 rounded-xl text-xs font-bold transition btn-effect"><i class="ph-bold ph-magnifying-glass"></i> Buscar</button>
+            <div class="bg-cardwhite border border-borderlight rounded-2xl overflow-hidden shadow-sm">
+                <div class="p-6 border-b border-borderlight flex justify-between items-center flex-wrap gap-4 bg-bglight no-print">
+                    <div class="flex gap-4 flex-wrap flex-1">
+                        <input type="text" id="busca-financeiro" placeholder="Buscar faturas..." class="input-minimal rounded-lg px-4 py-3.5 text-sm font-light bg-white w-72">
+                        <button onclick="MasterAPI.loadFinanceiroRecibos()" class="bg-darktext text-white px-8 rounded-lg text-[0.7rem] font-medium uppercase tracking-widest btn-elegant">Buscar</button>
                     </div>
-                    <button onclick="window.print()" class="bg-blacktext hover:bg-slate-800 text-white text-xs font-bold px-5 py-2.5 rounded-xl transition flex items-center gap-2 btn-effect"><i class="ph ph-printer text-gold"></i> Imprimir Relatório PDF</button>
+                    <button onclick="window.print()" class="bg-transparent border border-borderlight text-darktext px-6 py-3.5 rounded-lg text-[0.7rem] font-medium uppercase tracking-widest hover:bg-bglight transition flex items-center gap-2"><i class="ph-light ph-printer text-gold text-lg"></i> Imprimir</button>
                 </div>
                 <table class="w-full text-left border-collapse text-sm">
-                    <thead>
-                        <tr class="bg-white text-mutedblack uppercase text-[10px] tracking-widest border-b border-slate-200 font-bold">
-                            <th class="p-4">Cliente / Empresa</th>
-                            <th class="p-4">Data de Vencimento</th>
-                            <th class="p-4">Status (Carimbo Master)</th>
-                            <th class="p-4 text-right no-print">Ação</th>
+                    <thead class="bg-white">
+                        <tr>
+                            <th class="p-5">Cliente / Empresa</th>
+                            <th class="p-5">Data de Vencimento</th>
+                            <th class="p-5">Status Master</th>
+                            <th class="p-5 text-right no-print">Ação</th>
                         </tr>
                     </thead>
-                    <tbody id="tbody-recibos" class="divide-y divide-slate-100 font-medium bg-white">
-                        <!-- Renderizado via JS -->
+                    <tbody id="tbody-recibos" class="font-light bg-white">
                     </tbody>
                 </table>
             </div>
@@ -201,84 +215,91 @@
 
     </main>
 
-    <!-- ================= MODAL: GERAR PDF ================= -->
+    <!-- MODAL GERAR PDF -->
     <div class="modal-overlay" id="modalGerarPDF">
-        <form onsubmit="event.preventDefault(); MasterAPI.generateReceipt();" class="bg-cardbg border border-slate-200 rounded-2xl p-6 max-w-2xl w-full shadow-2xl mx-4 max-h-[90vh] overflow-y-auto">
-            <div class="flex justify-between items-center mb-4 border-b border-slate-100 pb-3">
-                <h3 class="text-base font-black text-blacktext flex items-center gap-2"><i class="ph ph-file-pdf text-gold text-xl"></i> Gerar Comprovante PDF (Financeiro)</h3>
-                <button type="button" onclick="closeModal('modalGerarPDF')" class="text-mutedblack hover:text-blacktext"><i class="ph ph-x text-xl"></i></button>
+        <form onsubmit="event.preventDefault(); MasterAPI.generateReceipt();" class="bg-cardwhite border border-borderlight rounded-2xl p-10 max-w-2xl w-full shadow-2xl mx-4 max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-8 border-b border-borderlight pb-4">
+                <h3 class="text-lg font-light text-darktext flex items-center gap-2 tracking-wide"><i class="ph-light ph-file-pdf text-gold text-2xl"></i> Emitir Comprovante</h3>
+                <button type="button" onclick="closeModal('modalGerarPDF')" class="text-muted hover:text-darktext transition"><i class="ph-light ph-x text-2xl"></i></button>
             </div>
 
-            <div class="space-y-4 font-bold text-xs text-mutedblack">
+            <div class="space-y-6">
                 <input type="hidden" id="pdf-id-cliente">
 
-                <div class="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-3">
-                    <h4 class="text-[10px] uppercase font-black text-blacktext">Info Empresa (SaaS Master)</h4>
-                    <div class="grid grid-cols-2 gap-3">
-                        <div><label class="block mb-1">Nome</label><input type="text" id="pdf-master-nome" value="ShopinVigia Master" required class="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 outline-none"></div>
-                        <div><label class="block mb-1">CNPJ/CPF</label><input type="text" id="pdf-master-cnpj" required class="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 outline-none"></div>
-                        <div><label class="block mb-1">Telefone</label><input type="text" id="pdf-master-tel" required class="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 outline-none"></div>
-                        <div><label class="block mb-1">Endereço</label><input type="text" id="pdf-master-end" required class="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 outline-none"></div>
+                <div class="p-6 border border-borderlight rounded-xl space-y-4">
+                    <h4 class="text-[0.65rem] uppercase font-medium text-muted tracking-widest">Suas Informações (Master)</h4>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div><label class="block mb-2 text-[0.65rem] uppercase tracking-widest text-muted">Nome</label><input type="text" id="pdf-master-nome" required class="w-full input-minimal rounded-lg px-4 py-3 text-sm font-light"></div>
+                        <div><label class="block mb-2 text-[0.65rem] uppercase tracking-widest text-muted">CNPJ/CPF</label><input type="text" id="pdf-master-cnpj" required class="w-full input-minimal rounded-lg px-4 py-3 text-sm font-light"></div>
+                        <div><label class="block mb-2 text-[0.65rem] uppercase tracking-widest text-muted">Telefone</label><input type="text" id="pdf-master-tel" required class="w-full input-minimal rounded-lg px-4 py-3 text-sm font-light"></div>
+                        <div><label class="block mb-2 text-[0.65rem] uppercase tracking-widest text-muted">Endereço</label><input type="text" id="pdf-master-end" required class="w-full input-minimal rounded-lg px-4 py-3 text-sm font-light"></div>
                     </div>
                 </div>
 
-                <div class="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-3">
-                    <h4 class="text-[10px] uppercase font-black text-blacktext">Info Cliente / Empresa</h4>
-                    <div class="grid grid-cols-3 gap-3">
-                        <div class="col-span-2"><label class="block mb-1">Nome do Cliente</label><input type="text" id="pdf-cliente-nome" required class="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 outline-none focus:border-gold"></div>
-                        <div class="col-span-1"><label class="block mb-1">CNPJ/CPF</label><input type="text" id="pdf-cliente-cnpj" required class="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 outline-none focus:border-gold"></div>
+                <div class="p-6 border border-borderlight rounded-xl space-y-4">
+                    <h4 class="text-[0.65rem] uppercase font-medium text-muted tracking-widest">Informações do Cliente</h4>
+                    <div class="grid grid-cols-3 gap-4">
+                        <div class="col-span-2"><label class="block mb-2 text-[0.65rem] uppercase tracking-widest text-muted">Nome do Cliente</label><input type="text" id="pdf-cliente-nome" required class="w-full input-minimal rounded-lg px-4 py-3 text-sm font-light"></div>
+                        <div class="col-span-1"><label class="block mb-2 text-[0.65rem] uppercase tracking-widest text-muted">CNPJ/CPF</label><input type="text" id="pdf-cliente-cnpj" required class="w-full input-minimal rounded-lg px-4 py-3 text-sm font-light"></div>
                     </div>
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                        <label class="block mb-1 uppercase text-[10px] text-blacktext">Competência (Data)</label>
-                        <input type="month" id="pdf-competencia" required class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 outline-none focus:border-gold">
-                    </div>
-                    <div>
-                        <label class="block mb-1 uppercase text-[10px] text-blacktext">Informações Gerais</label>
-                        <input type="text" id="pdf-info" placeholder="Plano App + ERP" required class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 outline-none focus:border-gold">
-                    </div>
+                    <div><label class="block mb-2 text-[0.65rem] uppercase tracking-widest text-muted">Competência (Mês/Ano)</label><input type="month" id="pdf-competencia" required class="w-full input-minimal rounded-lg px-4 py-3 text-sm font-light bg-transparent"></div>
+                    <div><label class="block mb-2 text-[0.65rem] uppercase tracking-widest text-muted">Descrição</label><input type="text" id="pdf-info" required class="w-full input-minimal rounded-lg px-4 py-3 text-sm font-light"></div>
                 </div>
 
-                <div>
-                    <label class="block mb-1 uppercase text-[10px] text-blacktext">OBS (Termos de Responsabilidade)</label>
-                    <textarea id="pdf-obs" rows="2" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 outline-none resize-none focus:border-gold">Confirmo o recebimento e que os termos de responsabilidade da plataforma foram aceitos.</textarea>
-                </div>
+                <div><label class="block mb-2 text-[0.65rem] uppercase tracking-widest text-muted">Observações</label><textarea id="pdf-obs" rows="2" class="w-full input-minimal rounded-lg px-4 py-3 text-sm font-light resize-none"></textarea></div>
             </div>
 
-            <div class="flex justify-end gap-2 mt-6 pt-4 border-t border-slate-100">
-                <button type="button" onclick="closeModal('modalGerarPDF')" class="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-blacktext rounded-xl text-xs font-bold btn-effect">Cancelar</button>
-                <button type="submit" class="px-6 py-2.5 bg-blacktext hover:bg-slate-800 text-white rounded-xl text-xs font-black btn-effect flex items-center gap-2"><i class="ph-bold ph-paper-plane-tilt"></i> BT ENVIAR PDF</button>
+            <div class="flex justify-end gap-4 mt-8 pt-6 border-t border-borderlight">
+                <button type="button" onclick="closeModal('modalGerarPDF')" class="px-6 py-3 bg-transparent border border-borderlight text-darktext rounded-lg text-[0.65rem] font-medium uppercase tracking-widest hover:bg-bglight transition">Cancelar</button>
+                <button type="submit" class="px-8 py-3 bg-darktext text-white rounded-lg text-[0.65rem] font-medium uppercase tracking-widest btn-elegant flex items-center gap-2">Enviar Recibo</button>
             </div>
         </form>
     </div>
 
-    <!-- ================= MODAL: ALERTAS DO SISTEMA (Canto Inferior) ================= -->
-    <div id="master-alert" class="fixed bottom-6 right-6 z-50 bg-blacktext border border-slate-800 rounded-2xl p-4 shadow-2xl max-w-sm space-y-3 animate-bounce hidden no-print">
+    <!-- ALERTA MASTER -->
+    <div id="master-alert" class="fixed bottom-8 right-8 z-50 bg-cardwhite border border-borderlight rounded-2xl p-6 shadow-2xl max-w-sm space-y-4 animate-bounce hidden no-print">
         <div class="flex items-start justify-between gap-4">
-            <div class="flex items-center gap-3">
-                <i class="ph-fill ph-warning-circle text-gold text-2xl"></i>
+            <div class="flex items-center gap-4">
+                <i class="ph-light ph-warning-circle text-gold text-3xl"></i>
                 <div>
-                    <h4 class="text-xs font-black text-white">Alertas do Sistema</h4>
-                    <ul id="alert-list" class="text-[10px] font-bold text-slate-300 mt-1 list-disc pl-3">
-                        <!-- Preenchido via JS (novo cliente, db limite, status) -->
-                    </ul>
+                    <h4 class="text-[0.7rem] font-medium uppercase tracking-widest text-darktext">Avisos do Sistema</h4>
+                    <ul id="alert-list" class="text-xs font-light text-muted mt-2 space-y-1"></ul>
                 </div>
             </div>
-            <button onclick="document.getElementById('master-alert').style.display='none'" class="text-slate-400 hover:text-white"><i class="ph-bold ph-x"></i></button>
+            <button onclick="document.getElementById('master-alert').style.display='none'" class="text-muted hover:text-darktext transition"><i class="ph-light ph-x text-lg"></i></button>
         </div>
     </div>
 
     <script>
-        const API_URL = 'https://shopinvigia.vercel.app/api/master';
+        const API_URL = 'https://shopinvigia.vercel.app';
         let globalToken = null;
         let chartFat = null;
         let chartNot = null;
 
-        // TELA LOGIN (Prompt exclusivo do Dono SaaS)
+        // INICIALIZAÇÃO E ANIMAÇÕES
         window.onload = async function() {
-            const senha = prompt("DIGITE AQUI SUA SENHA MASTER:");
+            // Animação do Logo
+            setInterval(() => {
+                document.querySelectorAll('.logo-container').forEach(logo => {
+                    logo.classList.remove('logo-animating');
+                    void logo.offsetWidth;
+                    logo.classList.add('logo-animating');
+                });
+            }, 5000);
+
+            // Observer para animação de scroll
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) entry.target.classList.add('visible');
+                });
+            }, { threshold: 0.1 });
+            document.querySelectorAll('.scroll-reveal').forEach((el) => observer.observe(el));
+
+            // Autenticação
+            const senha = prompt("Insira a SENHA_MASTER:");
             if(senha === null || senha.trim() === "") {
                 bloquearTela();
                 return;
@@ -291,23 +312,25 @@
                     body: JSON.stringify({ senha_master: senha })
                 });
 
-                if(!response.ok) throw new Error("Senha inválida");
+                if(!response.ok) throw new Error("Senha inválida ou API offline");
 
                 const data = await response.json();
                 globalToken = data.token;
 
                 document.getElementById('app-body').classList.remove('hidden');
+                setTimeout(() => document.getElementById('sec-clientes').classList.add('visible'), 100);
+                
                 MasterAPI.loadDashboardMetrics();
                 MasterAPI.loadClientes();
 
             } catch (error) {
-                alert("Acesso Negado. Conexão com a API falhou ou senha incorreta.");
+                alert("Acesso Negado. Verifique a senha ou a conexão.");
                 bloquearTela();
             }
         };
 
         function bloquearTela() {
-            document.body.innerHTML = "<div class='h-screen flex items-center justify-center bg-blacktext text-white font-black text-2xl uppercase tracking-widest'>Acesso Negado</div>";
+            document.body.innerHTML = "<div class='h-screen w-full flex flex-col items-center justify-center bg-bglight text-darktext'><i class='ph-light ph-lock-key text-6xl text-muted mb-4'></i><h1 class='font-light text-2xl uppercase tracking-widest'>Acesso Restrito</h1></div>";
         }
 
         const MasterAPI = {
@@ -323,11 +346,11 @@
                     if(!res.ok) throw new Error(`HTTP ${res.status}`);
                     return await res.json();
                 } catch (error) {
+                    console.error("API Error:", error);
                     throw error;
                 }
             },
 
-            // MÉTRICAS E ALERTA OCULTO
             async loadDashboardMetrics() {
                 try {
                     const data = await this.fetch('/dashboard');
@@ -337,87 +360,78 @@
 
                     const alertList = document.getElementById('alert-list');
                     alertList.innerHTML = '';
-                    if(data.novos_clientes > 0) alertList.innerHTML += `<li class="text-emerald-400">Novo cliente cadastrado no sistema!</li>`;
-                    if(percent > 80) alertList.innerHTML += `<li class="text-red-400">Alerta de limite de banco de dados (Atenção).</li>`;
-                    if(data.vencidos > 0) alertList.innerHTML += `<li class="text-amber-400">Status Alerta: Existem ${data.vencidos} empresas com licença vencida.</li>`;
+                    if(data.novos_clientes > 0) alertList.innerHTML += `<li><span class="text-emerald-500 font-medium mr-1">•</span> Novo cliente cadastrado.</li>`;
+                    if(percent > 80) alertList.innerHTML += `<li><span class="text-red-500 font-medium mr-1">•</span> Limite de BD atingido.</li>`;
+                    if(data.vencidos > 0) alertList.innerHTML += `<li><span class="text-orange-500 font-medium mr-1">•</span> ${data.vencidos} empresas vencidas.</li>`;
 
                     if(alertList.innerHTML !== '') {
-                        document.getElementById('master-alert').style.display = 'block';
+                        setTimeout(() => document.getElementById('master-alert').style.display = 'block', 1000);
                     }
                 } catch (e) {
-                    document.getElementById('db-usage-text').innerText = "Falha ao carregar DB.";
+                    document.getElementById('db-usage-text').innerText = "Falha ao carregar métricas.";
                 }
             },
 
-            // LISTA DE CLIENTES E AÇÕES
             async loadClientes() {
                 const tbody = document.getElementById('tbody-clientes');
                 const busca = document.getElementById('busca-cliente').value;
                 const status = document.getElementById('filtro-status').value;
-                const mes = document.getElementById('filtro-mes').value;
-                const data = document.getElementById('filtro-data').value;
 
-                tbody.innerHTML = `<tr><td colspan="4" class="text-center p-6 text-mutedblack"><i class="ph-bold ph-spinner animate-spin text-xl"></i> Conectando...</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="4" class="text-center p-8 text-muted"><i class="ph-light ph-spinner animate-spin text-2xl mb-2"></i><br>Sincronizando...</td></tr>`;
 
                 try {
-                    const query = new URLSearchParams({ busca, status, mes, data }).toString();
+                    const query = new URLSearchParams({ busca, status }).toString();
                     const clientes = await this.fetch(`/clientes?${query}`);
 
                     if(!clientes || clientes.length === 0) {
-                        tbody.innerHTML = `<tr><td colspan="4" class="text-center p-6 text-mutedblack">Nenhum registro encontrado.</td></tr>`;
+                        tbody.innerHTML = `<tr><td colspan="4" class="text-center p-8 text-muted font-light">Nenhuma empresa encontrada.</td></tr>`;
                         return;
                     }
 
                     tbody.innerHTML = clientes.map(c => `
-                        <tr class="hover:bg-slate-50 transition ${c.status === 'bloqueado' ? 'bg-red-50/30' : ''}">
-                            <td class="p-4 text-xs font-bold text-mutedblack">#${c.id}<br><span class="text-[9px] font-normal">${c.data_cadastro}</span></td>
-                            <td class="p-4 font-black text-blacktext">${c.nome}</td>
-                            <td class="p-4"><span class="px-2.5 py-1 rounded-full text-[10px] font-black uppercase ${this.getStatusColor(c.status)}">${c.status}</span></td>
-                            <td class="p-4 text-right space-x-1 no-print">
-                                <button onclick="MasterAPI.toggleStatus(${c.id}, '${c.nome}')" class="p-2 bg-slate-100 hover:bg-slate-200 rounded-xl transition text-blacktext" title="Ativar/Bloquear"><i class="ph ph-power"></i></button>
-                                <button onclick="MasterAPI.emitirContrato(${c.id})" class="p-2 bg-slate-100 hover:bg-slate-200 rounded-xl transition text-blue-600" title="Emitir Contrato"><i class="ph ph-file-text"></i></button>
-                                <button onclick="MasterAPI.alterarCliente(${c.id})" class="p-2 bg-slate-100 hover:bg-slate-200 rounded-xl transition text-amber-600" title="Alterar"><i class="ph ph-pencil"></i></button>
-                                <button onclick="MasterAPI.excluirCliente(${c.id})" class="p-2 bg-red-50 hover:bg-red-100 rounded-xl transition text-red-600" title="Excluir"><i class="ph ph-trash"></i></button>
+                        <tr class="hover:bg-bglight transition border-b border-borderlight ${c.status === 'bloqueado' ? 'bg-red-50/20' : ''}">
+                            <td class="p-5 text-sm font-light text-muted">#${c.id}<br><span class="text-[0.65rem] tracking-widest">${c.data_cadastro}</span></td>
+                            <td class="p-5 font-medium text-darktext">${c.nome}</td>
+                            <td class="p-5"><span class="px-3 py-1 rounded-md text-[0.65rem] font-medium uppercase tracking-widest ${this.getStatusColor(c.status)}">${c.status}</span></td>
+                            <td class="p-5 text-right space-x-2 no-print">
+                                <button onclick="MasterAPI.toggleStatus(${c.id}, '${c.nome}')" class="text-muted hover:text-darktext transition" title="Ativar/Bloquear"><i class="ph-light ph-power text-lg"></i></button>
+                                <button onclick="MasterAPI.emitirContrato(${c.id})" class="text-muted hover:text-blue-500 transition" title="Contrato"><i class="ph-light ph-file-text text-lg"></i></button>
+                                <button onclick="MasterAPI.alterarCliente(${c.id})" class="text-muted hover:text-gold transition" title="Editar"><i class="ph-light ph-pencil text-lg"></i></button>
+                                <button onclick="MasterAPI.excluirCliente(${c.id})" class="text-muted hover:text-red-500 transition" title="Excluir"><i class="ph-light ph-trash text-lg"></i></button>
                             </td>
                         </tr>
                     `).join('');
                 } catch (error) {
-                    tbody.innerHTML = `<tr><td colspan="4" class="text-center p-6 text-red-500 font-bold">Erro de API.</td></tr>`;
+                    tbody.innerHTML = `<tr><td colspan="4" class="text-center p-8 text-red-500 font-medium">Erro ao conectar com a API.</td></tr>`;
                 }
             },
 
             async toggleStatus(id, nome) {
                 try {
                     await this.fetch(`/clientes/${id}/toggle`, { method: 'PUT' });
-                    // Notificação por E-mail do Escopo simulada no Toast
-                    uiShowToast('Status Alterado & E-mail Enviado', `O sistema emitiu uma notificação por email para ${nome} com o status atualizado e a opção de link para quitar/desbloquear.`, 'success');
+                    uiShowToast('Status Alterado', `Notificação enviada para ${nome}.`);
                     this.loadClientes();
-                } catch (e) {
-                    uiShowToast('Erro', 'Falha ao processar na API.', 'error');
-                }
+                } catch (e) { uiShowToast('Erro', 'Falha na API.', 'error'); }
             },
 
-            async emitirContrato(id) { uiShowToast('Contrato Gerado', `Contrato formal emitido para o ID ${id}`); },
-            async alterarCliente(id) { uiShowToast('Info', `Abrindo painel de alteração para o ID ${id}`); },
+            async emitirContrato(id) { uiShowToast('Info', `Emitir contrato do ID ${id}`); },
+            async alterarCliente(id) { uiShowToast('Info', `Abrindo edição para o ID ${id}`); },
             async excluirCliente(id) {
-                if(confirm('Tem certeza que deseja excluir permanentemente?')) {
+                if(confirm('Tem certeza que deseja excluir esta empresa?')) {
                     try {
                         await this.fetch(`/clientes/${id}`, { method: 'DELETE' });
-                        uiShowToast('Sucesso', `Cliente excluído do sistema.`);
+                        uiShowToast('Sucesso', 'Empresa excluída.');
                         this.loadClientes();
-                    } catch (e) {
-                        uiShowToast('Erro', 'Falha ao excluir no banco.', 'error');
-                    }
+                    } catch (e) { uiShowToast('Erro', 'Falha ao excluir.', 'error'); }
                 }
             },
 
             getStatusColor(status) {
-                if(status === 'ativo') return 'bg-emerald-100 text-emerald-800';
-                if(status === 'bloqueado') return 'bg-red-100 text-red-800';
-                return 'bg-amber-100 text-amber-800';
+                if(status === 'ativo') return 'bg-emerald-50 text-emerald-600 border border-emerald-100';
+                if(status === 'bloqueado') return 'bg-red-50 text-red-600 border border-red-100';
+                return 'bg-orange-50 text-orange-600 border border-orange-100';
             },
 
-            // FINANCEIRO: GRÁFICOS
             async loadFaturamento(periodo = 'mes') {
                 try {
                     const data = await this.fetch(`/financeiro/graficos?periodo=${periodo}`);
@@ -425,8 +439,8 @@
                     const ctx = document.getElementById('chart-faturamento').getContext('2d');
                     chartFat = new Chart(ctx, {
                         type: 'line',
-                        data: { labels: data.labels, datasets: [{ label: 'Faturamento', data: data.valores, borderColor: '#d4af37', tension: 0.4 }] },
-                        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+                        data: { labels: data.labels, datasets: [{ label: 'Faturamento', data: data.valores, borderColor: '#d4af37', backgroundColor: 'transparent', borderWidth: 1.5, tension: 0.4 }] },
+                        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { display: false }, y: { display: false } } }
                     });
                 } catch (e) {}
             },
@@ -442,63 +456,49 @@
                     const ctx = document.getElementById('chart-notificacoes').getContext('2d');
                     chartNot = new Chart(ctx, {
                         type: 'bar',
-                        data: { labels: ['A Vencer', 'Vencidos', 'Bloqueados'], datasets: [{ data: [data.a_vencer, data.vencidos, data.bloqueados], backgroundColor: ['#fef3c7', '#ffedd5', '#fee2e2'] }] },
-                        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+                        data: { labels: ['A Vencer', 'Vencidos', 'Bloqueados'], datasets: [{ data: [data.a_vencer, data.vencidos, data.bloqueados], backgroundColor: ['#eaeaea', '#ffedd5', '#fee2e2'], borderRadius: 4 }] },
+                        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { display: false }, y: { display: false } } }
                     });
                 } catch (e) {}
             },
 
-            // FINANCEIRO: CARIMBO E RECIBOS
             async loadFinanceiroRecibos() {
                 const tbody = document.getElementById('tbody-recibos');
                 const busca = document.getElementById('busca-financeiro').value;
-                const dataBusca = document.getElementById('busca-financeiro-data').value;
-                
-                tbody.innerHTML = `<tr><td colspan="4" class="text-center p-6 text-mutedblack"><i class="ph-bold ph-spinner animate-spin text-xl"></i> Conectando...</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="4" class="text-center p-8 text-muted"><i class="ph-light ph-spinner animate-spin text-2xl mb-2"></i><br>Buscando...</td></tr>`;
 
                 try {
-                    const lista = await this.fetch(`/financeiro/lista?busca=${busca}&data=${dataBusca}`);
+                    const lista = await this.fetch(`/financeiro/lista?busca=${busca}`);
                     if(!lista || lista.length === 0) {
-                        tbody.innerHTML = `<tr><td colspan="4" class="text-center p-6 text-mutedblack">Nenhum registro encontrado.</td></tr>`;
+                        tbody.innerHTML = `<tr><td colspan="4" class="text-center p-8 text-muted font-light">Nenhum registro encontrado.</td></tr>`;
                         return;
                     }
                     tbody.innerHTML = lista.map(c => `
-                        <tr class="hover:bg-slate-50 transition">
-                            <td class="p-4 font-black text-blacktext">${c.nome}</td>
-                            <td class="p-4 text-xs font-bold text-mutedblack" id="venc-${c.id}">${c.data_vencimento}</td>
-                            <td class="p-4">
-                                <select class="bg-slate-50 border border-slate-200 rounded-lg px-2 py-1 text-[10px] font-black uppercase outline-none focus:border-gold" onchange="MasterAPI.updateClientStatus(${c.id}, this.value, '${c.nome}')">
+                        <tr class="hover:bg-bglight transition border-b border-borderlight">
+                            <td class="p-5 font-medium text-darktext">${c.nome}</td>
+                            <td class="p-5 text-sm font-light text-muted">${c.data_vencimento}</td>
+                            <td class="p-5">
+                                <select class="input-minimal rounded-md px-2 py-1 text-[0.65rem] font-medium uppercase tracking-widest" onchange="MasterAPI.updateClientStatus(${c.id}, this.value)">
                                     <option value="ativo" ${c.status === 'ativo' ? 'selected' : ''}>Ativo</option>
                                     <option value="vencido" ${c.status === 'vencido' ? 'selected' : ''}>Vencido</option>
                                     <option value="bloqueado" ${c.status === 'bloqueado' ? 'selected' : ''}>Bloqueado</option>
                                 </select>
                             </td>
-                            <td class="p-4 text-right no-print">
-                                <button onclick="prepararPDF(${c.id}, '${c.nome}', '${c.cnpj}')" class="bg-gold hover:bg-goldhover text-white text-xs font-bold px-4 py-2 rounded-xl transition flex items-center gap-1 ml-auto"><i class="ph-bold ph-file-pdf"></i> GERAR PDF</button>
+                            <td class="p-5 text-right no-print">
+                                <button onclick="prepararPDF(${c.id}, '${c.nome}', '${c.cnpj}')" class="text-[0.65rem] uppercase tracking-widest font-medium text-gold hover:text-goldhover transition ml-auto">Gerar PDF</button>
                             </td>
                         </tr>
                     `).join('');
                 } catch (e) {
-                    tbody.innerHTML = `<tr><td colspan="4" class="text-center p-6 text-red-500 font-bold">Erro de API.</td></tr>`;
+                    tbody.innerHTML = `<tr><td colspan="4" class="text-center p-8 text-red-500">Erro na API.</td></tr>`;
                 }
             },
 
-            async updateClientStatus(id, novoStatus, nome) {
+            async updateClientStatus(id, novoStatus) {
                 try {
                     await this.fetch(`/financeiro/status`, { method: 'PUT', body: JSON.stringify({ id, status: novoStatus }) });
-                    
-                    // Ação de carimbo (renovação no UI)
-                    if(novoStatus === 'ativo') {
-                        let dataCarimbo = new Date();
-                        dataCarimbo.setMonth(dataCarimbo.getMonth() + 1);
-                        document.getElementById(`venc-${id}`).innerText = dataCarimbo.toLocaleDateString('pt-BR');
-                        uiShowToast('Carimbado & E-mail Enviado', `Status renovado. A empresa ${nome} foi ativada e informada por e-mail com link.`, 'success');
-                    } else {
-                        uiShowToast('Status Alterado', `O sistema enviou um e-mail para ${nome} informando a mudança e o link de regularização.`, 'success');
-                    }
-                } catch (e) {
-                    uiShowToast('Erro', 'Falha ao atualizar DB.', 'error');
-                }
+                    uiShowToast('Status', 'Licença atualizada no banco.');
+                } catch (e) { uiShowToast('Erro', 'Falha ao atualizar DB.', 'error'); }
             },
 
             async savePixConfig() {
@@ -517,10 +517,8 @@
                         body: formData
                     });
                     if(!res.ok) throw new Error();
-                    uiShowToast('Configuração PIX Salva', 'As informações aparecem em tempo real na aba financeiro do app cliente/empresa.');
-                } catch (e) {
-                    uiShowToast('Erro', 'Falha na comunicação com a API.', 'error');
-                }
+                    uiShowToast('Sucesso', 'Configuração PIX salva para clientes.');
+                } catch (e) { uiShowToast('Erro', 'Falha no upload (multipart/form-data).', 'error'); }
             },
 
             async generateReceipt() {
@@ -544,24 +542,26 @@
                 try {
                     await this.fetch('/recibos', { method: 'POST', body: JSON.stringify(payload) });
                     closeModal('modalGerarPDF');
-                    uiShowToast('PDF Enviado', 'O comprovante foi carimbado e enviado em PDF para o financeiro do cliente.');
-                } catch (e) {
-                    uiShowToast('Falha', 'Não foi possível registrar o recibo.', 'error');
-                }
+                    uiShowToast('Enviado', 'Recibo processado via API.');
+                } catch (e) { uiShowToast('Falha', 'Não foi possível gerar recibo.', 'error'); }
             }
         };
 
         function uiNavigate(secId, element) {
-            document.querySelectorAll('.page-section').forEach(s => s.classList.add('hidden'));
-            document.getElementById(`sec-${secId}`).classList.remove('hidden');
+            document.querySelectorAll('.page-section').forEach(s => {
+                s.classList.add('hidden');
+                s.classList.remove('visible');
+            });
+            
+            const target = document.getElementById(`sec-${secId}`);
+            target.classList.remove('hidden');
+            setTimeout(() => target.classList.add('visible'), 50);
 
             document.querySelectorAll('#nav-menu a').forEach(a => {
-                a.classList.remove('bg-gold', 'text-blacktext');
-                a.classList.add('text-slate-300', 'hover:bg-slate-800');
+                a.className = 'nav-link flex items-center gap-4 px-4 py-3.5 rounded-lg text-[0.75rem] font-light text-muted hover:bg-bglight hover:text-darktext cursor-pointer transition uppercase tracking-widest';
             });
             if (element) {
-                element.classList.add('bg-gold', 'text-blacktext');
-                element.classList.remove('text-slate-300', 'hover:bg-slate-800');
+                element.className = 'nav-link flex items-center gap-4 px-4 py-3.5 rounded-lg text-[0.75rem] font-medium text-white bg-gold shadow-md btn-elegant cursor-pointer uppercase tracking-widest';
             }
 
             if(secId === 'clientes') MasterAPI.loadClientes();
@@ -582,19 +582,24 @@
         function openModal(id) { document.getElementById(id).classList.add('active'); }
         function closeModal(id) { document.getElementById(id).classList.remove('active'); }
 
-        function uiShowToast(titulo, mensagem, tipo = 'success') {
+        function uiShowToast(titulo, mensagem) {
             const container = document.getElementById('toast-container');
             const toast = document.createElement('div');
-            const color = tipo === 'success' ? 'emerald' : 'red';
-            toast.className = `w-full bg-white/95 backdrop-blur-xl border border-slate-100 shadow-xl rounded-2xl p-4 flex gap-4 animate-slide-in-right pointer-events-auto`;
+            toast.className = `w-full bg-cardwhite border border-borderlight shadow-2xl rounded-xl p-4 flex gap-4 pointer-events-auto transform translate-y-full opacity-0 transition-all duration-500 ease-out`;
+            
             toast.innerHTML = `
-                <div class="absolute left-0 top-0 bottom-0 w-1 bg-${color}-500"></div>
-                <div class="w-10 h-10 rounded-full bg-${color}-500/10 flex items-center justify-center flex-shrink-0"><i class="ph-fill ph-check-circle text-${color}-500 text-xl"></i></div>
-                <div class="flex-1 pt-0.5"><h4 class="text-[13px] font-black text-blacktext">${titulo}</h4><p class="text-[11px] font-bold text-mutedblack mt-1">${mensagem}</p></div>
-                <button onclick="this.parentElement.remove()" class="text-slate-400 hover:text-blacktext"><i class="ph-bold ph-x"></i></button>
+                <div class="flex-1 pt-1"><h4 class="text-[0.7rem] font-medium uppercase tracking-widest text-darktext">${titulo}</h4><p class="text-xs font-light text-muted mt-1">${mensagem}</p></div>
+                <button onclick="this.parentElement.style.opacity='0'; setTimeout(()=>this.parentElement.remove(),300);" class="text-borderlight hover:text-darktext transition"><i class="ph-light ph-x text-lg"></i></button>
             `;
             container.appendChild(toast);
-            setTimeout(() => { if(toast.parentElement) toast.remove(); }, 4000);
+            
+            setTimeout(() => toast.classList.remove('translate-y-full', 'opacity-0'), 10);
+            setTimeout(() => {
+                if(toast.parentElement) {
+                    toast.classList.add('opacity-0');
+                    setTimeout(() => toast.remove(), 500);
+                }
+            }, 4000);
         }
     </script>
 </body>
